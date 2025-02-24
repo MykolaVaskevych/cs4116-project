@@ -64,30 +64,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bind_param("s", $email);
             $stmt->execute();
             $stmt->store_result();
-            if ($stmt->num_rows > 0) {
-                $registerMsg = "Email already registered.";
-            } else {
-                // Check password complexity
-                $complexity = checkPasswordComplexity($password);
-                if ($complexity === "Too weak") {
-                    $registerMsg = "Password too weak. Must be at least 5 characters long, include an uppercase letter and a number.";
+            try {
+                if ($stmt->num_rows > 0) {
+                    $registerMsg = "Email already registered.";
                 } else {
-                    // Hash the password for storage
-                    $pass_hash = password_hash($password, PASSWORD_DEFAULT);
-                    // Set role to "customer" by default
-                    $default_role = "customer";
-
-                    $stmtInsert = $conn->prepare("INSERT INTO users (username, email, pass_hash, role) VALUES (?, ?, ?, ?)");
-                    $stmtInsert->bind_param("ssss", $username, $email, $pass_hash, $default_role);
-                    if ($stmtInsert->execute()) {
-                        $registerMsg = "Registration successful. You can now login.";
+                    // Check password complexity
+                    $complexity = checkPasswordComplexity($password);
+                    if ($complexity === "Too weak") {
+                        $registerMsg = "Password too weak. Must be at least 5 characters long, include an uppercase letter and a number.";
                     } else {
-                        $registerMsg = "Registration failed: " . $conn->error;
+                        // Hash the password for storage
+                        $pass_hash = password_hash($password, PASSWORD_DEFAULT);
+                        // Set role to "customer" by default
+                        $default_role = "customer";
+
+                        $stmtInsert = $conn->prepare("INSERT INTO users (username, email, pass_hash, role) VALUES (?, ?, ?, ?)");
+                        $stmtInsert->bind_param("ssss", $username, $email, $pass_hash, $default_role);
+                        if ($stmtInsert->execute()) {
+                            $registerMsg = "Registration successful. You can now login.";
+                        } else {
+                            $registerMsg = "Registration failed: " . $conn->error;
+                        }
+                        $stmtInsert->close();
                     }
-                    $stmtInsert->close();
                 }
+            } finally {
+                $stmt->close();
             }
-            $stmt->close();
         }
     }
 
