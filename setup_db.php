@@ -1,13 +1,13 @@
 <?php
-// Include the reusable .env loader
-require_once 'env.php';
+// Include the configuration
+require_once 'src/config/config.php';
 
-// Retrieve database credentials from environment variables
-$host     = getenv('DB_HOST');
-$port     = getenv('DB_PORT');
-$user     = getenv('DB_USER');
-$password = getenv('DB_PASSWORD');
-$dbName   = getenv('DB_NAME');
+// Retrieve database credentials from configuration
+$host     = config::getDb('host');
+$port     = config::getDb('port');
+$user     = config::getDb('user');
+$password = config::getDb('password');
+$dbName   = config::getDb('name');
 
 // Connect to MySQL server (without selecting a default database)
 $conn = new mysqli($host, $user, $password, "", $port);

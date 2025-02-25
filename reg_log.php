@@ -1,21 +1,9 @@
 <?php
+require_once 'src/config/config.php';
 session_start();
 
-// Include your env loader if available
-// require_once 'env.php';
-
-// For this example, we assume the .env file is loaded and these variables are set.
-$host     = getenv('DB_HOST') ?: 'localhost';
-$port     = getenv('DB_PORT') ?: 3306;
-$dbUser   = getenv('DB_USER') ?: 'root';
-$dbPass   = getenv('DB_PASSWORD') ?: '';
-$dbName   = getenv('DB_NAME') ?: 'urban_life';
-
 // Create MySQLi connection
-$conn = new mysqli($host, $dbUser, $dbPass, $dbName, $port);
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+$conn = config::getDbConnection();
 
 // Message holders
 $registerMsg = "";
