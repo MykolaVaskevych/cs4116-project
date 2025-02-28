@@ -40,7 +40,7 @@ export class ModerateServiceComponent {
     }
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
     const url = `http://127.0.0.1:8000/api/services/${this.serviceId}/${action}/`;
-    this.http.patch(url, {}, { headers }).subscribe({
+    this.http.post(url, {}, { headers }).subscribe({
       next: (res: any) => {
         this.responseMessage = res.detail || `Service ${action}ed.`;
       },

@@ -10,7 +10,7 @@ import { CreateServiceComponent } from './create-service/create-service.componen
 import { ModerateServiceComponent } from './moderate-service/moderate-service.component';
 import { CreateBookingComponent } from './create-booking/create-booking.component';
 import { UpdateBookingComponent } from './update-booking/update-booking.component';
-
+import { PendingProvidersComponent } from './pending-providers/pending-providers.component';
 export const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'register', component: RegisterComponent },
@@ -22,6 +22,7 @@ export const routes: Routes = [
   { path: 'moderate-service', component: ModerateServiceComponent },
   { path: 'create-booking', component: CreateBookingComponent },
   { path: 'update-booking', component: UpdateBookingComponent },
+  { path: 'pending-providers', component: PendingProvidersComponent },
 
   // 404
   { path: '**', component: NotFoundComponent },

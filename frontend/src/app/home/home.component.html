@@ -11,8 +11,8 @@
 
 <div *ngIf="role === 'customer'">
   <p>You are a customer.</p>
-  <button routerLink="/request-business">Request Business Account</button>
-  <button routerLink="/create-booking">Book a Service</button>
+  <a routerLink="/request-business" class="btn">Request Business Account</a>
+  <a routerLink="/create-booking" class="btn">Book a Service</a>
 </div>
 
 <div *ngIf="role === 'provider'">
