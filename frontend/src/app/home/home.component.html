@@ -1,0 +1,28 @@
+<h2>Welcome to Urban Life Hub!</h2>
+<p>This is the home page.</p>
+
+<!-- <button routerLink="/profile">Personal Profile</button>
+<button routerLink="/request-business">Request Business Account</button>
+<button routerLink="/create-service">Create a Service</button>
+<button routerLink="/moderate-service">Moderate a Service</button>
+<button routerLink="/create-booking">Create Booking</button>
+<button routerLink="/update-booking">Update Booking</button>
+<button routerLink="/approve-provider">Approve Provider</button> -->
+
+<div *ngIf="role === 'customer'">
+  <p>You are a customer.</p>
+  <button routerLink="/request-business">Request Business Account</button>
+  <button routerLink="/create-booking">Book a Service</button>
+</div>
+
+<div *ngIf="role === 'provider'">
+  <p>You are a provider.</p>
+  <button routerLink="/create-service">Create Service</button>
+  <button routerLink="/create-booking">You can also book other services</button>
+</div>
+
+<div *ngIf="role === 'moderator'">
+  <p>You are a moderator.</p>
+  <button routerLink="/pending-providers">View Pending Providers</button>
+  <button routerLink="/moderate-service">Moderate Services</button>
+</div>

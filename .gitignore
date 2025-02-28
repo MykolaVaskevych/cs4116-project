@@ -1,2 +1,4 @@
 .DS_Store
 .idea/
+.repoignore
+__pycache__/

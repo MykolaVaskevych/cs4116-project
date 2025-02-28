@@ -1,0 +1,29 @@
+<h2>My Profile</h2>
+<div *ngIf="responseMessage">{{ responseMessage }}</div>
+
+<div>
+  <label>Username:</label>
+  <input [(ngModel)]="userData.username" />
+</div>
+<div>
+  <label>Email:</label>
+  <input [(ngModel)]="userData.email" />
+</div>
+
+<button (click)="onSave()">Save</button>
+
+<h3>Change Password</h3>
+<form (ngSubmit)="onChangePassword()">
+  <div>
+    <label>Old Password:</label>
+    <input type="password" [(ngModel)]="oldPassword" name="oldPassword" required />
+  </div>
+  <div>
+    <label>New Password:</label>
+    <input type="password" [(ngModel)]="newPassword" name="newPassword" required />
+  </div>
+  <button type="submit">Update Password</button>
+</form>
+
+<p *ngIf="passwordChangeMessage">{{ passwordChangeMessage }}</p>
+
