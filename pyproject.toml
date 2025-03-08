@@ -4,4 +4,10 @@ version = "0.1.0"
 description = "TODO description"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "django>=5.1.7",
+    "django-filter>=25.1",
+    "djangorestframework>=3.15.2",
+    "markdown>=3.7",
+    "mysqlclient>=2.2.7",
+]
