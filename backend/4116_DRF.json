@@ -1,0 +1,454 @@
+{
+  "name": "4116_DRF",
+  "version": "1",
+  "items": [
+    {
+      "type": "http",
+      "name": "login [NICK]",
+      "seq": 2,
+      "request": {
+        "url": "{{host}}/api/login/",
+        "method": "POST",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "json",
+          "json": "{\n  \"email\": \"example@gmail.com\",\n  \"password\": \"Nnick!123\"\n}",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {
+          "res": "bru.setVar(\"token\", res.body.access);"
+        },
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "register [NICK]",
+      "seq": 1,
+      "request": {
+        "url": "{{host}}/api/register/",
+        "method": "POST",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "json",
+          "json": "{\n  \"email\": \"example@gmail.com\",\n  \"username\": \"Nick12345\",\n  \"password\": \"Nnick!123\",\n  \"first_name\": \"Nick\",\n  \"last_name\": \"Vaskevych\"\n}",
+          "formUrlEncoded": [],
+          "multipartForm": [
+            {
+              "type": "text",
+              "name": "",
+              "value": "",
+              "enabled": true
+            },
+            {
+              "type": "text",
+              "name": "",
+              "value": "",
+              "enabled": true
+            },
+            {
+              "type": "text",
+              "name": "",
+              "value": "",
+              "enabled": true
+            },
+            {
+              "type": "text",
+              "name": "",
+              "value": "",
+              "enabled": true
+            }
+          ],
+          "file": []
+        },
+        "script": {
+          "res": "bru.setVar(\"token\", res.body.access);"
+        },
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "wallet details",
+      "seq": 5,
+      "request": {
+        "url": "{{host}}/api/wallet",
+        "method": "GET",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "none",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "bearer",
+          "bearer": {
+            "token": "{{token}}"
+          }
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "wallet deposit",
+      "seq": 6,
+      "request": {
+        "url": "{{host}}/api/wallet/deposit/",
+        "method": "POST",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "json",
+          "json": "{\n  \"amount\": 100\n}",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "bearer",
+          "bearer": {
+            "token": "{{token}}"
+          }
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "wallet withdrawal",
+      "seq": 7,
+      "request": {
+        "url": "{{host}}/api/wallet/withdraw/",
+        "method": "POST",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "json",
+          "json": "{\n  \"amount\" : 100\n}",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "bearer",
+          "bearer": {
+            "token": "{{token}}"
+          }
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "wallet transfer",
+      "seq": 8,
+      "request": {
+        "url": "{{host}}/api/wallet/transfer/",
+        "method": "POST",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "json",
+          "json": "{\n  \"amount\" : 100,\n  \"recipient_email\" : \"example@gmail.com\"\n}",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "bearer",
+          "bearer": {
+            "token": "{{token}}"
+          }
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "login [USER2]",
+      "seq": 4,
+      "request": {
+        "url": "{{host}}/api/login/",
+        "method": "POST",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "json",
+          "json": "{\n  \"email\": \"example2@gmail.com\",\n  \"password\": \"Nnick!123\"\n}",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {
+          "res": "bru.setVar(\"token\", res.body.access);"
+        },
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "register [USER2]",
+      "seq": 3,
+      "request": {
+        "url": "{{host}}/api/register/",
+        "method": "POST",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "json",
+          "json": "{\n  \"email\": \"example2@gmail.com\",\n  \"username\": \"user12345\",\n  \"password\": \"Nnick!123\",\n  \"first_name\": \"user2\",\n  \"last_name\": \"last_name2\"\n}",
+          "formUrlEncoded": [],
+          "multipartForm": [
+            {
+              "type": "text",
+              "name": "",
+              "value": "",
+              "enabled": true
+            },
+            {
+              "type": "text",
+              "name": "",
+              "value": "",
+              "enabled": true
+            },
+            {
+              "type": "text",
+              "name": "",
+              "value": "",
+              "enabled": true
+            },
+            {
+              "type": "text",
+              "name": "",
+              "value": "",
+              "enabled": true
+            }
+          ],
+          "file": []
+        },
+        "script": {
+          "res": "bru.setVar(\"token\", res.body.access);"
+        },
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "transactions list",
+      "seq": 10,
+      "request": {
+        "url": "{{host}}/api/transactions/",
+        "method": "GET",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "none",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "bearer",
+          "bearer": {
+            "token": "{{token}}"
+          }
+        }
+      }
+    },
+    {
+      "type": "folder",
+      "name": "profile",
+      "items": [
+        {
+          "type": "http",
+          "name": "get profile",
+          "seq": 1,
+          "request": {
+            "url": "{{host}}/api/profile/",
+            "method": "GET",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "none",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "bearer",
+              "bearer": {
+                "token": "{{token}}"
+              }
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "put profile",
+          "seq": 2,
+          "request": {
+            "url": "{{host}}/api/profile/",
+            "method": "PUT",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "// updates all info at once, all fields are required\n\n{\n  \"username\": \"johndoe2025\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\"\n}\n\n// {\n//   \"username\": \"Nick2025\",\n//   \"first_name\": \"Nick\",\n//   \"last_name\": \"Vask\"\n// }",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "bearer",
+              "bearer": {
+                "token": "{{token}}"
+              }
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "patch profile",
+          "seq": 3,
+          "request": {
+            "url": "{{host}}/api/profile/",
+            "method": "PATCH",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "// diff from \"put\" is that\n//PATCH: Updates only specific fields of the user profile\n\n{\n//   \"username\": \"johndoe2025\",\n//   \"first_name\": \"John\",\n  \"last_name\": \"Doe\"\n}\n\n// {\n//   \"username\": \"Nick2025\",\n//   \"first_name\": \"Nick\",\n//   \"last_name\": \"Vask\"\n// }",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "bearer",
+              "bearer": {
+                "token": "{{token}}"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "activeEnvironmentUid": "Fymc5QteebHPI4CfwQNhz",
+  "environments": [
+    {
+      "variables": [
+        {
+          "name": "host",
+          "value": "http://127.0.0.1:8000",
+          "enabled": true,
+          "secret": false,
+          "type": "text"
+        },
+        {
+          "name": "token",
+          "value": "",
+          "enabled": true,
+          "secret": true,
+          "type": "text"
+        }
+      ],
+      "name": "4116_bruno_env"
+    }
+  ],
+  "root": {
+    "request": {
+      "auth": {
+        "mode": "none"
+      },
+      "vars": {
+        "req": [
+          {
+            "name": "url",
+            "value": "http://127.0.0.1:8000/",
+            "enabled": true,
+            "local": false,
+            "uid": "yKqIQzxhEy9wdrapYHJWo"
+          }
+        ]
+      }
+    }
+  },
+  "brunoConfig": {
+    "version": "1",
+    "name": "4116_DRF",
+    "type": "collection",
+    "ignore": [
+      "node_modules",
+      ".git"
+    ],
+    "size": 0.0009317398071289062,
+    "filesCount": 5
+  }
+}
