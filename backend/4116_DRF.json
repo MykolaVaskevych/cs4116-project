@@ -3,311 +3,6 @@
   "version": "1",
   "items": [
     {
-      "type": "http",
-      "name": "login [NICK]",
-      "seq": 2,
-      "request": {
-        "url": "{{host}}/api/login/",
-        "method": "POST",
-        "headers": [],
-        "params": [],
-        "body": {
-          "mode": "json",
-          "json": "{\n  \"email\": \"example@gmail.com\",\n  \"password\": \"Nnick!123\"\n}",
-          "formUrlEncoded": [],
-          "multipartForm": [],
-          "file": []
-        },
-        "script": {
-          "res": "bru.setVar(\"token\", res.body.access);"
-        },
-        "vars": {},
-        "assertions": [],
-        "tests": "",
-        "docs": "",
-        "auth": {
-          "mode": "none"
-        }
-      }
-    },
-    {
-      "type": "http",
-      "name": "register [NICK]",
-      "seq": 1,
-      "request": {
-        "url": "{{host}}/api/register/",
-        "method": "POST",
-        "headers": [],
-        "params": [],
-        "body": {
-          "mode": "json",
-          "json": "{\n  \"email\": \"example@gmail.com\",\n  \"username\": \"Nick12345\",\n  \"password\": \"Nnick!123\",\n  \"first_name\": \"Nick\",\n  \"last_name\": \"Vaskevych\"\n}",
-          "formUrlEncoded": [],
-          "multipartForm": [
-            {
-              "type": "text",
-              "name": "",
-              "value": "",
-              "enabled": true
-            },
-            {
-              "type": "text",
-              "name": "",
-              "value": "",
-              "enabled": true
-            },
-            {
-              "type": "text",
-              "name": "",
-              "value": "",
-              "enabled": true
-            },
-            {
-              "type": "text",
-              "name": "",
-              "value": "",
-              "enabled": true
-            }
-          ],
-          "file": []
-        },
-        "script": {
-          "res": "bru.setVar(\"token\", res.body.access);"
-        },
-        "vars": {},
-        "assertions": [],
-        "tests": "",
-        "docs": "",
-        "auth": {
-          "mode": "none"
-        }
-      }
-    },
-    {
-      "type": "http",
-      "name": "wallet details",
-      "seq": 5,
-      "request": {
-        "url": "{{host}}/api/wallet",
-        "method": "GET",
-        "headers": [],
-        "params": [],
-        "body": {
-          "mode": "none",
-          "formUrlEncoded": [],
-          "multipartForm": [],
-          "file": []
-        },
-        "script": {},
-        "vars": {},
-        "assertions": [],
-        "tests": "",
-        "docs": "",
-        "auth": {
-          "mode": "bearer",
-          "bearer": {
-            "token": "{{token}}"
-          }
-        }
-      }
-    },
-    {
-      "type": "http",
-      "name": "wallet deposit",
-      "seq": 6,
-      "request": {
-        "url": "{{host}}/api/wallet/deposit/",
-        "method": "POST",
-        "headers": [],
-        "params": [],
-        "body": {
-          "mode": "json",
-          "json": "{\n  \"amount\": 100\n}",
-          "formUrlEncoded": [],
-          "multipartForm": [],
-          "file": []
-        },
-        "script": {},
-        "vars": {},
-        "assertions": [],
-        "tests": "",
-        "docs": "",
-        "auth": {
-          "mode": "bearer",
-          "bearer": {
-            "token": "{{token}}"
-          }
-        }
-      }
-    },
-    {
-      "type": "http",
-      "name": "wallet withdrawal",
-      "seq": 7,
-      "request": {
-        "url": "{{host}}/api/wallet/withdraw/",
-        "method": "POST",
-        "headers": [],
-        "params": [],
-        "body": {
-          "mode": "json",
-          "json": "{\n  \"amount\" : 100\n}",
-          "formUrlEncoded": [],
-          "multipartForm": [],
-          "file": []
-        },
-        "script": {},
-        "vars": {},
-        "assertions": [],
-        "tests": "",
-        "docs": "",
-        "auth": {
-          "mode": "bearer",
-          "bearer": {
-            "token": "{{token}}"
-          }
-        }
-      }
-    },
-    {
-      "type": "http",
-      "name": "wallet transfer",
-      "seq": 8,
-      "request": {
-        "url": "{{host}}/api/wallet/transfer/",
-        "method": "POST",
-        "headers": [],
-        "params": [],
-        "body": {
-          "mode": "json",
-          "json": "{\n  \"amount\" : 100,\n  \"recipient_email\" : \"example@gmail.com\"\n}",
-          "formUrlEncoded": [],
-          "multipartForm": [],
-          "file": []
-        },
-        "script": {},
-        "vars": {},
-        "assertions": [],
-        "tests": "",
-        "docs": "",
-        "auth": {
-          "mode": "bearer",
-          "bearer": {
-            "token": "{{token}}"
-          }
-        }
-      }
-    },
-    {
-      "type": "http",
-      "name": "login [USER2]",
-      "seq": 4,
-      "request": {
-        "url": "{{host}}/api/login/",
-        "method": "POST",
-        "headers": [],
-        "params": [],
-        "body": {
-          "mode": "json",
-          "json": "{\n  \"email\": \"example2@gmail.com\",\n  \"password\": \"Nnick!123\"\n}",
-          "formUrlEncoded": [],
-          "multipartForm": [],
-          "file": []
-        },
-        "script": {
-          "res": "bru.setVar(\"token\", res.body.access);"
-        },
-        "vars": {},
-        "assertions": [],
-        "tests": "",
-        "docs": "",
-        "auth": {
-          "mode": "none"
-        }
-      }
-    },
-    {
-      "type": "http",
-      "name": "register [USER2]",
-      "seq": 3,
-      "request": {
-        "url": "{{host}}/api/register/",
-        "method": "POST",
-        "headers": [],
-        "params": [],
-        "body": {
-          "mode": "json",
-          "json": "{\n  \"email\": \"example2@gmail.com\",\n  \"username\": \"user12345\",\n  \"password\": \"Nnick!123\",\n  \"first_name\": \"user2\",\n  \"last_name\": \"last_name2\"\n}",
-          "formUrlEncoded": [],
-          "multipartForm": [
-            {
-              "type": "text",
-              "name": "",
-              "value": "",
-              "enabled": true
-            },
-            {
-              "type": "text",
-              "name": "",
-              "value": "",
-              "enabled": true
-            },
-            {
-              "type": "text",
-              "name": "",
-              "value": "",
-              "enabled": true
-            },
-            {
-              "type": "text",
-              "name": "",
-              "value": "",
-              "enabled": true
-            }
-          ],
-          "file": []
-        },
-        "script": {
-          "res": "bru.setVar(\"token\", res.body.access);"
-        },
-        "vars": {},
-        "assertions": [],
-        "tests": "",
-        "docs": "",
-        "auth": {
-          "mode": "none"
-        }
-      }
-    },
-    {
-      "type": "http",
-      "name": "transactions list",
-      "seq": 10,
-      "request": {
-        "url": "{{host}}/api/transactions/",
-        "method": "GET",
-        "headers": [],
-        "params": [],
-        "body": {
-          "mode": "none",
-          "formUrlEncoded": [],
-          "multipartForm": [],
-          "file": []
-        },
-        "script": {},
-        "vars": {},
-        "assertions": [],
-        "tests": "",
-        "docs": "",
-        "auth": {
-          "mode": "bearer",
-          "bearer": {
-            "token": "{{token}}"
-          }
-        }
-      }
-    },
-    {
       "type": "folder",
       "name": "profile",
       "items": [
@@ -350,7 +45,7 @@
             "params": [],
             "body": {
               "mode": "json",
-              "json": "// updates all info at once, all fields are required\n\n{\n  \"username\": \"johndoe2025\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\"\n}\n\n// {\n//   \"username\": \"Nick2025\",\n//   \"first_name\": \"Nick\",\n//   \"last_name\": \"Vask\"\n// }",
+              "json": "\n{\n  \"username\": \"johndoe2025\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\"\n}\n\n// role is optional",
               "formUrlEncoded": [],
               "multipartForm": [],
               "file": []
@@ -370,7 +65,7 @@
         },
         {
           "type": "http",
-          "name": "patch profile",
+          "name": "Update Profile",
           "seq": 3,
           "request": {
             "url": "{{host}}/api/profile/",
@@ -379,7 +74,608 @@
             "params": [],
             "body": {
               "mode": "json",
-              "json": "// diff from \"put\" is that\n//PATCH: Updates only specific fields of the user profile\n\n{\n//   \"username\": \"johndoe2025\",\n//   \"first_name\": \"John\",\n  \"last_name\": \"Doe\"\n}\n\n// {\n//   \"username\": \"Nick2025\",\n//   \"first_name\": \"Nick\",\n//   \"last_name\": \"Vask\"\n// }",
+              "json": "{\n    \"username\": \"new_username\",\n    \"first_name\": \"Updated\",\n    \"last_name\": \"Name\",\n    \"role\": \"BUSINESS\"\n  }",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "bearer",
+              "bearer": {
+                "token": "{{token}}"
+              }
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "login [USER]",
+          "seq": 5,
+          "request": {
+            "url": "{{host}}/api/login/",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"email\": \"example@gmail.com\",\n  \"password\": \"Nnick!123\"\n}",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {
+              "res": "bru.setVar(\"token\", res.body.access);"
+            },
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "none"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "register [USER]",
+          "seq": 4,
+          "request": {
+            "url": "{{host}}/api/register/",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"email\": \"example@gmail.com\",\n  \"username\": \"Nick12345\",\n  \"password\": \"Nnick!123\",\n  \"first_name\": \"Nick\",\n  \"last_name\": \"Vaskevych\",\n  \"role\": \"CUSTOMER\" // optional, def: CUSTOMER\n}",
+              "formUrlEncoded": [],
+              "multipartForm": [
+                {
+                  "type": "text",
+                  "name": "",
+                  "value": "",
+                  "enabled": true
+                },
+                {
+                  "type": "text",
+                  "name": "",
+                  "value": "",
+                  "enabled": true
+                },
+                {
+                  "type": "text",
+                  "name": "",
+                  "value": "",
+                  "enabled": true
+                },
+                {
+                  "type": "text",
+                  "name": "",
+                  "value": "",
+                  "enabled": true
+                }
+              ],
+              "file": []
+            },
+            "script": {
+              "res": "bru.setVar(\"token\", res.body.access);"
+            },
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "none"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "folder",
+      "name": "Services (business features)",
+      "items": [
+        {
+          "type": "http",
+          "name": "List Services",
+          "seq": 1,
+          "request": {
+            "url": "{{host}}/api/services/",
+            "method": "GET",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "none",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "bearer",
+              "bearer": {
+                "token": "{{token}}"
+              }
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Get Service Details (by id)",
+          "seq": 2,
+          "request": {
+            "url": "{{host}}/api/services/1",
+            "method": "GET",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "none",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "to get service you need to know its id.\n\nthen just change \"1\" in enpoint to id that you need:\nexamples:\n1. {{host}}/api/services/1\n2. {{host}}/api/services/2\n",
+            "auth": {
+              "mode": "bearer",
+              "bearer": {
+                "token": "{{token}}"
+              }
+            }
+          }
+        },
+        {
+          "type": "folder",
+          "name": "business only",
+          "items": [
+            {
+              "type": "http",
+              "name": "Create Service",
+              "seq": 2,
+              "request": {
+                "url": "{{host}}/api/services/",
+                "method": "POST",
+                "headers": [],
+                "params": [],
+                "body": {
+                  "mode": "json",
+                  "json": "{\n  \"name\": \"Service 1\",\n  \"description\": \"This service created by bruno\"\n\n}",
+                  "formUrlEncoded": [],
+                  "multipartForm": [],
+                  "file": []
+                },
+                "script": {},
+                "vars": {},
+                "assertions": [],
+                "tests": "",
+                "docs": "",
+                "auth": {
+                  "mode": "bearer",
+                  "bearer": {
+                    "token": "{{token}}"
+                  }
+                }
+              }
+            },
+            {
+              "type": "http",
+              "name": "Get My Services",
+              "seq": 1,
+              "request": {
+                "url": "{{host}}/api/services/?my_services=true",
+                "method": "GET",
+                "headers": [],
+                "params": [
+                  {
+                    "name": "my_services",
+                    "value": "true",
+                    "type": "query",
+                    "enabled": true
+                  }
+                ],
+                "body": {
+                  "mode": "none",
+                  "formUrlEncoded": [],
+                  "multipartForm": [],
+                  "file": []
+                },
+                "script": {},
+                "vars": {},
+                "assertions": [],
+                "tests": "",
+                "docs": "",
+                "auth": {
+                  "mode": "bearer",
+                  "bearer": {
+                    "token": "{{token}}"
+                  }
+                }
+              }
+            },
+            {
+              "type": "http",
+              "name": "Update Service",
+              "seq": 3,
+              "request": {
+                "url": "{{host}}/api/services/1/",
+                "method": "PATCH",
+                "headers": [],
+                "params": [],
+                "body": {
+                  "mode": "json",
+                  "json": "{\n  \"name\": \"Updated name\",\n  \"description\": \"updated description\"\n}",
+                  "formUrlEncoded": [],
+                  "multipartForm": [],
+                  "file": []
+                },
+                "script": {},
+                "vars": {},
+                "assertions": [],
+                "tests": "",
+                "docs": "to change service that you are working with, do not workget to change id in endpoint url",
+                "auth": {
+                  "mode": "bearer",
+                  "bearer": {
+                    "token": "{{token}}"
+                  }
+                }
+              }
+            },
+            {
+              "type": "http",
+              "name": "Delete Service",
+              "seq": 4,
+              "request": {
+                "url": "{{host}}/api/services/2/",
+                "method": "DELETE",
+                "headers": [],
+                "params": [],
+                "body": {
+                  "mode": "none",
+                  "formUrlEncoded": [],
+                  "multipartForm": [],
+                  "file": []
+                },
+                "script": {},
+                "vars": {},
+                "assertions": [],
+                "tests": "",
+                "docs": "",
+                "auth": {
+                  "mode": "bearer",
+                  "bearer": {
+                    "token": "{{token}}"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "folder",
+      "name": "Inquiries",
+      "items": [
+        {
+          "type": "http",
+          "name": "List Inquiries",
+          "seq": 1,
+          "request": {
+            "url": "{{host}}/api/inquiries/",
+            "method": "GET",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "none",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "bearer",
+              "bearer": {
+                "token": "{{token}}"
+              }
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Create Inquiry (Customer)",
+          "seq": 2,
+          "request": {
+            "url": "{{host}}/api/inquiries/",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"service\": 1,\n  \"subject\": \"Inquiry about web development\",\n      \"initial_message\": \"Hello, I'm interested in your web development service and would like to know more details.\"\n}",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "bearer",
+              "bearer": {
+                "token": "{{token}}"
+              }
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Get Inquiry Details",
+          "seq": 3,
+          "request": {
+            "url": "{{host}}/api/inquiries/1/",
+            "method": "GET",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "none",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "bearer",
+              "bearer": {
+                "token": "{{token}}"
+              }
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Close Inquiry (Moderator only)",
+          "seq": 4,
+          "request": {
+            "url": "/api/inquiries/1/close/",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "none",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "bearer",
+              "bearer": {
+                "token": "{{token}}"
+              }
+            }
+          }
+        },
+        {
+          "type": "folder",
+          "name": "Messages",
+          "items": [
+            {
+              "type": "http",
+              "name": "List Messages",
+              "seq": 1,
+              "request": {
+                "url": "{{host}}/api/messages/",
+                "method": "GET",
+                "headers": [],
+                "params": [],
+                "body": {
+                  "mode": "none",
+                  "formUrlEncoded": [],
+                  "multipartForm": [],
+                  "file": []
+                },
+                "script": {},
+                "vars": {},
+                "assertions": [],
+                "tests": "",
+                "docs": "this endpoint gets all messages from current user.\nits better to use \"get inquiry Details\" if you want to get messages from spesific inquiry.\n\nbut if you really need it, filtering is present, so you can do like this:\nGET /api/messages/?inquiry=1",
+                "auth": {
+                  "mode": "bearer",
+                  "bearer": {
+                    "token": "{{token}}"
+                  }
+                }
+              }
+            },
+            {
+              "type": "http",
+              "name": "Send Message",
+              "seq": 2,
+              "request": {
+                "url": "{{host}}/api/messages/",
+                "method": "POST",
+                "headers": [],
+                "params": [],
+                "body": {
+                  "mode": "json",
+                  "json": "{\n  \"inquiry\": 1,\n  \"content\": \"This is my message content\"\n}",
+                  "formUrlEncoded": [],
+                  "multipartForm": [],
+                  "file": []
+                },
+                "script": {},
+                "vars": {},
+                "assertions": [],
+                "tests": "",
+                "docs": "",
+                "auth": {
+                  "mode": "bearer",
+                  "bearer": {
+                    "token": "{{token}}"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "folder",
+      "name": "Wallet & Transactions",
+      "items": [
+        {
+          "type": "http",
+          "name": "Get Wallet",
+          "seq": 1,
+          "request": {
+            "url": "{{host}}/api/wallet",
+            "method": "GET",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "none",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "bearer",
+              "bearer": {
+                "token": "{{token}}"
+              }
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "wallet deposit",
+          "seq": 2,
+          "request": {
+            "url": "{{host}}/api/wallet/deposit/",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"amount\": 100\n}",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "bearer",
+              "bearer": {
+                "token": "{{token}}"
+              }
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "wallet withdrawal",
+          "seq": 3,
+          "request": {
+            "url": "{{host}}/api/wallet/withdraw/",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"amount\" : 100\n}",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "bearer",
+              "bearer": {
+                "token": "{{token}}"
+              }
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "wallet transfer",
+          "seq": 4,
+          "request": {
+            "url": "{{host}}/api/wallet/transfer/",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"amount\" : 100,\n  \"recipient_email\" : \"example@gmail.com\"\n}",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "bearer",
+              "bearer": {
+                "token": "{{token}}"
+              }
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "transactions list",
+          "seq": 5,
+          "request": {
+            "url": "{{host}}/api/transactions/",
+            "method": "GET",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "none",
               "formUrlEncoded": [],
               "multipartForm": [],
               "file": []
@@ -400,7 +696,7 @@
       ]
     }
   ],
-  "activeEnvironmentUid": "Fymc5QteebHPI4CfwQNhz",
+  "activeEnvironmentUid": "jWnjPqaNvF4eBQr5Wwo9Q",
   "environments": [
     {
       "variables": [
@@ -434,7 +730,7 @@
             "value": "http://127.0.0.1:8000/",
             "enabled": true,
             "local": false,
-            "uid": "yKqIQzxhEy9wdrapYHJWo"
+            "uid": "ZAHVqt0Ntsnkqt9Ta4Oh2"
           }
         ]
       }
