@@ -1,8 +1,15 @@
 # accounts/urls.py
 
-from django.urls import path
+from django.urls import path, include
 from rest_framework_simplejwt.views import TokenVerifyView, TokenRefreshView
+from rest_framework.routers import DefaultRouter
 from . import views
+
+# Create a router for viewsets
+router = DefaultRouter()
+router.register(r'services', views.ServiceViewSet)
+router.register(r'inquiries', views.InquiryViewSet)
+router.register(r'messages', views.InquiryMessageViewSet, basename='inquiry-messages')
 
 app_name = 'accounts'
 
@@ -24,4 +31,7 @@ urlpatterns = [
     
     # Transactions endpoints
     path('transactions/', views.transaction_list, name='transactions'),
+    
+    # Include routers for the new viewsets
+    path('', include(router.urls)),
 ]
