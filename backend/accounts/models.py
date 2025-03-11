@@ -24,7 +24,9 @@ class UserManager(DjangoUserManager):
         with transaction.atomic():
             user.save(using=self._db)
             # Create wallet directly here instead of using a signal
-            from .models import Wallet  # Import here to avoid circular import
+            # Use apps.get_model to avoid circular import
+            from django.apps import apps
+            Wallet = apps.get_model('accounts', 'Wallet')
             Wallet.objects.create(user=user)
             
         return user
@@ -32,11 +34,15 @@ class UserManager(DjangoUserManager):
     def create_user(self, username, email=None, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", False)
         extra_fields.setdefault("is_superuser", False)
+        # By default, set role to CUSTOMER if not provided
+        extra_fields.setdefault("role", User.Role.CUSTOMER)
         return self._create_user(username, email, password, **extra_fields)
 
     def create_superuser(self, username, email=None, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
+        # Set role to MODERATOR for superusers if not explicitly provided
+        extra_fields.setdefault("role", User.Role.MODERATOR)
 
         if extra_fields.get("is_staff") is not True:
             raise ValueError("Superuser must have is_staff=True.")
@@ -50,6 +56,11 @@ class User(AbstractUser):
     """
     Custom User model that uses email for authentication
     """
+    class Role(models.TextChoices):
+        CUSTOMER = 'CUSTOMER', _('Customer')
+        BUSINESS = 'BUSINESS', _('Business')
+        MODERATOR = 'MODERATOR', _('Moderator')
+        
     # Override email field to make it unique and required
     email = models.EmailField(
         _('email address'),
@@ -57,6 +68,12 @@ class User(AbstractUser):
         error_messages={
             'unique': _("A user with that email already exists."),
         },
+    )
+    
+    role = models.CharField(
+        max_length=10,
+        choices=Role.choices,
+        default=Role.CUSTOMER,
     )
     
     # Use our custom manager that handles wallet creation
@@ -68,6 +85,14 @@ class User(AbstractUser):
     
     def __str__(self):
         return self.email
+        
+    @property
+    def is_business(self):
+        return self.role == self.Role.BUSINESS
+    
+    @property
+    def is_moderator(self):
+        return self.role == self.Role.MODERATOR
 
 
 class Wallet(models.Model):
@@ -89,34 +114,55 @@ class Wallet(models.Model):
         """Add funds to wallet and create transaction record"""
         if amount <= 0:
             raise ValueError("Amount must be positive")
-            
-        self.balance += amount
-        self.save(update_fields=['balance', 'updated_at'])
         
-        # Create transaction record directly
-        return Transaction.objects.create(
-            to_wallet=self,
-            amount=amount,
-            transaction_type=Transaction.TransactionType.DEPOSIT
-        )
+        # Use atomic transaction to ensure both updates happen or none
+        with transaction.atomic():
+            # Get a lock on this wallet row
+            wallet = Wallet.objects.select_for_update().get(pk=self.pk)
+            wallet.balance += amount
+            wallet.save(update_fields=['balance', 'updated_at'])
+            
+            # Create transaction record
+            tx = Transaction.objects.create(
+                to_wallet=wallet,
+                amount=amount,
+                transaction_type=Transaction.TransactionType.DEPOSIT
+            )
+            
+            # Update the instance
+            self.balance = wallet.balance
+            self.updated_at = wallet.updated_at
+            
+            return tx
         
     def withdraw(self, amount):
         """Withdraw funds from wallet and create transaction record"""
         if amount <= 0:
             raise ValueError("Amount must be positive")
-            
-        if self.balance < amount:
-            raise ValueError("Insufficient funds")
-            
-        self.balance -= amount
-        self.save(update_fields=['balance', 'updated_at'])
         
-        # Create transaction record
-        return Transaction.objects.create(
-            from_wallet=self,
-            amount=amount,
-            transaction_type=Transaction.TransactionType.WITHDRAWAL
-        )
+        # Use atomic transaction to ensure both updates happen or none
+        with transaction.atomic():
+            # Get a lock on this wallet row
+            wallet = Wallet.objects.select_for_update().get(pk=self.pk)
+            
+            if wallet.balance < amount:
+                raise ValueError("Insufficient funds")
+                
+            wallet.balance -= amount
+            wallet.save(update_fields=['balance', 'updated_at'])
+            
+            # Create transaction record
+            tx = Transaction.objects.create(
+                from_wallet=wallet,
+                amount=amount,
+                transaction_type=Transaction.TransactionType.WITHDRAWAL
+            )
+            
+            # Update the instance
+            self.balance = wallet.balance
+            self.updated_at = wallet.updated_at
+            
+            return tx
         
     def transfer(self, recipient_wallet, amount):
         """Transfer funds to another wallet and create transaction record"""
@@ -192,3 +238,95 @@ class Transaction(models.Model):
                 raise ValueError("Transfer transactions must have both source and destination wallets")
                 
         super().save(*args, **kwargs)
+
+
+class Service(models.Model):
+    """Model for business services that can be offered to customers"""
+    
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    business = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='services',
+        limit_choices_to={'role': User.Role.BUSINESS}
+    )
+    
+    def __str__(self):
+        return f"{self.name} by {self.business.username}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only business users can create services
+        if not self.business.is_business:
+            raise ValueError("Only business users can create services")
+        super().save(*args, **kwargs)
+
+
+class Inquiry(models.Model):
+    """Model for customer inquiries about services"""
+    
+    class Status(models.TextChoices):
+        OPEN = 'OPEN', _('Open')
+        CLOSED = 'CLOSED', _('Closed')
+    
+    service = models.ForeignKey(
+        Service,
+        on_delete=models.CASCADE,
+        related_name='inquiries'
+    )
+    customer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='customer_inquiries'
+    )
+    moderator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='moderated_inquiries',
+        limit_choices_to={'role': User.Role.MODERATOR},
+        null=True
+    )
+    subject = models.CharField(max_length=100)
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.OPEN
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Inquiry about {self.service.name} by {self.customer.username}"
+    
+    def close(self, moderator):
+        """Close an inquiry - only moderators can do this"""
+        if not moderator.is_moderator:
+            raise ValueError("Only moderators can close inquiries")
+        self.status = self.Status.CLOSED
+        self.moderator = moderator
+        self.save(update_fields=['status', 'moderator', 'updated_at'])
+
+
+class InquiryMessage(models.Model):
+    """Model for messages within an inquiry"""
+    
+    inquiry = models.ForeignKey(
+        Inquiry,
+        on_delete=models.CASCADE,
+        related_name='messages'
+    )
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='sent_messages'
+    )
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Message in {self.inquiry} by {self.sender.username}"
+    
+    class Meta:
+        ordering = ['created_at']
