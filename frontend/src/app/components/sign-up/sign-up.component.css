@@ -1,0 +1,15 @@
+.signup-container {
+    background-color: #5EB8B0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden !important;
+    color: white;
+}
+
+@media (max-width: 1000px) {
+    .signup-form-parent {
+        height: 100%;
+    }
+}

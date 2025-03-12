@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ng-bootstrap demo - Table - Basic</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.css" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+</head>
+
+<body [class.login-page]="isLoginPage()">
+    <!--Bootstrap Docs: https://getbootstrap.com/docs/5.3/forms/form-control/-->
+    <!--Bootstrap Icons: https://icons.getbootstrap.com-->
+
+    <div class="container-fluid" style="background-color: #5EB8B0;">
+    <!--    Topbar-->
+        <app-topbar *ngIf="!isLoginPage()"></app-topbar>
+    </div>
+
+    <!-- Main content section -->
+    <div class="container-fluid mt-3">
+        <router-outlet></router-outlet>
+    </div>
+</body>
+
+</html>
+
+
+<!--        SideNave: START-->
+<!--    <div class="d-flex flex-column"> &lt;!&ndash; Space for the topbar &ndash;&gt;-->
+<!--        <div class="row flex-grow-1">-->
+<!--            &lt;!&ndash; Sidebar &ndash;&gt;-->
+<!--            <nav class="col-md-3 col-lg-2 bg-dark sidebar p-3">-->
+<!--                <h5 class="text-white">Menu</h5>-->
+<!--                <ul class="nav flex-column">-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link text-white" routerLink="/home" routerLinkActive="active">Home</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link text-white" routerLink="/about" routerLinkActive="active">About</a>-->
+<!--                    </li>-->
+<!--                </ul>-->
+<!--            </nav>-->
+
+<!--            &lt;!&ndash; Main Content &ndash;&gt;-->
+<!--            <main class="col-md-9 col-lg-10 ms-sm-auto px-4">-->
+<!--                <hr>-->
+<!--                <router-outlet />-->
+<!--                <hr>-->
+<!--            </main>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--        SideNave: END-->

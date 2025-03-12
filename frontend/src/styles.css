@@ -1,0 +1,18 @@
+/* You can add global styles to this file, and also import other style files */
+/* Apply restricted height & remove scrolling only for login page */
+body.login-page {
+    height: 100vh;
+    overflow: hidden;
+    background-color: #5EB8B0;
+}
+
+/*sweet alert if sign-up form is invalid*/
+.invalid-sign-up-form {
+    font-size: 15px;  /* Set your desired font size */
+    color: mediumvioletred;   /* Optionally, change the color */
+    font-weight: bold; /* Optionally, make it bold */
+}
+
+.no-icon {
+    display: none !important;
+}

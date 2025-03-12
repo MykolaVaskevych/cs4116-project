@@ -1,0 +1,92 @@
+.home-container-footer {
+    position: absolute; /* Position it at the bottom of the page */
+    left: 0;
+    width: 100%; /* Full width of the container */
+    height: 100px; /* Footer height */
+    background-color: #5EB8B0; /* Optional for visibility */
+    color: white;
+    text-align: center;
+    font-size: x-large;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0; /* Remove any margin */
+    padding: 0; /* Remove padding */
+}
+
+
+
+.home-container-header {
+    position: relative;
+    height: 100px;
+    width: 100vw; /* Full viewport width */
+    left: -50vw; /* Counteract container centering */
+    margin-left: 50%; /* Re-center */
+    margin-top: -16px; /* Adjust based on Bootstrap's `.mt-3` */
+    padding: 10px 0; /* Optional spacing */
+    text-align: center; /* Optional */
+    background-color: #56CCF2; /* Optional for visibility */
+
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: xxx-large;
+    font-weight: bold;
+}
+
+.container {
+
+}
+
+.adulting-101-banner {
+    cursor: pointer;
+    background-color: aliceblue;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: black;
+    font-size: 36px;
+    font-family: Arial, sans-serif;
+    text-align: center;
+
+    /* Used to keep it stick to the header on top of it */
+    position: relative;
+    height: 300px;
+    width: 100vw; /* Full viewport width */
+    left: -50vw; /* Counteract container centering */
+    margin-left: 50%; /* Re-center */
+    margin-top: -16px; /* Adjust based on Bootstrap's `.mt-3` */
+    padding: 10px 0; /* Optional spacing */
+}
+
+.square, .about-us-square {
+    cursor: pointer;
+    flex-grow: 1; /* Allow it to grow if needed */
+    height: 300px;
+    background-color: #D9D9D9;
+    color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0.2rem;
+    font-size: xxx-large;
+    font-weight: bold;
+    /*border-radius: 5px;*/
+}
+
+.about-us-square:nth-child(3) {
+    cursor: pointer;
+    flex-grow: 1; /* Allow it to grow if needed */
+    height: 100px;
+    background-color: #D9D9D9;
+    color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0.2rem;
+    font-size: xxx-large;
+    font-weight: bold;
+    /*border-radius: 5px;*/
+}

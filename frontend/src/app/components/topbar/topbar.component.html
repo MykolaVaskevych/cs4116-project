@@ -1,0 +1,55 @@
+<nav class="navbar navbar-expand-lg bg-body-tertiary" style="background-color: #5EB8B0; padding: unset">
+    <div class="container-fluid" style="background-color: #5EB8B0; padding: 0.0rem">
+        <a class="navbar-brand" href="#">
+            <span class="topbar-font-color" style="font-size: xx-large; font-weight: bold">Urban Life Hub</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <form class="d-flex" role="search">
+                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                <!--                    <button class="btn btn-outline-success" type="submit">Search</button>-->
+            </form>
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 topbar-ul">
+                <li class="nav-item">
+                    <a class="nav-link active topbar-font-color" aria-current="page" href="#">
+                        <i class="bi bi-house" style="font-size: 2rem; cursor: pointer"></i>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link topbar-font-color" style="font-size: x-large; font-weight: bold" href="/about">101</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active topbar-font-color" aria-current="page" href="#">
+                        <i class="bi bi-envelope" style="font-size: 2rem; cursor: pointer"></i>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active topbar-font-color" aria-current="page" href="#">
+                        <i class="bi bi-person-circle" style="font-size: 2rem; cursor: pointer"></i>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link active topbar-font-color" aria-current="page" href="/login">
+                        <i class="bi bi-key" style="font-size: 2rem; cursor: pointer"></i>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link active topbar-font-color" aria-current="page" href="/sign-up">
+                        <i class="bi bi-file-earmark-person" style="font-size: 2rem; cursor: pointer"></i>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link active topbar-font-color" aria-current="page" href="/login">
+                        <i class="bi bi-box-arrow-right" style="font-size: 2rem; cursor: pointer" (click)="logOut()" ngbTooltip="Log Out"></i>
+                    </a>
+                </li>
+            </ul>
+
+        </div>
+    </div>
+</nav>

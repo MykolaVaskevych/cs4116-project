@@ -1,0 +1,35 @@
+<span class="home-container">
+    <p class="home-container-header">Our Services</p>
+
+    <div class="container">
+        <div class="row d-flex flex-wrap">
+            <div *ngFor="let service of serviceList" [ngStyle]="{'flex-basis': '300px'}" class="square">
+                {{ service.title }}
+            </div>
+        </div>
+    </div>
+
+    <h1 style="visibility: hidden">HI</h1>
+
+    <p class="home-container-header">Adulting 101</p>
+    <div class="adulting-101-banner">
+        ADULTING 101
+    </div>
+
+    <h1 style="visibility: hidden">HI</h1>
+
+    <p class="home-container-header">About Us</p>
+    <div class="container">
+        <div class="row d-flex flex-wrap">
+            <div *ngFor="let aboutUs of aboutUsItems" [ngStyle]="{'flex-basis': aboutUs.size}" class="about-us-square">
+                {{ aboutUs.value }}
+            </div>
+        </div>
+    </div>
+
+    <h1 style="visibility: hidden">HI</h1>
+</span>
+
+<p class="home-container-footer">
+    <span><i class="bi bi-microsoft-teams"> Group 11</i>️</span>
+</p>

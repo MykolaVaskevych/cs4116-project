@@ -1,0 +1,52 @@
+<div class="d-flex justify-content-center align-items-center vh-100 signup-container" style="flex-direction: column">
+    <div class="p-4 signup-form-parent" style="width: 400px;">
+        <h1 class="text-center mb-3" style="font-weight: bold; font-size: xxx-large">Urban Life Hub</h1>
+        <h6 class="text-center mb-3" style="visibility: hidden">Login</h6>
+        <form autocomplete="off" [formGroup]="signUpForm">
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input
+                    type="text" id="username" name="randomUsername" class="form-control"
+                    formControlName="username"
+                    placeholder="Enter username" autocomplete="new-password"
+                    required readonly onfocus="this.removeAttribute('readonly')"
+                />
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" id="email" name="randomEmail" class="form-control"
+                       formControlName="email"
+                       placeholder="Enter your email"
+                       required readonly onfocus="this.removeAttribute('readonly')"
+                />
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" name="randomPassword" class="form-control"
+                       formControlName="password"
+                       placeholder="Choose your password"
+                       required readonly onfocus="this.removeAttribute('readonly')"
+                />
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Repeat Password</label>
+                <input type="password" id="repeat-password" name="repeatRandomPassword" class="form-control"
+                       formControlName="repeatPassword"
+                       placeholder="Repeat your password"
+                       required readonly onfocus="this.removeAttribute('readonly')"
+                />
+                <small *ngIf="signUpForm.hasError('passwordsNotMatching')" style="color: blue;">Passwords do not match</small>
+            </div>
+            <button class="btn btn-primary w-100 mb-3" (click)="signUpButton($event)">Register</button>
+            <p>Go to <a href="/login" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Login</a> page.</p>
+        </form>
+    </div>
+
+    <div *ngIf="invalidItems.length > 0" class="alert alert-danger" role="alert">
+        Missing Data: {{ invalidItems }}
+    </div>
+
+    <ul *ngIf="errorListAfterSignUp.length > 0" class="list-group">
+        <li *ngFor="let item of errorListAfterSignUp" class="list-group-item list-group-item-danger">{{item}}</li>
+    </ul>
+</div>

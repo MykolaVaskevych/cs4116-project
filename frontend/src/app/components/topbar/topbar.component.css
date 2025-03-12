@@ -1,0 +1,10 @@
+.topbar-font-color {
+    color: white !important;
+}
+
+.topbar-ul {
+    align-items: center;
+    justify-content: space-evenly;
+    flex-direction: row;
+}
+
