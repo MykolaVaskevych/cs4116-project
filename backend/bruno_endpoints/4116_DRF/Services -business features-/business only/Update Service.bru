@@ -1,0 +1,26 @@
+meta {
+  name: Update Service
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{host}}/api/services/1/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "name": "Updated name",
+    "description": "updated description"
+  }
+}
+
+docs {
+  to change service that you are working with, do not workget to change id in endpoint url
+}

@@ -1,0 +1,23 @@
+meta {
+  name: List Messages
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/api/messages/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  this endpoint gets all messages from current user.
+  its better to use "get inquiry Details" if you want to get messages from spesific inquiry.
+  
+  but if you really need it, filtering is present, so you can do like this:
+  GET /api/messages/?inquiry=1
+}

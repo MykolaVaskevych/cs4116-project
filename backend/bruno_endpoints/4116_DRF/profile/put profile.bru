@@ -1,0 +1,26 @@
+meta {
+  name: put profile
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{host}}/api/profile/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  
+  {
+    "username": "johndoe2025",
+    "first_name": "John",
+    "last_name": "Doe"
+  }
+  
+  // role is optional
+}

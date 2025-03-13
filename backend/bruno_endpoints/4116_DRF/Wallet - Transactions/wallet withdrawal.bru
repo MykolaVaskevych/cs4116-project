@@ -1,0 +1,21 @@
+meta {
+  name: wallet withdrawal
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/api/wallet/withdraw/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "amount" : 100
+  }
+}

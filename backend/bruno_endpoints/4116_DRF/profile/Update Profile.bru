@@ -1,0 +1,24 @@
+meta {
+  name: Update Profile
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{host}}/api/profile/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+      "username": "new_username",
+      "first_name": "Updated",
+      "last_name": "Name",
+      "role": "BUSINESS"
+    }
+}

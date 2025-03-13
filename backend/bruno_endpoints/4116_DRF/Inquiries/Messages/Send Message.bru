@@ -1,0 +1,22 @@
+meta {
+  name: Send Message
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/api/messages/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "inquiry": 1,
+    "content": "This is my message content"
+  }
+}

@@ -1,0 +1,15 @@
+meta {
+  name: List Inquiries
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/api/inquiries/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}

@@ -1,0 +1,23 @@
+meta {
+  name: Create Inquiry -Customer-
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/api/inquiries/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "service": 1,
+    "subject": "Inquiry about web development",
+        "initial_message": "Hello, I'm interested in your web development service and would like to know more details."
+  }
+}

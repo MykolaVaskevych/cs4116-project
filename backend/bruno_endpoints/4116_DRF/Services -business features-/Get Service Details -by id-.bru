@@ -1,0 +1,25 @@
+meta {
+  name: Get Service Details -by id-
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{host}}/api/services/1
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  to get service you need to know its id.
+  
+  then just change "1" in enpoint to id that you need:
+  examples:
+  1. {{host}}/api/services/1
+  2. {{host}}/api/services/2
+  
+}

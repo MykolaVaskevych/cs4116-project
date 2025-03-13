@@ -1,0 +1,22 @@
+meta {
+  name: login -USER-
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{host}}/api/login/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "example@gmail.com",
+    "password": "Nnick!123"
+  }
+}
+
+script:post-response {
+  bru.setVar("token", res.body.access);
+}

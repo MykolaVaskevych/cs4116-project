@@ -1,0 +1,23 @@
+meta {
+  name: Create Service
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/api/services/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "name": "Service 1",
+    "description": "This service created by bruno"
+  
+  }
+}

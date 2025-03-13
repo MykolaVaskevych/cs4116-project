@@ -1,0 +1,33 @@
+meta {
+  name: register -USER-
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{host}}/api/register/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "example@gmail.com",
+    "username": "Nick12345",
+    "password": "Nnick!123",
+    "first_name": "Nick",
+    "last_name": "Vaskevych",
+    "role": "CUSTOMER" // optional, def: CUSTOMER
+  }
+}
+
+body:multipart-form {
+  : 
+  : 
+  : 
+  : 
+}
+
+script:post-response {
+  bru.setVar("token", res.body.access);
+}

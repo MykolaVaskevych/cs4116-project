@@ -1,0 +1,22 @@
+meta {
+  name: wallet transfer
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{host}}/api/wallet/transfer/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "amount" : 100,
+    "recipient_email" : "example@gmail.com"
+  }
+}
