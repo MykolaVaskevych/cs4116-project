@@ -40,6 +40,15 @@ ALLOWED_HOSTS.extend([
 # Remove None values
 ALLOWED_HOSTS = [host for host in ALLOWED_HOSTS if host]
 
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.up.railway.app',
+    'https://*.railway.app',
+    'https://cs4116-project-production.up.railway.app',
+]
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
 
 # Application definition
 

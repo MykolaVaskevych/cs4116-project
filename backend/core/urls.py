@@ -20,10 +20,15 @@ from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.views import LoginView
 
 # Simple health check for Railway deployment
 def health_check(request):
     return HttpResponse("OK")
+
+# Create a custom admin login view with CSRF exemption for Railway deployment
+admin.site.login = csrf_exempt(admin.site.login)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
