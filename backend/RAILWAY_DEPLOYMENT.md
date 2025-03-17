@@ -13,7 +13,7 @@ The Dockerfile uses the `RAILWAY_SERVICE_ID` environment variable that Railway a
 
 ```dockerfile
 # Format used for cache mounts
---mount=type=cache,id=s/${RAILWAY_SERVICE_ID}-/root/.cache/uv,target=/root/.cache/uv
+--mount=type=cache,id=python-deps-${RAILWAY_SERVICE_ID},target=/root/.cache/uv
 ```
 
 No manual changes to the Dockerfile are needed as Railway automatically injects the `RAILWAY_SERVICE_ID` variable during build.

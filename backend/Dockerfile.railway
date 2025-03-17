@@ -28,11 +28,11 @@ ENV PATH="/project/.venv/bin:$PATH"
 ARG RAILWAY_SERVICE_ID
 
 # Install dependencies using uv sync
-RUN --mount=type=cache,id=s/${RAILWAY_SERVICE_ID}-/root/.cache/uv,target=/root/.cache/uv \
+RUN --mount=type=cache,id=python-deps-${RAILWAY_SERVICE_ID},target=/root/.cache/uv \
     uv sync --frozen
 
 # Install gunicorn for production
-RUN --mount=type=cache,id=s/${RAILWAY_SERVICE_ID}-/root/.cache/uv,target=/root/.cache/uv \
+RUN --mount=type=cache,id=python-deps-${RAILWAY_SERVICE_ID},target=/root/.cache/uv \
     uv pip install gunicorn
 
 # Copy backend project files
