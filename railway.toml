@@ -14,3 +14,6 @@ port = 8000
 DJANGO_ENV = "production"
 DJANGO_SECRET_KEY = "MGgX9a8un0KMRrDCb02hnwWCIwi+D01Gb1tSfTkQCf8="
 ALLOWED_HOSTS = "*.up.railway.app"
+DJANGO_SUPERUSER_USERNAME = "admin"
+DJANGO_SUPERUSER_EMAIL = "admin@example.com"
+DJANGO_SUPERUSER_PASSWORD = "UrbanLife2025!"
