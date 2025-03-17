@@ -8,15 +8,8 @@
   2. Backend (Django) - being deployed now
   3. Frontend - will be deployed later
 
-## Important Note for Deployment
-The Dockerfile uses the `RAILWAY_SERVICE_ID` environment variable that Railway automatically provides during the build process. This is used to create properly formatted cache mounts according to Railway's specifications:
-
-```dockerfile
-# Format used for cache mounts
---mount=type=cache,id=python-deps-${RAILWAY_SERVICE_ID},target=/root/.cache/uv
-```
-
-No manual changes to the Dockerfile are needed as Railway automatically injects the `RAILWAY_SERVICE_ID` variable during build.
+## Deployment Notes
+The Dockerfile is optimized for Railway deployment and handles all necessary dependencies. Cache mounts have been removed to simplify deployment and avoid potential build issues.
 
 ## Files Created/Modified for Railway Deployment
 

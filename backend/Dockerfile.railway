@@ -24,16 +24,11 @@ COPY pyproject.toml uv.lock ./
 RUN uv venv /project/.venv
 ENV PATH="/project/.venv/bin:$PATH"
 
-# Get service ID from build arg
-ARG RAILWAY_SERVICE_ID
-
 # Install dependencies using uv sync
-RUN --mount=type=cache,id=python-deps-${RAILWAY_SERVICE_ID},target=/root/.cache/uv \
-    uv sync --frozen
+RUN uv sync --frozen
 
 # Install gunicorn for production
-RUN --mount=type=cache,id=python-deps-${RAILWAY_SERVICE_ID},target=/root/.cache/uv \
-    uv pip install gunicorn
+RUN uv pip install gunicorn
 
 # Copy backend project files
 WORKDIR /app
