@@ -1,16 +1,16 @@
 # accounts/views.py
-from rest_framework import status, permissions, viewsets
+from rest_framework import status, permissions, viewsets, generics
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model, authenticate
 from django.db.models import Q
-from .models import Wallet, Transaction, Service, Inquiry, InquiryMessage
+from .models import Wallet, Transaction, Service, Inquiry, InquiryMessage, Review
 from .serializers import (
-    UserSerializer, UserProfileSerializer, WalletSerializer, 
-    TransactionSerializer, DepositSerializer, WithdrawSerializer, 
+    UserSerializer, UserProfileSerializer, WalletSerializer,
+    TransactionSerializer, DepositSerializer, WithdrawSerializer,
     TransferSerializer, ServiceSerializer, InquirySerializer,
-    InquiryMessageSerializer, InquiryCreateSerializer
+    InquiryMessageSerializer, InquiryCreateSerializer, ReviewSerializer
 )
 
 User = get_user_model()
@@ -390,3 +390,29 @@ class InquiryMessageViewSet(viewsets.ModelViewSet):
         if message.inquiry.status != Inquiry.Status.OPEN:
             raise serializers.ValidationError("Cannot update messages in a closed inquiry")
         serializer.save()
+
+class ReviewListCreateView(generics.ListCreateAPIView):
+    """
+    View to list all reviews or create a new one.
+    """
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+
+    def create(self, request, *args, **kwargs):
+        """
+        Custom create method to handle logic from the serializer's validation.
+        """
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    View to retrieve, update, or delete a review.
+    """
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer

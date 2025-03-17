@@ -1,6 +1,9 @@
+from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models, transaction
 from django.contrib.auth.models import AbstractUser, UserManager as DjangoUserManager
 from django.contrib.auth.hashers import make_password
+from django.db.models import DO_NOTHING
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 import uuid
@@ -253,6 +256,7 @@ class Service(models.Model):
         related_name='services',
         limit_choices_to={'role': User.Role.BUSINESS}
     )
+
     
     def __str__(self):
         return f"{self.name} by {self.business.username}"
@@ -330,3 +334,41 @@ class InquiryMessage(models.Model):
     
     class Meta:
         ordering = ['created_at']
+
+class Review(models.Model):
+    """Model for reviews based on a service"""
+
+    #each review has an id that is automatically incremented
+    review_id = models.AutoField(primary_key=True)
+    #if service is deleted its reviews will be also
+    service_id = models.ForeignKey(
+        Service,
+        on_delete=models.CASCADE,
+    )
+    #dont delete review even if user was deleted
+    user_id = models.ForeignKey(
+        User,
+        related_name='reviews',
+        on_delete=DO_NOTHING
+    )
+    #reviews can be rated 0-5 stars
+    rating = models.PositiveSmallIntegerField(
+        validators=[
+            MinValueValidator(0),
+            MaxValueValidator(5)
+        ]
+    )
+    #comments can be added optionally if the user wants
+    comment = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        """Enforce inquiry status check before saving"""
+        inquiry = Inquiry.objects.filter(user=self.user_id, service=self.service_id).first()
+
+        if not inquiry or inquiry.status != Inquiry.Status.CLOSED:
+            raise ValueError("You can only leave an inquiry review if it's status is closed")
+
+        super().save(*args, **kwargs)
+

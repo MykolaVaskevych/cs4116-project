@@ -1,7 +1,7 @@
 # accounts/serializers.py
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Wallet, Transaction, Service, Inquiry, InquiryMessage
+from .models import Wallet, Transaction, Service, Inquiry, InquiryMessage, Review
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
@@ -262,3 +262,26 @@ class InquiryCreateSerializer(serializers.ModelSerializer):
         )
         
         return inquiry
+
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = [
+            'review_id', 'service_id', 'user_id', 'rating', 'comment', 'created_at'
+        ]
+        read_only_fields = ['review_id', 'created_at']
+
+    def validate(self, data):
+        """Custom validation ensuring that inquiry exists and it's status is set to closed"""
+        inquiry = Inquiry.objects.filter(
+            user=data['user'],
+            service=data['service_id']
+        ).first()
+
+        if not inquiry or inquiry.status != Inquiry.Status.CLOSED:
+            raise serializers.ValidationError("Can only review an inquiry if the status is closed")
+        return data
+
+    def create(self, validated_data):
+        """custom create method for handling instance creatation"""
+        return Review.objects.create(**validated_data)

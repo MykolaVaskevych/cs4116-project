@@ -4,6 +4,7 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenVerifyView, TokenRefreshView
 from rest_framework.routers import DefaultRouter
 from . import views
+from .views import ReviewListCreateView, ReviewDetailView
 
 # Create a router for viewsets
 router = DefaultRouter()
@@ -31,6 +32,10 @@ urlpatterns = [
     
     # Transactions endpoints
     path('transactions/', views.transaction_list, name='transactions'),
+
+    #reviews endpoints
+    path('reviews/', ReviewListCreateView.as_view(), name='review-list-create'),
+    path('reviews/<int:pk>/', ReviewDetailView.as_view(), name='review-detail'),
     
     # Include routers for the new viewsets
     path('', include(router.urls)),
