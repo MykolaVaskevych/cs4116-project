@@ -9,7 +9,13 @@
   3. Frontend - will be deployed later
 
 ## Deployment Notes
-The Dockerfile is optimized for Railway deployment and handles all necessary dependencies. Cache mounts have been removed to simplify deployment and avoid potential build issues.
+The Dockerfile is optimized for Railway deployment and handles all necessary dependencies. Health checks have been disabled to improve deployment reliability.
+
+### Important Configuration
+- The service runs on port 8000
+- Health checks are disabled to avoid intermittent failures
+- DATABASE_URL must be set to connect to the MySQL database
+- Django environment variables (DJANGO_ENV, DJANGO_SECRET_KEY, ALLOWED_HOSTS) are set in railway.toml
 
 ## Files Created/Modified for Railway Deployment
 

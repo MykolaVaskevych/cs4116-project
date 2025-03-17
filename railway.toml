@@ -4,8 +4,9 @@ dockerfilePath = "backend/Dockerfile.railway"
 
 [deploy]
 startCommand = "gunicorn --bind 0.0.0.0:8000 core.wsgi:application"
-# Disable health checks for now
-healthcheck = false
+# Re-enable health checks
+healthcheckPath = "/api/health/"
+healthcheckTimeout = 30
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
 port = 8000
