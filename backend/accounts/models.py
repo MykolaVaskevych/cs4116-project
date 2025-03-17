@@ -6,7 +6,58 @@ from django.contrib.auth.hashers import make_password
 from django.db.models import DO_NOTHING
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
+from PIL import Image
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
 import uuid
+import sys
+import os
+
+def resize_image(image_field, size=(512, 512)):
+    """
+    Resizes an image to the specified size and standardizes the format.
+    Used for profile images and service logos.
+    
+    Args:
+        image_field: The image field to resize
+        size: Tuple of (width, height) for the output image
+        
+    Returns:
+        The resized image as an InMemoryUploadedFile
+    """
+    if not image_field:
+        return None
+        
+    img = Image.open(image_field)
+    
+    # Convert to RGB if image is RGBA (has transparency)
+    if img.mode == 'RGBA':
+        img = img.convert('RGB')
+    
+    # Resize the image while maintaining aspect ratio
+    img.thumbnail(size, Image.LANCZOS)
+    
+    # If the image is not square, create a square image with white background
+    if img.size[0] != img.size[1]:
+        background = Image.new('RGB', size, (255, 255, 255))
+        offset = ((size[0] - img.size[0]) // 2, (size[1] - img.size[1]) // 2)
+        background.paste(img, offset)
+        img = background
+    
+    # Save the image to a BytesIO object
+    output = BytesIO()
+    img.save(output, format='JPEG', quality=90)
+    output.seek(0)
+    
+    # Create a new Django image object
+    return InMemoryUploadedFile(
+        output,
+        'ImageField',
+        f"{os.path.splitext(image_field.name)[0]}.jpg",
+        'image/jpeg',
+        sys.getsizeof(output),
+        None
+    )
 
 class UserManager(DjangoUserManager):
     """Custom user manager that handles wallet creation"""
@@ -79,6 +130,20 @@ class User(AbstractUser):
         default=Role.CUSTOMER,
     )
     
+    # Profile image
+    profile_image = models.ImageField(
+        upload_to='profile_images/',
+        null=True,
+        blank=True,
+        help_text="User's profile avatar (512x512)"
+    )
+    
+    # Optional biography
+    bio = models.TextField(
+        blank=True,
+        help_text="User's biography or description"
+    )
+    
     # Use our custom manager that handles wallet creation
     objects = UserManager()
     
@@ -96,6 +161,15 @@ class User(AbstractUser):
     @property
     def is_moderator(self):
         return self.role == self.Role.MODERATOR
+        
+    def save(self, *args, **kwargs):
+        """Override save method to resize profile image"""
+        if self.profile_image:
+            # Check if this is a new image or it has been changed
+            if not self.pk or User.objects.get(pk=self.pk).profile_image != self.profile_image:
+                self.profile_image = resize_image(self.profile_image)
+        
+        super().save(*args, **kwargs)
 
 
 class Wallet(models.Model):
@@ -243,11 +317,42 @@ class Transaction(models.Model):
         super().save(*args, **kwargs)
 
 
+class Category(models.Model):
+    """
+    Model for service categories.
+    These are high-level groupings of services.
+    """
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name_plural = "Categories"
+        ordering = ['name']
+
+
 class Service(models.Model):
     """Model for business services that can be offered to customers"""
     
     name = models.CharField(max_length=100)
     description = models.TextField()
+    logo = models.ImageField(
+        upload_to='service_logos/', 
+        null=True, 
+        blank=True,
+        help_text="Service logo image (512x512)"
+    )
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        related_name='services',
+        null=True,
+        blank=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     business = models.ForeignKey(
@@ -256,7 +361,6 @@ class Service(models.Model):
         related_name='services',
         limit_choices_to={'role': User.Role.BUSINESS}
     )
-
     
     def __str__(self):
         return f"{self.name} by {self.business.username}"
@@ -265,6 +369,13 @@ class Service(models.Model):
         # Ensure only business users can create services
         if not self.business.is_business:
             raise ValueError("Only business users can create services")
+            
+        # Resize logo if it exists and has changed
+        if self.logo:
+            if not self.pk or (Service.objects.filter(pk=self.pk).exists() and 
+                              Service.objects.get(pk=self.pk).logo != self.logo):
+                self.logo = resize_image(self.logo)
+                
         super().save(*args, **kwargs)
 
 

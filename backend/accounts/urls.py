@@ -11,8 +11,9 @@ from .views import (
 
 # Create a router for viewsets
 router = DefaultRouter()
-router.register(r'services', views.ServiceViewSet)
-router.register(r'inquiries', views.InquiryViewSet)
+router.register(r'services', views.ServiceViewSet, basename='service')
+router.register(r'categories', views.CategoryViewSet, basename='category')
+router.register(r'inquiries', views.InquiryViewSet, basename='inquiry')
 router.register(r'messages', views.InquiryMessageViewSet, basename='inquiry-messages')
 
 app_name = 'accounts'

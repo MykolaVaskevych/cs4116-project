@@ -1,7 +1,10 @@
 # accounts/serializers.py
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Wallet, Transaction, Service, Inquiry, InquiryMessage, Review, ReviewComment
+from .models import (
+    Wallet, Transaction, Service, Inquiry, InquiryMessage,
+    Review, ReviewComment, Category
+)
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
@@ -12,10 +15,23 @@ class UserSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ["id", "email", "username", "password", "first_name", "last_name", "role", "role_display"]
+        fields = [
+            "id", 
+            "email", 
+            "username", 
+            "password", 
+            "first_name", 
+            "last_name", 
+            "role", 
+            "role_display",
+            "profile_image",
+            "bio"
+        ]
         extra_kwargs = {
             "password": {"write_only": True},
             "username": {"required": False},
+            "profile_image": {"required": False},
+            "bio": {"required": False},
         }
 
     def create(self, validated_data):
@@ -44,6 +60,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "role_display",
             "is_business",
             "is_moderator",
+            "profile_image",
+            "bio",
             "date_joined",
             "last_login",
         ]
@@ -53,6 +71,21 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "first_name": {"required": True},
             "last_name": {"required": True},
         }
+        
+    def update(self, instance, validated_data):
+        """Handle profile image updates properly"""
+        # Pop profile_image if it exists to handle it specially
+        profile_image = validated_data.pop('profile_image', None)
+        
+        # If profile_image is None, and it's explicitly included in validated_data,
+        # that means the user wants to remove their profile image
+        if profile_image is None and 'profile_image' in self.initial_data:
+            instance.profile_image = None
+        elif profile_image:
+            instance.profile_image = profile_image
+            
+        # Update the rest of the fields normally
+        return super().update(instance, validated_data)
         
     def validate(self, data):
         # Role changes should be restricted
@@ -149,8 +182,25 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = "email"
 
 
+class CategorySerializer(serializers.ModelSerializer):
+    """Serializer for the Category model"""
+    
+    class Meta:
+        model = Category
+        fields = [
+            "id",
+            "name",
+            "description",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["created_at", "updated_at"]
+
+
 class ServiceSerializer(serializers.ModelSerializer):
     business_name = serializers.CharField(source='business.username', read_only=True)
+    business_image = serializers.ImageField(source='business.profile_image', read_only=True)
+    category_name = serializers.CharField(source='category.name', read_only=True)
     
     class Meta:
         model = Service
@@ -158,8 +208,12 @@ class ServiceSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "description",
+            "logo",
+            "category",
+            "category_name",
             "business",
             "business_name",
+            "business_image",
             "created_at",
             "updated_at",
         ]
@@ -172,6 +226,21 @@ class ServiceSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Only business users can create services")
         validated_data['business'] = user
         return super().create(validated_data)
+        
+    def update(self, instance, validated_data):
+        """Handle logo updates properly"""
+        # Pop logo if it exists to handle it specially
+        logo = validated_data.pop('logo', None)
+        
+        # If logo is None, and it's explicitly included in validated_data,
+        # that means the user wants to remove their logo
+        if logo is None and 'logo' in self.initial_data:
+            instance.logo = None
+        elif logo:
+            instance.logo = logo
+            
+        # Update the rest of the fields normally
+        return super().update(instance, validated_data)
 
 
 class InquiryMessageSerializer(serializers.ModelSerializer):

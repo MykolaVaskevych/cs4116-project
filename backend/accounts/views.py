@@ -1,17 +1,18 @@
 # accounts/views.py
-from rest_framework import status, permissions, viewsets, generics
+from rest_framework import status, permissions, viewsets, generics, filters
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model, authenticate
 from django.db.models import Q
-from .models import Wallet, Transaction, Service, Inquiry, InquiryMessage, Review, ReviewComment
+from django_filters.rest_framework import DjangoFilterBackend
+from .models import Wallet, Transaction, Service, Inquiry, InquiryMessage, Review, ReviewComment, Category
 from .serializers import (
     UserSerializer, UserProfileSerializer, WalletSerializer,
     TransactionSerializer, DepositSerializer, WithdrawSerializer,
     TransferSerializer, ServiceSerializer, InquirySerializer,
     InquiryMessageSerializer, InquiryCreateSerializer, 
-    ReviewSerializer, ReviewCommentSerializer
+    ReviewSerializer, ReviewCommentSerializer, CategorySerializer
 )
 
 User = get_user_model()
@@ -131,7 +132,9 @@ def user_profile(request):
         
     elif request.method in ['PUT', 'PATCH']:
         partial = request.method == 'PATCH'
+        # Handle file uploads - no need for 'files' argument, DRF handles this automatically
         serializer = UserProfileSerializer(user, data=request.data, partial=partial)
+            
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -239,6 +242,27 @@ def transaction_list(request):
     return Response(serializer.data)
 
 
+class CategoryViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for viewing and managing service categories.
+    """
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        - Create/Update/Delete: Only moderators 
+        - List/Retrieve: Any authenticated user
+        """
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            permission_classes = [IsModeratorUser]
+        else:
+            permission_classes = [permissions.IsAuthenticated]
+        return [permission() for permission in permission_classes]
+
+
 class ServiceViewSet(viewsets.ModelViewSet):
     """
     ViewSet for viewing and creating services.
@@ -246,6 +270,11 @@ class ServiceViewSet(viewsets.ModelViewSet):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['category']
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'created_at']
+    ordering = ['-created_at']  # Default ordering
     
     def get_permissions(self):
         """
@@ -260,12 +289,18 @@ class ServiceViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """
         Optionally restricts the returned services to those owned by the current business user.
+        Also supports filtering by category.
         """
         queryset = Service.objects.all()
         
         # If a business user is viewing their services, filter the queryset
         if self.request.user.is_business and self.request.query_params.get('my_services', False):
             queryset = queryset.filter(business=self.request.user)
+            
+        # Filter by category
+        category_id = self.request.query_params.get('category')
+        if category_id:
+            queryset = queryset.filter(category_id=category_id)
             
         return queryset
     
