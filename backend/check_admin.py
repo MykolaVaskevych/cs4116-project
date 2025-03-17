@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 """
-Script to check and create admin user
+Script to force creation of admin user with proper login credentials
 """
 import os
 import django
+from django.db import transaction
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 django.setup()
@@ -11,31 +12,42 @@ django.setup()
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
-# Default credentials (same as in railway.toml)
+# Admin credentials
 username = 'admin'
-email = 'admin@example.com'  # This is the login field
+email = 'admin@example.com'  # LOGIN FIELD - use this to log in
 password = 'UrbanLife2025!'
 
-# Check if user exists by email (since email is the USERNAME_FIELD)
-if User.objects.filter(email=email).exists():
-    user = User.objects.get(email=email)
-    print(f"Admin user exists with email: {user.email}")
-    print(f"Username: {user.username}")
-    print(f"Is superuser: {user.is_superuser}")
-    print(f"Is staff: {user.is_staff}")
-    # Reset password
-    user.set_password(password)
+# Force recreation regardless of whether user exists
+with transaction.atomic():
+    # Delete any existing admin users with this email to avoid conflicts
+    if User.objects.filter(email=email).exists():
+        user = User.objects.get(email=email)
+        print(f"Removing existing admin user: {email}")
+        user.delete()
+    
+    # Create a completely fresh superuser
+    user = User.objects.create_user(
+        username=username,
+        email=email,
+        password=password,
+    )
+    
+    # Make sure it has admin rights
+    user.is_staff = True
+    user.is_superuser = True
+    user.role = User.Role.MODERATOR
     user.save()
-    print(f"Password has been reset to: {password}")
-else:
-    # Create user - note the order of parameters (email is the USERNAME_FIELD)
-    user = User.objects.create_superuser(email=email, username=username, password=password)
-    print(f"Created new admin user with:")
-    print(f"Email: {email} (use this to log in)")
+    
+    print(f"\n✅ ADMIN USER CREATED SUCCESSFULLY")
+    print(f"------------------------------")
+    print(f"Email: {email}")
     print(f"Username: {username}")
     print(f"Password: {password}")
+    print(f"Is staff: {user.is_staff}")
+    print(f"Is superuser: {user.is_superuser}")
+    print(f"Role: {user.role}")
 
-print("\n*** IMPORTANT: LOG IN WITH EMAIL NOT USERNAME ***")
+print("\n🔴 IMPORTANT: LOG IN WITH EMAIL NOT USERNAME 🔴")
 print(f"Email: {email}")
 print(f"Password: {password}")
 print("Login URL: /admin/")
