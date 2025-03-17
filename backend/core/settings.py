@@ -26,7 +26,19 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-8@kk09iqpcc^lp
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_ENV", "development") != "production"
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+# Parse ALLOWED_HOSTS from environment or use defaults
+allowed_hosts_str = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1")
+ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_str.split(",")]
+
+# Add railway domains
+ALLOWED_HOSTS.extend([
+    'railway.app',
+    'up.railway.app',
+    # Add a fallback setting to accept all hosts in production (can be removed later for security)
+    '*' if os.environ.get("DJANGO_ENV") == "production" else None,
+])
+# Remove None values
+ALLOWED_HOSTS = [host for host in ALLOWED_HOSTS if host]
 
 
 # Application definition
@@ -184,3 +196,25 @@ REST_FRAMEWORK = {
 }
 
 AUTH_USER_MODEL = "accounts.User"
+
+# Configure logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
