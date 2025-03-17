@@ -19,10 +19,16 @@ from django.contrib import admin
 from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import HttpResponse
+
+# Simple health check for Railway deployment
+def health_check(request):
+    return HttpResponse("OK")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("accounts.urls", namespace="accounts")),
+    path("api/health/", health_check, name="health_check"),
 ]
 
 # Serve media files in development

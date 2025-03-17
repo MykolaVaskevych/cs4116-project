@@ -19,6 +19,78 @@ A web application that enables customers to browse business services, request in
 
 ## Backend Setup
 
+### Docker Setup (Recommended)
+
+This project includes Docker support for easy local development and deployment to Railway.
+
+#### Local Development with Docker
+
+1. Make sure you have Docker and Docker Compose installed on your machine.
+
+2. Build and start the containers:
+   ```bash
+   docker-compose up --build
+   ```
+
+3. The backend will be available at http://localhost:8000
+
+4. Docker automatically:
+   - Sets up the MySQL database
+   - Applies migrations
+   - Creates a superuser (admin@example.com / admin123)
+   - Starts the Django development server
+
+#### Deploying to Railway
+
+For Railway deployment, this project is configured to connect to an existing MySQL instance.
+
+1. In your Railway project, make sure you have set up the MySQL database service.
+
+2. Ensure the following variables are set in your Railway project:
+   - `MYSQL_URL`: The MySQL connection URL (automatically connected to your MySQL service)
+   - `DJANGO_SECRET_KEY`: A secure secret key for Django
+   - `DJANGO_ENV`: Set to "production"
+   - `ALLOWED_HOSTS`: Comma-separated list of allowed hosts
+
+3. Deploy using the docker-compose.prod.yml file:
+   ```bash
+   railway up --detach
+   ```
+
+#### Docker Commands Reference
+
+- Start containers in development mode:
+  ```bash
+  docker-compose up
+  ```
+
+- Start containers in background:
+  ```bash
+  docker-compose up -d
+  ```
+
+- Stop containers:
+  ```bash
+  docker-compose down
+  ```
+
+- View logs:
+  ```bash
+  docker-compose logs -f
+  ```
+
+- Run migrations:
+  ```bash
+  docker-compose exec backend python manage.py migrate
+  ```
+
+- Create a superuser:
+  ```bash
+  docker-compose exec backend python manage.py createsuperuser
+  ```
+
+### Manual Setup
+
 ### Prerequisites
 
 - Python 3.9+ 
