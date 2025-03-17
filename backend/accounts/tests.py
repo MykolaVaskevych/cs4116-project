@@ -148,8 +148,8 @@ class ReviewAPITestCase(APITestCase):
         self.moderator_client = APIClient()
         self.moderator_client.force_authenticate(user=self.moderator)
         
-        # URLs
-        self.reviews_url = reverse('accounts:review-list-create')
+        # URLs - updated to use service-review-create instead of review-list-create
+        self.reviews_url = reverse('accounts:service-review-create', args=[self.service.id])
     
     def test_customer_cannot_review_with_open_inquiry(self):
         """Test that a customer can't create a review for an open inquiry"""
@@ -326,7 +326,6 @@ class ReviewAPITestCase(APITestCase):
         self.inquiry.close(self.moderator)
         
         data = {
-            'service': self.service.id,
             'rating': 5,
             'comment': 'Great service!'
         }
@@ -348,17 +347,19 @@ class ReviewAPITestCase(APITestCase):
         
         another_inquiry.close(self.moderator)
         
+        # Create a URL for the second service
+        another_service_reviews_url = reverse('accounts:service-review-create', args=[another_service.id])
+        
         another_data = {
-            'service': another_service.id,
             'rating': 3,
             'comment': 'Okay service'
         }
         
-        self.customer_client.post(self.reviews_url, another_data, format='json')
+        self.customer_client.post(another_service_reviews_url, another_data, format='json')
         
         # Get reviews filtered by service
-        filter_url = f"{self.reviews_url}?service_id={self.service.id}"
-        response = self.customer_client.get(filter_url)
+        service_reviews_list_url = reverse('accounts:service-reviews-list', args=[self.service.id])
+        response = self.customer_client.get(service_reviews_list_url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
@@ -449,7 +450,7 @@ class CompleteWorkflowTestCase(APITestCase):
         # Use the actual router pattern for viewsets
         self.services_url = '/api/services/'
         self.inquiries_url = '/api/inquiries/'
-        self.reviews_url = reverse('accounts:review-list-create')
+        # We'll set the reviews_url after creating the service in the test
     
     def test_complete_workflow(self):
         """Test complete workflow from registration to review"""
@@ -529,6 +530,9 @@ class CompleteWorkflowTestCase(APITestCase):
         self.assertEqual(service_response.status_code, status.HTTP_201_CREATED)
         service_id = service_response.data['id']
         
+        # Now we can set the reviews URL with the service ID
+        self.reviews_url = reverse('accounts:service-review-create', args=[service_id])
+        
         # 4. Customer creates an inquiry
         inquiry_data = {
             'service': service_id,
@@ -545,7 +549,6 @@ class CompleteWorkflowTestCase(APITestCase):
         
         # 5. Customer can't review yet (inquiry is open)
         review_data = {
-            'service': service_id,
             'rating': 5,
             'comment': 'Great service!'
         }
@@ -566,7 +569,7 @@ class CompleteWorkflowTestCase(APITestCase):
         self.assertEqual(review_response.data['comment'], 'Great service!')
         
         # 8. Business can see the review
-        service_reviews_url = f"{self.reviews_url}?service_id={service_id}"
+        service_reviews_url = reverse('accounts:service-reviews-list', args=[service_id])
         reviews_response = self.business_client.get(service_reviews_url)
         self.assertEqual(reviews_response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(reviews_response.data), 1)
