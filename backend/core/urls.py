@@ -92,6 +92,129 @@ def direct_login(request):
             })
 
 @csrf_exempt
+def admin_debug(request):
+    """Full diagnostic endpoint for admin login issues"""
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    
+    # Admin credentials
+    username = 'admin'
+    email = 'admin@example.com'
+    password = 'UrbanLife2025!'
+    
+    # Find all staff users
+    staff_users = User.objects.filter(is_staff=True)
+    admin_users = User.objects.filter(is_superuser=True)
+    admin_email_user = User.objects.filter(email=email).first()
+    
+    # Create admin user if requested
+    if request.method == 'POST' and request.POST.get('action') == 'create_admin':
+        try:
+            # Delete any existing admin users with this email
+            if User.objects.filter(email=email).exists():
+                existing_user = User.objects.get(email=email)
+                existing_user.delete()
+            
+            # Create a fresh admin user
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+            )
+            
+            # Make sure it has admin rights
+            user.is_staff = True
+            user.is_superuser = True
+            user.role = User.Role.MODERATOR
+            user.save()
+            
+            created_message = f"Admin user created: {email}"
+        except Exception as e:
+            created_message = f"Error creating admin: {str(e)}"
+    else:
+        created_message = "POST with action=create_admin to create admin user"
+        
+    # Try to authenticate
+    test_user = authenticate(request, username=email, password=password)
+    auth_successful = test_user is not None
+    
+    if auth_successful and request.POST.get('action') == 'login':
+        login(request, test_user)
+        return redirect('/admin/')
+    
+    # Format user info for display
+    staff_user_info = [{
+        'username': u.username,
+        'email': u.email,
+        'is_active': u.is_active,
+        'is_staff': u.is_staff,
+        'is_superuser': u.is_superuser
+    } for u in staff_users]
+    
+    # Response as HTML for easier viewing
+    html_response = f"""
+    <html>
+        <head>
+            <title>Django Admin Debug</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 20px; }}
+                table {{ border-collapse: collapse; width: 100%; }}
+                th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+                th {{ background-color: #f2f2f2; }}
+                tr:nth-child(even) {{ background-color: #f9f9f9; }}
+                .success {{ color: green; }}
+                .error {{ color: red; }}
+                .actions {{ margin-top: 20px; }}
+                form {{ margin-bottom: 10px; }}
+            </style>
+        </head>
+        <body>
+            <h1>Django Admin Debug</h1>
+            
+            <h2>Authentication Test</h2>
+            <p class="{('success' if auth_successful else 'error')}">
+                Authentication with email='{email}', password='{password}': 
+                {('SUCCESS' if auth_successful else 'FAILED')}
+            </p>
+            
+            <h2>Admin User Creation</h2>
+            <p>{created_message}</p>
+            
+            <h2>Staff Users ({len(staff_users)})</h2>
+            <table>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Active</th>
+                    <th>Staff</th>
+                    <th>Superuser</th>
+                </tr>
+                {''.join([f"<tr><td>{u['username']}</td><td>{u['email']}</td><td>{u['is_active']}</td><td>{u['is_staff']}</td><td>{u['is_superuser']}</td></tr>" for u in staff_user_info])}
+            </table>
+            
+            <div class="actions">
+                <form method="post" action="/admin-debug/">
+                    <input type="hidden" name="action" value="create_admin">
+                    <button type="submit">Create/Reset Admin User</button>
+                </form>
+                
+                <form method="post" action="/admin-debug/">
+                    <input type="hidden" name="action" value="login">
+                    <button type="submit">Login as Admin</button>
+                </form>
+                
+                <p>
+                    <a href="/admin/">Go to Admin Panel</a> | 
+                    <a href="/direct-login/">Direct Login Page</a>
+                </p>
+            </div>
+        </body>
+    </html>
+    """
+    
+    return HttpResponse(html_response)
+
+@csrf_exempt
 def create_admin(request):
     """Endpoint to create an admin user directly from web"""
     from django.contrib.auth import get_user_model
@@ -148,6 +271,7 @@ urlpatterns = [
     path("api/health/", health_check, name="health_check"),
     path("direct-login/", direct_login, name="direct_login"),
     path("create-admin/", create_admin, name="create_admin"),
+    path("admin-debug/", admin_debug, name="admin_debug"),
 ]
 
 # Serve media and static files (both in development and production for Railway)
