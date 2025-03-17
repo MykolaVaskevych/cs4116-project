@@ -17,4 +17,5 @@ dependencies = [
     "pydotplus>=2.0.2",
     "dj-database-url>=2.1.0",
     "gunicorn>=21.2.0",
+    "whitenoise>=6.9.0",
 ]

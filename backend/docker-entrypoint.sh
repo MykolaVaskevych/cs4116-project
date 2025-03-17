@@ -11,11 +11,9 @@ mkdir -p media/profile_images
 mkdir -p media/service_logos
 chmod -R 755 media
 
-# Collect static files (for production)
-if [ "$DJANGO_ENV" = "production" ]; then
-    echo "Collecting static files..."
-    python manage.py collectstatic --noinput
-fi
+# Always collect static files in production environment
+echo "Collecting static files..."
+python manage.py collectstatic --noinput --clear
 
 # Create superuser
 if [ "$DJANGO_SUPERUSER_EMAIL" ] && [ "$DJANGO_SUPERUSER_PASSWORD" ]; then

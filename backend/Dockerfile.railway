@@ -38,9 +38,11 @@ COPY backend/ .
 RUN mkdir -p media/profile_images media/service_logos && \
     chmod -R 755 media
 
-# Collect static files
-RUN mkdir -p staticfiles && \
-    python manage.py collectstatic --noinput
+# Create static files directory
+RUN mkdir -p staticfiles
+
+# We'll collect static files in the entrypoint script to ensure
+# all settings are loaded correctly
 
 # Expose port (Railway automatically sets PORT environment variable)
 EXPOSE 8000
