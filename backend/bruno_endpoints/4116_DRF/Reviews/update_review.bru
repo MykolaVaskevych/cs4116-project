@@ -1,0 +1,41 @@
+meta {
+  name: Update Review
+  type: http
+  seq: 5
+  description: Updates an existing review (only by review owner)
+}
+
+patch {
+  url: {{host}}/api/reviews/:review_id/
+  body: json {
+    "rating": 4,
+    "comment": "Good service, but there were a few minor issues."
+  }
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+params:path {
+  review_id: 1
+}
+
+docs {
+  title: "Update a review"
+  description: "Updates an existing review. Only the owner of the review can update it.
+  
+  **Authentication:**
+  - Requires Bearer token authentication
+  - User must be the owner of the review
+  
+  **Request Body:**
+  - rating: Optional, number from 0-5
+  - comment: Optional text review
+  
+  **Note:**
+  - Partial updates are supported (only include fields you want to change)
+  - The validation that the user has a closed inquiry will still be enforced
+  "
+}

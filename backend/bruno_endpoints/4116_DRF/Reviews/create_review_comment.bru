@@ -1,0 +1,39 @@
+meta {
+  name: Create Review Comment
+  type: http
+  seq: 8
+  description: Creates a comment on a review (only by service owner or moderator)
+}
+
+post {
+  url: {{host}}/api/reviews/:review_id/comments/
+  body: json {
+    "content": "Thank you for your review. We are sorry about the issues you encountered and have addressed them."
+  }
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+params:path {
+  review_id: 1
+}
+
+docs {
+  title: "Create a comment on a review"
+  description: "Creates a new comment on the specified review. Only the service owner or moderators can create comments.
+  
+  **Authentication:**
+  - Requires Bearer token authentication
+  - User must be the service owner or a moderator
+  
+  **Request Body:**
+  - content: The text of the comment
+  
+  **Response:**
+  - The created comment with its ID and timestamps
+  
+  This endpoint is useful for service owners to respond to reviews or for moderators to add notes."
+}

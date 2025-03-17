@@ -1,7 +1,7 @@
 # accounts/serializers.py
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Wallet, Transaction, Service, Inquiry, InquiryMessage, Review
+from .models import Wallet, Transaction, Service, Inquiry, InquiryMessage, Review, ReviewComment
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
@@ -263,25 +263,113 @@ class InquiryCreateSerializer(serializers.ModelSerializer):
         
         return inquiry
 
+class ReviewCommentSerializer(serializers.ModelSerializer):
+    """
+    Serializer for review comments.
+    
+    Handles comments that service providers and moderators can make on reviews.
+    """
+    author_name = serializers.CharField(source='author.username', read_only=True)
+    author_role = serializers.CharField(source='author.get_role_display', read_only=True)
+    
+    class Meta:
+        model = ReviewComment
+        fields = [
+            'comment_id', 'review', 'author', 'author_name', 'author_role',
+            'content', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['comment_id', 'created_at', 'updated_at', 'author']
+    
+    def validate(self, data):
+        """
+        Validates that only service owners and moderators can comment on reviews.
+        """
+        user = self.context['request'].user
+        review = data.get('review')
+        
+        # Skip validation if review is not provided (it might be set in the view)
+        if not review:
+            return data
+            
+        # Check if user is the service owner or a moderator
+        is_service_owner = (user == review.service.business)
+        is_moderator = user.is_moderator
+        
+        if not (is_service_owner or is_moderator):
+            raise serializers.ValidationError("Only service owners and moderators can comment on reviews.")
+            
+        return data
+    
+    def create(self, validated_data):
+        """Sets the comment author to the current user"""
+        validated_data['author'] = self.context['request'].user
+        return ReviewComment.objects.create(**validated_data)
+
+
 class ReviewSerializer(serializers.ModelSerializer):
+    """
+    Serializer for service reviews.
+    
+    Handles validation, creation, and representation of review objects.
+    Includes additional read-only fields and nested comments.
+    """
+    service_name = serializers.CharField(source='service.name', read_only=True)
+    business_name = serializers.CharField(source='service.business.username', read_only=True)
+    customer_name = serializers.CharField(source='user.username', read_only=True)
+    comments = ReviewCommentSerializer(many=True, read_only=True)
+    
     class Meta:
         model = Review
         fields = [
-            'review_id', 'service_id', 'user_id', 'rating', 'comment', 'created_at'
+            'review_id', 'service', 'service_name', 'business_name',
+            'user', 'customer_name', 'rating', 'comment', 
+            'created_at', 'updated_at', 'comments'
         ]
-        read_only_fields = ['review_id', 'created_at']
-
+        read_only_fields = ['review_id', 'created_at', 'updated_at', 'user', 'comments']
+    
     def validate(self, data):
-        """Custom validation ensuring that inquiry exists and it's status is set to closed"""
+        """
+        Custom validation that enforces business rules:
+        
+        1. Prevents duplicate reviews: a user can only review a service once
+        2. Verifies the user has a closed inquiry for the service
+        """
+        user = self.context['request'].user
+        service = data.get('service')
+        
+        # For updates, if service isn't being changed, skip service-related validations
+        if self.instance and service is None:
+            return data
+            
+        # Use the current service if not changing it during an update
+        if self.instance and service is None:
+            service = self.instance.service
+        
+        # Prevent duplicate reviews (only on creation)
+        existing_review = Review.objects.filter(
+            user=user,
+            service=service
+        ).exclude(review_id=getattr(self.instance, 'review_id', None))
+        
+        if existing_review.exists():
+            raise serializers.ValidationError("You have already reviewed this service.")
+        
+        # Verify user has a closed inquiry for this service
         inquiry = Inquiry.objects.filter(
-            user=data['user'],
-            service=data['service_id']
+            customer=user,
+            service=service,
+            status=Inquiry.Status.CLOSED
         ).first()
 
-        if not inquiry or inquiry.status != Inquiry.Status.CLOSED:
-            raise serializers.ValidationError("Can only review an inquiry if the status is closed")
+        if not inquiry:
+            raise serializers.ValidationError("You can only review a service if you have a closed inquiry for it.")
+            
         return data
-
+    
     def create(self, validated_data):
-        """custom create method for handling instance creatation"""
+        """
+        Creates a new review with the authenticated user as the author.
+        This ensures the review is always tied to the current user.
+        """
+        validated_data['user'] = self.context['request'].user
         return Review.objects.create(**validated_data)

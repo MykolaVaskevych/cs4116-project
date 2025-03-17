@@ -15,6 +15,7 @@ A web application that enables customers to browse business services, request in
 - **Inquiries**: Customers can create inquiries about services
 - **Messaging**: Built-in chat system between customers, businesses, and moderators
 - **Wallet System**: Digital wallet with deposit, withdrawal, and transfer capabilities
+- **Review System**: Customers can leave reviews for services after closed inquiries, with business owners able to respond
 
 ## Backend Setup
 
@@ -141,6 +142,19 @@ The backend API will be available at http://127.0.0.1:8000/
 
 - List Messages: `GET /api/messages/?inquiry={inquiry_id}`
 - Send Message: `POST /api/messages/`
+
+### Reviews
+
+- List Service Reviews: `GET /api/services/{service_id}/reviews/`
+- Get User Reviews: `GET /api/users/{user_id}/reviews/`
+- Create Review: `POST /api/services/{service_id}/reviews/create/`
+- Get Review Details: `GET /api/reviews/{review_id}/`
+- Update Review: `PATCH /api/reviews/{review_id}/`
+- Delete Review: `DELETE /api/reviews/{review_id}/`
+- List Review Comments: `GET /api/reviews/{review_id}/comments/`
+- Create Review Comment: `POST /api/reviews/{review_id}/comments/`
+- Update Review Comment: `PATCH /api/reviews/{review_id}/comments/{comment_id}/`
+- Delete Review Comment: `DELETE /api/reviews/{review_id}/comments/{comment_id}/`
 
 ## Testing with Bruno API Client
 

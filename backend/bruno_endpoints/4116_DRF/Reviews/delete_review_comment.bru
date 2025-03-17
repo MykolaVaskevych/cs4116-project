@@ -1,0 +1,37 @@
+meta {
+  name: Delete Review Comment
+  type: http
+  seq: 10
+  description: Deletes a comment on a review (only by comment author)
+}
+
+delete {
+  url: {{host}}/api/reviews/:review_id/comments/:comment_id/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+params:path {
+  review_id: 1
+  comment_id: 1
+}
+
+docs {
+  title: "Delete a comment on a review"
+  description: "Deletes an existing comment on a review. Only the author of the comment can delete it.
+  
+  **Authentication:**
+  - Requires Bearer token authentication
+  - User must be the author of the comment
+  
+  **Response:**
+  - 204 No Content on successful deletion
+  
+  **Note:**
+  - This operation is not reversible
+  "
+}

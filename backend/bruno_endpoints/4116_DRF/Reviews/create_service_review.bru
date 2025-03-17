@@ -1,0 +1,43 @@
+meta {
+  name: Create Service Review
+  type: http
+  seq: 2
+  description: Creates a review for a specific service
+}
+
+post {
+  url: {{host}}/api/services/:service_id/reviews/create/
+  body: json {
+    "rating": 5,
+    "comment": "This service was excellent. The business was very professional and I would use them again."
+  }
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+params:path {
+  service_id: 1
+}
+
+docs {
+  title: "Create a review for a service"
+  description: "Creates a new review for the specified service. The service ID is specified in the URL.
+  
+  **Requirements:**
+  - User must be authenticated with a Bearer token
+  - User must have a closed inquiry for the service they're reviewing
+  - User can only leave one review per service
+  - Rating must be between 0-5
+  - Comment is optional
+  
+  **Authentication:**
+  - Requires Bearer token authentication
+  
+  **Request Body:**
+  - rating: Number from 0-5
+  - comment: Optional text review
+  "
+}

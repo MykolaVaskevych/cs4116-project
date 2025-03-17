@@ -336,39 +336,111 @@ class InquiryMessage(models.Model):
         ordering = ['created_at']
 
 class Review(models.Model):
-    """Model for reviews based on a service"""
-
-    #each review has an id that is automatically incremented
+    """
+    Model for service reviews by customers.
+    
+    Reviews can only be created by customers who have a closed inquiry for the service.
+    Each customer can only leave one review per service. Rating must be between 0-5.
+    """
     review_id = models.AutoField(primary_key=True)
-    #if service is deleted its reviews will be also
-    service_id = models.ForeignKey(
+    service = models.ForeignKey(
         Service,
         on_delete=models.CASCADE,
+        related_name='reviews',
+        help_text="The service being reviewed"
     )
-    #dont delete review even if user was deleted
-    user_id = models.ForeignKey(
+    user = models.ForeignKey(
         User,
         related_name='reviews',
-        on_delete=DO_NOTHING
+        on_delete=DO_NOTHING,
+        help_text="The customer who wrote the review"
     )
-    #reviews can be rated 0-5 stars
     rating = models.PositiveSmallIntegerField(
         validators=[
             MinValueValidator(0),
             MaxValueValidator(5)
-        ]
+        ],
+        help_text="Rating from 0 to 5 stars"
     )
-    #comments can be added optionally if the user wants
-    comment = models.TextField(blank=True)
-
+    comment = models.TextField(
+        blank=True,
+        help_text="Optional review comment"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Review for {self.service.name} by {self.user.username}"
 
     def save(self, *args, **kwargs):
-        """Enforce inquiry status check before saving"""
-        inquiry = Inquiry.objects.filter(user=self.user_id, service=self.service_id).first()
+        """
+        Custom save method with business logic validation:
+        1. Ensures the user has a closed inquiry for this service
+        2. Prevents duplicate reviews for the same service by the same user
+        """
+        # Verify user has a closed inquiry for this service
+        inquiry = Inquiry.objects.filter(
+            customer=self.user, 
+            service=self.service, 
+            status=Inquiry.Status.CLOSED
+        ).first()
 
-        if not inquiry or inquiry.status != Inquiry.Status.CLOSED:
-            raise ValueError("You can only leave an inquiry review if it's status is closed")
+        if not inquiry:
+            raise ValueError("You can only review a service if you have a closed inquiry for it.")
+            
+        # Prevent duplicate reviews (only check on creation)
+        if not self.pk and Review.objects.filter(user=self.user, service=self.service).exists():
+            raise ValueError("You have already reviewed this service.")
 
         super().save(*args, **kwargs)
+    
+    class Meta:
+        ordering = ['-created_at']
+
+
+class ReviewComment(models.Model):
+    """
+    Model for comments on reviews by service providers or moderators.
+    
+    These allow business owners to respond to reviews of their services,
+    or moderators to add notes or mediate disputes.
+    """
+    comment_id = models.AutoField(primary_key=True)
+    review = models.ForeignKey(
+        Review,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        help_text="The review this comment is attached to"
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='review_comments',
+        help_text="The user who wrote this comment (service owner or moderator)"
+    )
+    content = models.TextField(
+        help_text="The comment text"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Comment on review {self.review_id} by {self.author.username}"
+    
+    def save(self, *args, **kwargs):
+        """
+        Custom save method with business logic validation:
+        Only service owners and moderators can comment on reviews
+        """
+        # Ensure author is either the service owner or a moderator
+        is_service_owner = (self.author == self.review.service.business)
+        is_moderator = self.author.is_moderator
+        
+        if not (is_service_owner or is_moderator):
+            raise ValueError("Only service owners and moderators can comment on reviews")
+            
+        super().save(*args, **kwargs)
+    
+    class Meta:
+        ordering = ['created_at']
 

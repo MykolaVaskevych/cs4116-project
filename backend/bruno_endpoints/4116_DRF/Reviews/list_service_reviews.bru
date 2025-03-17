@@ -1,0 +1,34 @@
+meta {
+  name: List Service Reviews
+  type: http
+  seq: 1
+  description: Lists all reviews for a specific service
+}
+
+get {
+  url: {{host}}/api/services/:service_id/reviews/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+params:path {
+  service_id: 1
+}
+
+docs {
+  title: "List all reviews for a service"
+  description: "Retrieves all reviews for the specified service. Reviews are returned sorted by creation date (newest first).
+  
+  **Authentication:**
+  - Requires Bearer token authentication
+  
+  **Response:**
+  - List of reviews with rating, comment and user information
+  - Includes any comments on the reviews by service owner or moderators
+  
+  This endpoint is useful for showing service ratings and feedback to potential customers."
+}

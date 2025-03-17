@@ -1,0 +1,33 @@
+meta {
+  name: List Review Comments
+  type: http
+  seq: 7
+  description: Lists all comments on a specific review
+}
+
+get {
+  url: {{host}}/api/reviews/:review_id/comments/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+params:path {
+  review_id: 1
+}
+
+docs {
+  title: "List comments on a review"
+  description: "Retrieves all comments on the specified review. Comments are returned sorted by creation date (oldest first).
+  
+  **Authentication:**
+  - Requires Bearer token authentication
+  
+  **Response:**
+  - List of comments with content, author info, and timestamps
+  
+  This endpoint is useful for viewing responses from service owners or moderator notes on a review."
+}

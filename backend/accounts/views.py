@@ -5,12 +5,13 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model, authenticate
 from django.db.models import Q
-from .models import Wallet, Transaction, Service, Inquiry, InquiryMessage, Review
+from .models import Wallet, Transaction, Service, Inquiry, InquiryMessage, Review, ReviewComment
 from .serializers import (
     UserSerializer, UserProfileSerializer, WalletSerializer,
     TransactionSerializer, DepositSerializer, WithdrawSerializer,
     TransferSerializer, ServiceSerializer, InquirySerializer,
-    InquiryMessageSerializer, InquiryCreateSerializer, ReviewSerializer
+    InquiryMessageSerializer, InquiryCreateSerializer, 
+    ReviewSerializer, ReviewCommentSerializer
 )
 
 User = get_user_model()
@@ -391,28 +392,198 @@ class InquiryMessageViewSet(viewsets.ModelViewSet):
             raise serializers.ValidationError("Cannot update messages in a closed inquiry")
         serializer.save()
 
-class ReviewListCreateView(generics.ListCreateAPIView):
+class IsReviewOwner(permissions.BasePermission):
     """
-    View to list all reviews or create a new one.
+    Custom permission to only allow owners of a review to update or delete it.
+    
+    Read permissions are allowed to any authenticated user.
+    Write permissions are restricted to the user who created the review.
     """
-    queryset = Review.objects.all()
+    def has_object_permission(self, request, view, obj):
+        # Read permissions are allowed to any request
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        # Write permissions are only allowed to the owner of the review
+        return obj.user == request.user
+
+
+class IsReviewCommentAllowed(permissions.BasePermission):
+    """
+    Custom permission for review comments.
+    
+    Only allows service owners and moderators to create/edit/delete comments.
+    """
+    def has_permission(self, request, view):
+        # For listing/viewing, anyone can access
+        if request.method in permissions.SAFE_METHODS:
+            return True
+            
+        # For write operations, check if user is service owner or moderator
+        # This requires getting the review object from the URL
+        if view.kwargs.get('review_pk'):
+            try:
+                review = Review.objects.get(review_id=view.kwargs['review_pk'])
+                return (request.user == review.service.business or 
+                        request.user.is_moderator)
+            except Review.DoesNotExist:
+                return False
+        return False
+    
+    def has_object_permission(self, request, view, obj):
+        # Read permissions are allowed to any request
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        # Only author (service owner or moderator) can edit their comments
+        return obj.author == request.user
+
+
+class ServiceReviewListView(generics.ListAPIView):
+    """
+    API endpoint for listing all reviews for a specific service.
+    
+    GET: Returns all reviews for the service specified in the URL.
+    """
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = ReviewSerializer
+    
+    def get_queryset(self):
+        """Return reviews for the specified service"""
+        service_id = self.kwargs.get('service_pk')
+        return Review.objects.filter(service__id=service_id)
 
-    def create(self, request, *args, **kwargs):
-        """
-        Custom create method to handle logic from the serializer's validation.
-        """
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class UserReviewListView(generics.ListAPIView):
+    """
+    API endpoint for listing all reviews by a specific user.
+    
+    GET: Returns all reviews written by the user specified in the URL.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ReviewSerializer
+    
+    def get_queryset(self):
+        """Return reviews by the specified user"""
+        user_id = self.kwargs.get('user_pk')
+        return Review.objects.filter(user__id=user_id)
+
+
+class ServiceReviewCreateView(generics.CreateAPIView):
+    """
+    API endpoint for creating a review for a specific service.
+    
+    POST: Creates a new review for the service specified in the URL.
+           Only users with closed inquiries for the service can create reviews.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ReviewSerializer
+    
+    def get_serializer_context(self):
+        """Add the service to the serializer context"""
+        context = super().get_serializer_context()
+        service_id = self.kwargs.get('service_pk')
+        context['service'] = Service.objects.get(id=service_id)
+        return context
+    
+    def get_serializer(self, *args, **kwargs):
+        """Pre-populate the service field in the serializer data"""
+        if kwargs.get('data') and not kwargs['data'].get('service'):
+            service_id = self.kwargs.get('service_pk')
+            if isinstance(kwargs['data'], dict):
+                kwargs['data']['service'] = service_id
+            else:
+                # Handle immutable QueryDict by copying it
+                data = kwargs['data'].copy()
+                data['service'] = service_id
+                kwargs['data'] = data
+        return super().get_serializer(*args, **kwargs)
+    
+    def perform_create(self, serializer):
+        """Set the service and user from the URL and request"""
+        service_id = self.kwargs.get('service_pk')
+        service = Service.objects.get(id=service_id)
+        serializer.save(user=self.request.user, service=service)
 
 
 class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
-    View to retrieve, update, or delete a review.
+    API endpoint for retrieving, updating, and deleting a specific review.
+    
+    GET: Retrieve the review details
+    PUT/PATCH: Update the review (only allowed for the review owner)
+    DELETE: Delete the review (only allowed for the review owner)
     """
-    queryset = Review.objects.all()
+    permission_classes = [permissions.IsAuthenticated, IsReviewOwner]
     serializer_class = ReviewSerializer
+    lookup_url_kwarg = 'review_pk'
+    
+    def get_queryset(self):
+        """Get the review, optionally filtering by service"""
+        service_id = self.kwargs.get('service_pk')
+        if service_id:
+            return Review.objects.filter(service__id=service_id)
+        return Review.objects.all()
+
+
+class ReviewCommentListCreateView(generics.ListCreateAPIView):
+    """
+    API endpoint for listing and creating comments on a specific review.
+    
+    GET: List all comments for a review
+    POST: Create a new comment (only allowed for service owners and moderators)
+    """
+    permission_classes = [permissions.IsAuthenticated, IsReviewCommentAllowed]
+    serializer_class = ReviewCommentSerializer
+    
+    def get_queryset(self):
+        """Return comments for the specified review"""
+        review_id = self.kwargs.get('review_pk')
+        return ReviewComment.objects.filter(review__review_id=review_id)
+    
+    def get_serializer_context(self):
+        """Add the review to the serializer context"""
+        context = super().get_serializer_context()
+        review_id = self.kwargs.get('review_pk')
+        try:
+            context['review'] = Review.objects.get(review_id=review_id)
+        except Review.DoesNotExist:
+            pass
+        return context
+    
+    def get_serializer(self, *args, **kwargs):
+        """Pre-populate the review field in the serializer data"""
+        if kwargs.get('data') and not kwargs['data'].get('review'):
+            review_id = self.kwargs.get('review_pk')
+            if isinstance(kwargs['data'], dict):
+                kwargs['data']['review'] = review_id
+            else:
+                # Handle immutable QueryDict by copying it
+                data = kwargs['data'].copy()
+                data['review'] = review_id
+                kwargs['data'] = data
+        return super().get_serializer(*args, **kwargs)
+    
+    def perform_create(self, serializer):
+        """Set the review and author based on URL and request"""
+        review_id = self.kwargs.get('review_pk')
+        review = Review.objects.get(review_id=review_id)
+        serializer.save(author=self.request.user, review=review)
+
+
+class ReviewCommentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    API endpoint for managing a specific comment on a review.
+    
+    GET: Retrieve the comment
+    PUT/PATCH: Update the comment (only allowed for the comment author)
+    DELETE: Delete the comment (only allowed for the comment author)
+    """
+    permission_classes = [permissions.IsAuthenticated, IsReviewCommentAllowed]
+    serializer_class = ReviewCommentSerializer
+    lookup_url_kwarg = 'comment_pk'
+    
+    def get_queryset(self):
+        """Get the comment, filtering by review"""
+        review_id = self.kwargs.get('review_pk')
+        return ReviewComment.objects.filter(review__review_id=review_id)

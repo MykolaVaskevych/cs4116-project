@@ -1,0 +1,36 @@
+meta {
+  name: Service Review Detail
+  type: http
+  seq: 11
+  description: Retrieves, updates, or deletes a specific review for a service
+}
+
+get {
+  url: {{host}}/api/services/:service_id/reviews/:review_id/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+params:path {
+  service_id: 1
+  review_id: 1
+}
+
+docs {
+  title: "Get review details in service context"
+  description: "Retrieves the details of a specific review for a given service.
+  
+  **Authentication:**
+  - Requires Bearer token authentication
+  
+  **Response:**
+  - The review with rating, comment, user information, and any comments
+  
+  This endpoint is useful for viewing the complete details of a specific review within the context of a service. It supports GET (retrieve), PATCH (update), and DELETE operations.
+  
+  Note: This endpoint provides the same functionality as the /api/reviews/:review_id/ endpoint, but within the specific context of a service."
+}

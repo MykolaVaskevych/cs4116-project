@@ -4,7 +4,10 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenVerifyView, TokenRefreshView
 from rest_framework.routers import DefaultRouter
 from . import views
-from .views import ReviewListCreateView, ReviewDetailView
+from .views import (
+    ServiceReviewListView, ServiceReviewCreateView, UserReviewListView,
+    ReviewDetailView, ReviewCommentListCreateView, ReviewCommentDetailView
+)
 
 # Create a router for viewsets
 router = DefaultRouter()
@@ -33,9 +36,21 @@ urlpatterns = [
     # Transactions endpoints
     path('transactions/', views.transaction_list, name='transactions'),
 
-    #reviews endpoints
-    path('reviews/', ReviewListCreateView.as_view(), name='review-list-create'),
-    path('reviews/<int:pk>/', ReviewDetailView.as_view(), name='review-detail'),
+    # Reviews endpoints - RESTful nested resources
+    # Service Reviews
+    path('services/<int:service_pk>/reviews/', ServiceReviewListView.as_view(), name='service-reviews-list'),
+    path('services/<int:service_pk>/reviews/create/', ServiceReviewCreateView.as_view(), name='service-review-create'),
+    path('services/<int:service_pk>/reviews/<int:review_pk>/', ReviewDetailView.as_view(), name='service-review-detail'),
+    
+    # User Reviews
+    path('users/<int:user_pk>/reviews/', UserReviewListView.as_view(), name='user-reviews-list'),
+    
+    # Direct Review access (for updates/deletion by owner)
+    path('reviews/<int:review_pk>/', ReviewDetailView.as_view(), name='review-detail'),
+    
+    # Review Comments
+    path('reviews/<int:review_pk>/comments/', ReviewCommentListCreateView.as_view(), name='review-comments-list'),
+    path('reviews/<int:review_pk>/comments/<int:comment_pk>/', ReviewCommentDetailView.as_view(), name='review-comment-detail'),
     
     # Include routers for the new viewsets
     path('', include(router.urls)),

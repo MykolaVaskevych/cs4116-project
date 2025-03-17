@@ -1,0 +1,40 @@
+meta {
+  name: Update Review Comment
+  type: http
+  seq: 9
+  description: Updates an existing comment on a review (only by comment author)
+}
+
+patch {
+  url: {{host}}/api/reviews/:review_id/comments/:comment_id/
+  body: json {
+    "content": "Thank you for your review. We've addressed the issues and would love to have you back again."
+  }
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+params:path {
+  review_id: 1
+  comment_id: 1
+}
+
+docs {
+  title: "Update a comment on a review"
+  description: "Updates an existing comment on a review. Only the author of the comment can update it.
+  
+  **Authentication:**
+  - Requires Bearer token authentication
+  - User must be the author of the comment
+  
+  **Request Body:**
+  - content: The updated text of the comment
+  
+  **Response:**
+  - The updated comment with its timestamps
+  
+  This endpoint allows service owners or moderators to edit their responses to reviews."
+}
