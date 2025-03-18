@@ -198,21 +198,22 @@ class ServiceAdmin(admin.ModelAdmin):
         # Store original clean method
         original_clean = form.clean
         
-        def custom_clean():
+        def custom_clean(form_instance):
             """Add custom validation for service creation"""
             cleaned_data = original_clean()
             
             business = cleaned_data.get('business')
             if business and not business.is_business:
-                form._errors = form._errors or {}
-                form._errors['business'] = form.error_class([
+                form_instance._errors = form_instance._errors or {}
+                form_instance._errors['business'] = form_instance.error_class([
                     'Only business users can create services'
                 ])
             
             return cleaned_data
-            
-        # Replace clean method with our custom one
-        form.clean = custom_clean
+        
+        # Set the custom clean method, making sure it's properly bound
+        form.clean = custom_clean.__get__(form, form.__class__)
+        
         return form
 
 
@@ -291,6 +292,34 @@ class InquiryMessageAdmin(admin.ModelAdmin):
             super().save_model(request, obj, form, change)
         except ValueError as e:
             self.message_user(request, str(e), level='error')
+            
+    def get_form(self, request, obj=None, **kwargs):
+        """Add custom validation for message sender"""
+        form = super().get_form(request, obj, **kwargs)
+        
+        # Store original clean method
+        original_clean = form.clean
+        
+        def custom_clean(form_instance):
+            """Check if the inquiry is closed"""
+            cleaned_data = original_clean()
+            
+            # Only check when creating new messages
+            if not obj:
+                inquiry = cleaned_data.get('inquiry')
+                
+                if inquiry and inquiry.status == 'CLOSED':
+                    form_instance._errors = form_instance._errors or {}
+                    form_instance._errors['inquiry'] = form_instance.error_class([
+                        'Cannot add messages to a closed inquiry'
+                    ])
+            
+            return cleaned_data
+        
+        # Set the custom clean method, making sure it's properly bound
+        form.clean = custom_clean.__get__(form, form.__class__)
+        
+        return form
 
 
 class ReviewCommentInline(admin.TabularInline):
@@ -346,7 +375,8 @@ class ReviewAdmin(admin.ModelAdmin):
         # Store original clean method
         original_clean = form.clean
         
-        def custom_clean():
+        # Define a clean method that accepts self parameter (form instance)
+        def custom_clean(form_instance):
             """Add custom validation to check if the user can review this service"""
             cleaned_data = original_clean()
             
@@ -365,8 +395,8 @@ class ReviewAdmin(admin.ModelAdmin):
                     ).exists()
                     
                     if not has_closed_inquiry:
-                        form._errors = form._errors or {}
-                        form._errors['user'] = form.error_class([
+                        form_instance._errors = form_instance._errors or {}
+                        form_instance._errors['user'] = form_instance.error_class([
                             'This user does not have a closed inquiry for this service and cannot review it.'
                         ])
                     
@@ -378,15 +408,16 @@ class ReviewAdmin(admin.ModelAdmin):
                     ).exists()
                     
                     if has_review and not obj:
-                        form._errors = form._errors or {}
-                        form._errors['user'] = form.error_class([
+                        form_instance._errors = form_instance._errors or {}
+                        form_instance._errors['user'] = form_instance.error_class([
                             'This user has already reviewed this service.'
                         ])
             
             return cleaned_data
-            
-        # Replace clean method with our custom one
-        form.clean = custom_clean
+        
+        # Set the custom clean method, making sure it's properly bound
+        form.clean = custom_clean.__get__(form, form.__class__)
+        
         return form
 
 
@@ -424,7 +455,7 @@ class ReviewCommentAdmin(admin.ModelAdmin):
         # Store original clean method
         original_clean = form.clean
         
-        def custom_clean():
+        def custom_clean(form_instance):
             """Add custom validation to check if the author can comment on this review"""
             cleaned_data = original_clean()
             
@@ -439,15 +470,16 @@ class ReviewCommentAdmin(admin.ModelAdmin):
                     is_moderator = author.is_moderator
                     
                     if not (is_service_owner or is_moderator):
-                        form._errors = form._errors or {}
-                        form._errors['author'] = form.error_class([
+                        form_instance._errors = form_instance._errors or {}
+                        form_instance._errors['author'] = form_instance.error_class([
                             'Only service owners and moderators can comment on reviews'
                         ])
             
             return cleaned_data
-            
-        # Replace clean method with our custom one
-        form.clean = custom_clean
+        
+        # Set the custom clean method, making sure it's properly bound
+        form.clean = custom_clean.__get__(form, form.__class__)
+        
         return form
 
 
