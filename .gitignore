@@ -3,3 +3,4 @@
 .vscode/
 **/__pycache__/
 my.cnf
+backend/check_admin.py

@@ -21,7 +21,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-8@kk09iqpcc^lp!l2s!n4efcfv++!i72@y5egs&o)oc_1orr)y")
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+if not SECRET_KEY and os.environ.get("DJANGO_ENV") != "production":
+    # Only for development - generate a temporary key
+    SECRET_KEY = 'dev-only-insecure-key-do-not-use-in-production'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_ENV", "development") != "production"
@@ -34,10 +37,8 @@ ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_str.split(",")]
 ALLOWED_HOSTS.extend([
     'railway.app',
     'up.railway.app',
-    # Add a fallback setting to accept all hosts in production (can be removed later for security)
-    '*' if os.environ.get("DJANGO_ENV") == "production" else None,
+    'cs4116-project-production.up.railway.app',
 ])
-# Remove None values
 ALLOWED_HOSTS = [host for host in ALLOWED_HOSTS if host]
 
 # CSRF settings
@@ -46,8 +47,13 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.railway.app',
     'https://cs4116-project-production.up.railway.app',
 ]
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
+
+# CSRF and cookie security settings
+CSRF_COOKIE_SECURE = os.environ.get("DJANGO_ENV") == "production"
+SESSION_COOKIE_SECURE = os.environ.get("DJANGO_ENV") == "production"
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'Lax'
 
 
 # Application definition
@@ -74,11 +80,17 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",  # Add WhiteNoise for static files
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+]
+
+# Always include CSRF middleware
+MIDDLEWARE.append("django.middleware.csrf.CsrfViewMiddleware")
+
+# Add remaining middleware
+MIDDLEWARE.extend([
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-]
+])
 
 ROOT_URLCONF = "core.urls"
 

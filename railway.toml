@@ -12,9 +12,5 @@ port = 8000
 
 [vars]
 DJANGO_ENV = "production"
-DJANGO_SECRET_KEY = "MGgX9a8un0KMRrDCb02hnwWCIwi+D01Gb1tSfTkQCf8="
+DJANGO_SECRET_KEY = "${RAILWAY_SECRET_KEY}"
 ALLOWED_HOSTS = "*.up.railway.app"
-# Use these credentials to log in to admin panel (log in with EMAIL, not username)
-DJANGO_SUPERUSER_EMAIL = "admin@example.com"
-DJANGO_SUPERUSER_USERNAME = "admin"
-DJANGO_SUPERUSER_PASSWORD = "UrbanLife2025!"

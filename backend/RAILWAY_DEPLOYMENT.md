@@ -2,7 +2,6 @@
 
 ## Project Overview
 - Project name: 4116 urban life hub
-- Project ID: 4eb92bf5-de74-451a-b2df-525429f172a8
 - Components:
   1. MySQL Database (already set up on Railway)
   2. Backend (Django) - being deployed now
@@ -40,7 +39,7 @@ The Dockerfile is optimized for Railway deployment and handles all necessary dep
 
 1. **Link project to Railway**
    ```bash
-   railway link --project 4eb92bf5-de74-451a-b2df-525429f172a8
+   railway link --project <your-project-id>
    ```
 
 2. **Create a new backend service**
