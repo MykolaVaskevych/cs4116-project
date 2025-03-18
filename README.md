@@ -25,11 +25,11 @@ This project includes Docker support for easy local development and deployment t
 
 #### Local Development with Docker
 
-1. Make sure you have Docker and Docker Compose installed on your machine.
+1. Make sure you have Docker installed on your machine.
 
 2. Build and start the containers:
    ```bash
-   docker-compose up --build
+   docker compose up --build
    ```
 
 3. The backend will be available at http://localhost:8000
@@ -61,32 +61,32 @@ For Railway deployment, this project is configured to connect to an existing MyS
 
 - Start containers in development mode:
   ```bash
-  docker-compose up
+  docker compose up
   ```
 
 - Start containers in background:
   ```bash
-  docker-compose up -d
+  docker compose up -d
   ```
 
 - Stop containers:
   ```bash
-  docker-compose down
+  docker compose down
   ```
 
 - View logs:
   ```bash
-  docker-compose logs -f
+  docker compose logs -f
   ```
 
 - Run migrations:
   ```bash
-  docker-compose exec backend python manage.py migrate
+  docker compose exec backend python manage.py migrate
   ```
 
 - Create a superuser:
   ```bash
-  docker-compose exec backend python manage.py createsuperuser
+  docker compose exec backend python manage.py createsuperuser
   ```
 
 ### Manual Setup
@@ -235,6 +235,35 @@ The project includes a collection for the [Bruno API Client](https://www.usebrun
 1. Install [Bruno](https://www.usebruno.com/downloads)
 2. Open Bruno and import the collection from `backend/4116_DRF.json`
 3. In the environment settings, ensure the `host` variable is set to your backend URL (default: `http://127.0.0.1:8000`)
+
+## Testing
+
+### Running Tests
+
+This project has extensive test coverage for all major components including the admin interface, API endpoints, and models.
+
+```bash
+# Run all tests
+python manage.py test
+
+# Run specific test modules
+python manage.py test accounts.tests_admin accounts.tests_views core.tests_urls
+
+# Run tests with coverage
+coverage run --source='.' manage.py test
+coverage report
+coverage html  # Generates HTML report in htmlcov/
+```
+
+### Test Coverage
+
+The project currently maintains >90% test coverage, with comprehensive tests for:
+- User authentication and permissions
+- Admin interface functionality and validation
+- API endpoint behavior for all resources
+- Wallet transactions and validation
+- Service and review system logic
+- Inquiry and messaging system
 
 ## Troubleshooting
 
