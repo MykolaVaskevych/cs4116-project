@@ -45,12 +45,12 @@
     margin-bottom: 30px;
   }
   
-  .chart-container h3 {
+  .chart-container h2 {
     margin-top: 0;
-    margin-bottom: 15px;
-    color: #333;
-    font-size: 18px;
-    font-weight: 600;
+    margin-bottom: 20px;
+    color: #1a1a1a;
+    font-size: 24px;
+    font-weight: 700;
   }
   
   .chart-grid {
@@ -63,9 +63,17 @@
   .recent-activity {
     background-color: #fff;
     border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     padding: 20px;
     margin-bottom: 30px;
+  }
+  
+  .recent-activity h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #1a1a1a;
+    font-size: 24px;
+    font-weight: 700;
   }
   
   .activity-grid {
@@ -101,9 +109,27 @@
   .top-items {
     background-color: #fff;
     border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     padding: 20px;
     margin-bottom: 30px;
+  }
+  
+  .top-items h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #1a1a1a;
+    font-size: 24px;
+    font-weight: 700;
+  }
+  
+  .section-title {
+    color: #1a1a1a;
+    font-size: 18px;
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #eee;
   }
   
   .rating {
@@ -226,7 +252,7 @@
     <h2>Recent Activity</h2>
     <div class="activity-grid">
       <div>
-        <h3>Recent Inquiries</h3>
+        <h3 class="section-title">Recent Inquiries</h3>
         <ul class="activity-list">
           {% for inquiry in recent_inquiries %}
           <li>
@@ -243,7 +269,7 @@
       </div>
       
       <div>
-        <h3>Recent Reviews</h3>
+        <h3 class="section-title">Recent Reviews</h3>
         <ul class="activity-list">
           {% for review in recent_reviews %}
           <li>
@@ -259,7 +285,7 @@
       </div>
       
       <div>
-        <h3>Recent Transactions</h3>
+        <h3 class="section-title">Recent Transactions</h3>
         <ul class="activity-list">
           {% for transaction in recent_transactions %}
           <li>
