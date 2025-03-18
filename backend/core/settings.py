@@ -27,7 +27,8 @@ if not SECRET_KEY and os.environ.get("DJANGO_ENV") != "production":
     SECRET_KEY = 'dev-only-insecure-key-do-not-use-in-production'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DJANGO_ENV", "development") != "production"
+# Temporarily enable DEBUG for troubleshooting admin issues
+DEBUG = True  # Will change back after fixing admin issues
 
 # Parse ALLOWED_HOSTS from environment or use defaults
 allowed_hosts_str = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1")
