@@ -93,11 +93,68 @@ The Dockerfile is optimized for Railway deployment and handles all necessary dep
    https://<your-railway-domain>/api/health/
    ```
 
+## Database Management
+
+### Resetting the Database
+
+If you need to completely reset the database:
+
+1. Set the `RESET_DATABASE` environment variable:
+   ```bash
+   railway variables set RESET_DATABASE=true
+   ```
+
+2. Redeploy the application:
+   ```bash
+   railway up
+   ```
+
+3. After the reset is complete, turn off the reset flag to prevent accidental data loss:
+   ```bash
+   railway variables set RESET_DATABASE=false
+   ```
+
+### Generating Demo Data
+
+To populate the database with comprehensive demo data:
+
+1. Set the `GENERATE_DEMO_DATA` environment variable:
+   ```bash
+   railway variables set GENERATE_DEMO_DATA=true
+   ```
+
+2. Redeploy the application:
+   ```bash
+   railway up
+   ```
+
+3. After demo data generation completes, turn off the flag:
+   ```bash
+   railway variables set GENERATE_DEMO_DATA=false
+   ```
+
+The demo data includes:
+- 80 customer accounts
+- 10 moderator accounts
+- 40 business accounts
+- 73 services in different categories
+- 100 inquiries with conversation threads
+- Transactions between users
+- Reviews and comments
+
+### Admin Access
+
+For quick admin access:
+1. Visit `/admin-debug/` on your deployed site
+2. Use the "Create/Reset Admin User" button to create an admin user
+3. Use the "Login as Admin" button to access the admin dashboard
+
 ## Troubleshooting
 
 - **Database Connection Issues**: Verify the `MYSQL_URL` variable is correctly set and accessible
 - **Deployment Failures**: Check logs using `railway logs`
 - **Migration Errors**: Try running migrations manually with `railway run python manage.py migrate`
+- **Admin Access Problems**: Use the `/admin-debug/` endpoint to diagnose and fix admin user issues
 
 ## Local Development with Docker
 

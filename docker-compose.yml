@@ -16,6 +16,7 @@ services:
       - DJANGO_SUPERUSER_EMAIL=admin@example.com
       - DJANGO_SUPERUSER_PASSWORD=admin123
       - DJANGO_SUPERUSER_USERNAME=admin
+      - GENERATE_DEMO_DATA=true
     volumes:
       - ./backend:/app
     command: python manage.py runserver 0.0.0.0:8000

@@ -25,5 +25,17 @@ if [ "$DJANGO_SUPERUSER_EMAIL" ] && [ "$DJANGO_SUPERUSER_PASSWORD" ]; then
     echo "Admin user creation completed."
 fi
 
+# Reset database if requested
+if [ "${RESET_DATABASE:-false}" = "true" ]; then
+    echo "Resetting database..."
+    python manage.py flush --no-input
+fi
+
+# Generate demo data if requested
+if [ "${GENERATE_DEMO_DATA:-false}" = "true" ]; then
+    echo "Generating demo data for the application..."
+    python generate_demo_data.py
+fi
+
 # Execute the command passed to the script
 exec "$@"

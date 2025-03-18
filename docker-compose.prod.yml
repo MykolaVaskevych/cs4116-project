@@ -12,4 +12,10 @@ services:
       - DATABASE_URL=${MYSQL_URL}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+      - RESET_DATABASE=${RESET_DATABASE:-false}
+      - GENERATE_DEMO_DATA=${GENERATE_DEMO_DATA:-false}
+      # Only create superuser if explicitly requested in production
+      - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-}
+      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD:-}
+      - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME:-}
     command: gunicorn --bind 0.0.0.0:8000 core.wsgi:application

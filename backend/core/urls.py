@@ -27,9 +27,42 @@ from django.contrib.auth.views import LoginView
 
 from accounts.admin_dashboard import DashboardAdmin, Dashboard
 
-# Simple health check for Railway deployment
+# Health check endpoint for Railway deployment
 def health_check(request):
-    return HttpResponse("OK")
+    """
+    Health check endpoint that checks database connection and returns application status.
+    This is used by Railway for health monitoring.
+    """
+    from django.db import connection
+    from django.contrib.auth import get_user_model
+    from django.conf import settings
+    import time
+    
+    status = {
+        "status": "healthy",
+        "timestamp": time.time(),
+        "environment": settings.DJANGO_ENV,
+        "database": "connected",
+        "version": "1.0.0",
+    }
+    
+    # Check database connection
+    try:
+        # Simple query to check database connectivity
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+        
+        # Check if we have at least one user
+        User = get_user_model()
+        user_count = User.objects.count()
+        status["users_count"] = user_count
+        
+    except Exception as e:
+        status["status"] = "unhealthy"
+        status["database"] = f"error: {str(e)}"
+    
+    return JsonResponse(status)
 
 # Create a custom admin login view with CSRF exemption for Railway deployment
 admin.site.login = csrf_exempt(admin.site.login)

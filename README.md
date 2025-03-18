@@ -38,7 +38,10 @@ This project includes Docker support for easy local development and deployment t
    - Sets up the MySQL database
    - Applies migrations
    - Creates a superuser (admin@example.com / admin123)
+   - Generates demo data (users, services, inquiries, etc.)
    - Starts the Django development server
+
+   See [Demo Data Documentation](backend/DEMO_DATA.md) for details on the demo data that is generated.
 
 #### Deploying to Railway
 
