@@ -271,9 +271,9 @@
 <script>
   // Fetch chart data
   async function fetchChartData() {
-    const statsResponse = await fetch('{% url "admin:accounts_api_stats" %}');
-    const transactionsResponse = await fetch('{% url "admin:accounts_api_transactions" %}');
-    const servicesResponse = await fetch('{% url "admin:accounts_api_services" %}');
+    const statsResponse = await fetch('/admin/api/stats/');
+    const transactionsResponse = await fetch('/admin/api/transactions/');
+    const servicesResponse = await fetch('/admin/api/services/');
     
     if (!statsResponse.ok || !transactionsResponse.ok || !servicesResponse.ok) {
       console.error('Failed to fetch chart data');

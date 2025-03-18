@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.core.exceptions import PermissionDenied
+from django.db import models
 from django.db.models import Sum, Count, Avg, Q
 from django.db.models.functions import TruncDay, TruncMonth
 from django.http import JsonResponse
@@ -18,16 +19,29 @@ from .models import (
 import datetime
 import json
 
+# Create a dummy model for the dashboard
+class Dashboard(models.Model):
+    """
+    This is a dummy model for the admin dashboard.
+    It's not actually used in the database, just to provide
+    a model for the Django admin site.
+    """
+    class Meta:
+        managed = False  # No database table creation
+        verbose_name_plural = 'Dashboard'
+        app_label = 'accounts'
+
 
 class DashboardAdmin(admin.ModelAdmin):
     """
     Admin view for the dashboard showing platform statistics
     """
+    change_list_template = 'admin/dashboard.html'
     
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            path('dashboard/', self.admin_site.admin_view(self.dashboard_view), name='accounts_dashboard'),
+            path('', self.admin_site.admin_view(self.dashboard_view), name='accounts_dashboard'),
             path('api/stats/', self.admin_site.admin_view(self.api_stats), name='accounts_api_stats'),
             path('api/transactions/', self.admin_site.admin_view(self.api_transactions), name='accounts_api_transactions'),
             path('api/services/', self.admin_site.admin_view(self.api_services), name='accounts_api_services'),

@@ -25,7 +25,7 @@ from django.contrib.auth import authenticate, login
 from django.shortcuts import redirect
 from django.contrib.auth.views import LoginView
 
-from accounts.admin_dashboard import DashboardAdmin
+from accounts.admin_dashboard import DashboardAdmin, Dashboard
 
 # Simple health check for Railway deployment
 def health_check(request):
@@ -268,10 +268,10 @@ def create_admin(request):
         })
 
 # Set up the dashboard admin
-dashboard_admin = DashboardAdmin(model=None, admin_site=admin.site)
+dashboard_admin = DashboardAdmin(Dashboard, admin_site=admin.site)
 
-# Add the dashboard view to the admin site
-admin.site.register_view('dashboard/', dashboard_admin.dashboard_view, 'Dashboard')
+# Register the dashboard in the admin site
+admin.site.register(Dashboard, DashboardAdmin)
 
 # Main URL patterns
 urlpatterns = [
