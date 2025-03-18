@@ -25,6 +25,8 @@ from django.contrib.auth import authenticate, login
 from django.shortcuts import redirect
 from django.contrib.auth.views import LoginView
 
+from accounts.admin_dashboard import DashboardAdmin
+
 # Simple health check for Railway deployment
 def health_check(request):
     return HttpResponse("OK")
@@ -265,6 +267,13 @@ def create_admin(request):
             'error': str(e)
         })
 
+# Set up the dashboard admin
+dashboard_admin = DashboardAdmin(model=None, admin_site=admin.site)
+
+# Add the dashboard view to the admin site
+admin.site.register_view('dashboard/', dashboard_admin.dashboard_view, 'Dashboard')
+
+# Main URL patterns
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("accounts.urls", namespace="accounts")),
@@ -272,6 +281,11 @@ urlpatterns = [
     path("direct-login/", direct_login, name="direct_login"),
     path("create-admin/", create_admin, name="create_admin"),
     path("admin-debug/", admin_debug, name="admin_debug"),
+    
+    # Dashboard API endpoints
+    path("admin/api/stats/", dashboard_admin.api_stats, name="accounts_api_stats"),
+    path("admin/api/transactions/", dashboard_admin.api_transactions, name="accounts_api_transactions"), 
+    path("admin/api/services/", dashboard_admin.api_services, name="accounts_api_services"),
 ]
 
 # Serve media and static files (both in development and production for Railway)

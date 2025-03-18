@@ -1,0 +1,17 @@
+{% extends "admin/base_site.html" %}
+
+{% block nav-global %}
+<style>
+  #header .dashboard-link {
+    display: inline-block;
+    color: #fff;
+    margin-left: 15px;
+    text-decoration: none;
+    font-weight: bold;
+  }
+  #header .dashboard-link:hover {
+    text-decoration: underline;
+  }
+</style>
+<a href="{% url 'admin:accounts_dashboard' %}" class="dashboard-link">Dashboard</a>
+{% endblock %}
