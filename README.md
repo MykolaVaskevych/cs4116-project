@@ -336,6 +336,6 @@ If you see database connection errors:
    mysql -u root -e "SHOW DATABASES;"
    ```
 
-## Artfacts:
-Trello board: https://trello.com/b/dbEAbVVm/cs4116
+## Artefacts:
+Trello board: https://trello.com/b/dbEAbVVm/cs4116 
 Design document: [CS4116 Design document.pdf](https://github.com/user-attachments/files/19340238/CS4116.Design.document.pdf)
