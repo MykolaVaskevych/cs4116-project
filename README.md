@@ -323,6 +323,7 @@ If you encounter migration errors:
 
 ### Database Connection Issues
 
+
 If you see database connection errors:
 1. Check your `my.cnf` file has the correct credentials and database name
 2. Verify the MySQL server is running
@@ -334,3 +335,7 @@ If you see database connection errors:
    ```bash
    mysql -u root -e "SHOW DATABASES;"
    ```
+
+## Artfacts:
+Trello board: https://trello.com/b/dbEAbVVm/cs4116
+Design document: [CS4116 Design document.pdf](https://github.com/user-attachments/files/19340238/CS4116.Design.document.pdf)
