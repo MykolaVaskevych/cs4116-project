@@ -11,7 +11,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 django.setup()
 
 # Import models
-from accounts.models import User, Wallet, Transaction, Category, Service, Inquiry, InquiryMessage, Review, ReviewComment
+from accounts.models import User, Wallet, Transaction, Category, Service, Inquiry, InquiryMessage, Review, ReviewComment, BlogCategory, BlogPost, BlogComment
 from django.utils import timezone
 from django.db import transaction
 
@@ -22,6 +22,9 @@ NUM_BUSINESSES = 40
 NUM_SERVICES = 73
 NUM_INQUIRIES = 100
 NUM_CATEGORIES = 14
+NUM_BLOG_CATEGORIES = 8
+NUM_BLOG_POSTS = 50
+NUM_BLOG_COMMENTS = 120
 
 # Sample data
 first_names = ['James', 'John', 'Robert', 'Michael', 'William', 'David', 'Richard', 'Joseph', 'Thomas', 'Charles',
@@ -149,6 +152,182 @@ moderator_review_comments = [
     "As moderators, we appreciate detailed reviews that help others make informed decisions about {service}.",
     "This kind of feedback about {service} is essential for maintaining platform quality standards.",
     "Thank you for taking the time to share your experience with {service}. It benefits the entire community."
+]
+
+# Blog data
+blog_categories = [
+    "Business Tips", "Career Development", "Industry News", "Technology Trends",
+    "Customer Success Stories", "How-To Guides", "Service Updates", "Educational Content"
+]
+
+blog_titles = [
+    "Top 10 {category} Strategies for 2025",
+    "The Ultimate Guide to {category} for Beginners",
+    "How {category} Can Transform Your Business",
+    "5 Common {category} Mistakes to Avoid",
+    "The Future of {category}: Trends and Predictions",
+    "Understanding {category}: A Comprehensive Overview",
+    "Why {category} Matters More Than Ever in Today's Economy",
+    "Building Success Through Effective {category}",
+    "Mastering {category}: Expert Tips and Tricks",
+    "The Evolution of {category} Over the Past Decade"
+]
+
+blog_content_templates = [
+    """
+# {title}
+
+## Introduction
+Welcome to our comprehensive guide on {category}. In this article, we'll explore key strategies, best practices, and insights to help you navigate this important area.
+
+## Why {category} Matters
+In today's competitive landscape, understanding {category} is essential for success. It allows businesses to:
+
+- Stay ahead of industry trends
+- Improve customer satisfaction
+- Increase operational efficiency
+- Drive sustainable growth
+
+## Key Strategies
+
+### 1. Research and Planning
+Before diving into {category}, it's crucial to conduct thorough research and develop a strategic plan. This includes:
+- Market analysis
+- Competitor assessment
+- Goal setting
+- Resource allocation
+
+### 2. Implementation
+The implementation phase is where your {category} strategy comes to life. Focus on:
+- Establishing clear processes
+- Training your team
+- Setting up monitoring systems
+- Creating feedback loops
+
+### 3. Measurement and Optimization
+To ensure your {category} efforts are effective, regularly:
+- Track key performance indicators
+- Gather customer feedback
+- Analyze results
+- Make data-driven adjustments
+
+## Conclusion
+By prioritizing {category} in your business strategy, you'll be well-positioned for long-term success. Remember that this is an ongoing process that requires commitment, flexibility, and continuous learning.
+    """,
+    
+    """
+# {title}
+
+## Introduction
+{category} has become a critical factor in business success. This article aims to provide you with practical insights and actionable advice to excel in this area.
+
+## Understanding the Fundamentals
+At its core, {category} is about creating value through systematic approaches and innovative thinking. The most successful organizations view it as a cornerstone of their operations.
+
+## Best Practices
+
+### Focus on Customer Needs
+Always start with your customers' needs and work backward. Ask:
+- What problems are they trying to solve?
+- How can your offerings address these challenges?
+- What unique value can you provide?
+
+### Embrace Technology
+Technology continues to transform how businesses approach {category}. Consider:
+- Automation tools to improve efficiency
+- Data analytics for better decision-making
+- Digital platforms to expand reach
+
+### Develop Your Team
+Your team is your greatest asset when it comes to {category}. Invest in:
+- Regular training and development
+- Creating a culture of innovation
+- Recognizing and rewarding excellence
+
+## Case Study: Success in Action
+[Company X] implemented a comprehensive {category} strategy that resulted in:
+- 35% increase in customer satisfaction
+- 28% growth in revenue
+- 20% reduction in operational costs
+
+## Looking Ahead
+The future of {category} lies in adaptability, customer-centricity, and technological integration. Organizations that can effectively balance these elements will thrive in an increasingly competitive marketplace.
+    """,
+    
+    """
+# {title}
+
+## Overview
+This article explores the essential aspects of {category} and provides practical guidance for implementation in your business.
+
+## The Business Impact of {category}
+Effective {category} strategies can significantly impact your bottom line through:
+
+1. **Increased Efficiency**: Streamlining processes and reducing waste
+2. **Enhanced Customer Experience**: Meeting and exceeding customer expectations
+3. **Competitive Advantage**: Differentiating your business in the marketplace
+4. **Innovation Enablement**: Creating an environment that fosters new ideas
+
+## Implementation Framework
+
+### Phase 1: Assessment
+Begin by assessing your current approach to {category}:
+- Identify strengths and weaknesses
+- Benchmark against industry standards
+- Determine priority areas for improvement
+
+### Phase 2: Strategy Development
+Based on your assessment, develop a comprehensive strategy that includes:
+- Clear objectives and key results (OKRs)
+- Resource requirements
+- Timeline for implementation
+- Roles and responsibilities
+
+### Phase 3: Execution
+Successfully executing your {category} strategy requires:
+- Strong leadership commitment
+- Cross-functional collaboration
+- Regular communication
+- Agile approach to implementation
+
+### Phase 4: Evaluation
+Continuously evaluate the effectiveness of your {category} initiatives:
+- Establish relevant metrics
+- Conduct regular reviews
+- Solicit feedback from stakeholders
+- Refine approach based on results
+
+## Conclusion
+{category} is not a one-time project but an ongoing commitment to excellence. By following this framework and adapting it to your specific context, you can realize significant benefits for your business and your customers.
+    """
+]
+
+blog_summaries = [
+    "Explore the essential strategies and best practices for effective {category} in today's business landscape.",
+    "Learn how to leverage {category} to drive growth, improve customer satisfaction, and gain competitive advantage.",
+    "Discover the latest trends, insights, and practical tips related to {category} for business success.",
+    "A comprehensive guide to understanding and implementing {category} in your organization.",
+    "Expert advice on optimizing your approach to {category} for maximum business impact."
+]
+
+blog_comments = [
+    "Great article! I especially appreciated the insights on {point}.",
+    "This was really helpful for understanding {category}. Thanks for sharing!",
+    "I've been struggling with {category} and this gave me some practical steps to take.",
+    "Do you have any additional resources on {point}? I'd love to learn more.",
+    "I implemented some of these strategies and saw immediate improvements in our {category} approach.",
+    "Well-written and thorough. I'll be sharing this with my team.",
+    "Could you elaborate more on the {point} section? That's particularly relevant to my business.",
+    "This article came at the perfect time as we're revamping our {category} strategy.",
+    "The case study was particularly illuminating. Great real-world example!",
+    "I appreciate the practical framework provided here. Makes {category} seem less overwhelming."
+]
+
+comment_points = [
+    "performance measurement", "team development", "technology integration",
+    "customer feedback loops", "implementation strategies", "market research",
+    "resource allocation", "competitive analysis", "strategic planning",
+    "process optimization", "change management", "innovation approaches"
 ]
 
 common_passwords = [
@@ -365,17 +544,109 @@ def create_inquiry(customer, service, moderators):
     
     return inquiry
 
+def generate_blog_categories():
+    """Create blog categories"""
+    blog_cats = []
+    for name in blog_categories[:NUM_BLOG_CATEGORIES]:
+        blog_cat, created = BlogCategory.objects.get_or_create(
+            name=name,
+            defaults={
+                'description': f"Articles and resources about {name.lower()}"
+            }
+        )
+        blog_cats.append(blog_cat)
+    return blog_cats
+
+
+def create_blog_post(author, blog_cats):
+    """Create a blog post by a user"""
+    category = random.choice(blog_cats)
+    title_template = random.choice(blog_titles)
+    title = title_template.format(category=category.name)
+    
+    # Generate slug from title
+    from django.utils.text import slugify
+    base_slug = slugify(title)
+    slug = base_slug
+    
+    # Ensure slug is unique
+    counter = 1
+    while BlogPost.objects.filter(slug=slug).exists():
+        slug = f"{base_slug}-{counter}"
+        counter += 1
+    
+    # Select a content template and format it
+    content_template = random.choice(blog_content_templates)
+    content = content_template.format(title=title, category=category.name)
+    
+    # Generate a summary
+    summary_template = random.choice(blog_summaries)
+    summary = summary_template.format(category=category.name)
+    
+    # Determine if post is published (90% chance)
+    is_published = random.random() < 0.9
+    
+    # Create the post
+    post = BlogPost.objects.create(
+        title=title,
+        slug=slug,
+        content=content,
+        summary=summary,
+        author=author,
+        category=category,
+        is_published=is_published,
+        views=random.randint(0, 500)  # Random view count
+    )
+    
+    return post
+
+
+def create_blog_comment(blog_post, author, users):
+    """Create a comment on a blog post"""
+    # Select a commenter (can be any user except the post author)
+    if random.random() < 0.7:  # 70% chance the commenter is not the author
+        potential_commenters = [u for u in users if u != author]
+        if potential_commenters:
+            commenter = random.choice(potential_commenters)
+        else:
+            commenter = author
+    else:
+        commenter = author
+    
+    # Generate comment text
+    comment_template = random.choice(blog_comments)
+    point = random.choice(comment_points)
+    comment_text = comment_template.format(
+        point=point, 
+        category=blog_post.category.name if blog_post.category else "this topic"
+    )
+    
+    # Create the comment
+    comment = BlogComment.objects.create(
+        blog_post=blog_post,
+        author=commenter,
+        content=comment_text
+    )
+    
+    return comment
+
+
 @transaction.atomic
 def generate_demo_data():
     """Generate comprehensive demo data for the application"""
     print("Generating demo data...")
     
-    # Check for existing admin user or create one
+    # First, clear all existing data except admin user
+    print("Clearing existing data...")
+    # Keep admin user, delete all others
     admin_email = "admin@example.com"
     try:
         admin_user = User.objects.get(email=admin_email)
-        print(f"Admin user already exists: {admin_user.email}")
+        print(f"Preserving admin user: {admin_user.email}")
+        # Delete all other users
+        User.objects.exclude(email=admin_email).delete()
     except User.DoesNotExist:
+        # Create admin if doesn't exist
         admin_user = User.objects.create_superuser(
             username="admin",
             email=admin_email,
@@ -384,6 +655,21 @@ def generate_demo_data():
             last_name="User"
         )
         print(f"Created admin user: {admin_user.email}")
+    
+    # Delete all other data
+    Transaction.objects.all().delete()
+    Wallet.objects.exclude(user=admin_user).delete()
+    Service.objects.all().delete()
+    Category.objects.all().delete()
+    Inquiry.objects.all().delete()
+    InquiryMessage.objects.all().delete()
+    Review.objects.all().delete()
+    ReviewComment.objects.all().delete()
+    BlogPost.objects.all().delete()
+    BlogComment.objects.all().delete()
+    BlogCategory.objects.all().delete()
+    
+    print("Existing data cleared. Generating new demo data...")
     
     # Create categories
     categories = generate_categories()
@@ -455,6 +741,47 @@ def generate_demo_data():
             except ValueError:
                 # Skip if transfer fails
                 pass
+    
+    # Generate blog content
+    print("Creating blog content...")
+    blog_cats = generate_blog_categories()
+    print(f"Created {len(blog_cats)} blog categories")
+    
+    # Create blog posts
+    all_users = customers + businesses + moderators
+    blog_posts = []
+    
+    # Distribute blog posts among users (weighted toward businesses and moderators)
+    for _ in range(NUM_BLOG_POSTS):
+        # Select author with weighting: 50% business, 30% moderator, 20% customer
+        author_type = random.choices(
+            [User.Role.BUSINESS, User.Role.MODERATOR, User.Role.CUSTOMER],
+            weights=[0.5, 0.3, 0.2],
+            k=1
+        )[0]
+        
+        if author_type == User.Role.BUSINESS:
+            author = random.choice(businesses)
+        elif author_type == User.Role.MODERATOR:
+            author = random.choice(moderators)
+        else:
+            author = random.choice(customers)
+            
+        post = create_blog_post(author, blog_cats)
+        blog_posts.append(post)
+    
+    print(f"Created {len(blog_posts)} blog posts")
+    
+    # Create blog comments
+    blog_comments_list = []
+    for post in blog_posts:
+        # Each post gets 0-6 comments
+        num_comments = random.randint(0, 6)
+        for _ in range(num_comments):
+            comment = create_blog_comment(post, post.author, all_users)
+            blog_comments_list.append(comment)
+    
+    print(f"Created {len(blog_comments_list)} blog comments")
     
     print("Demo data generation complete!")
 

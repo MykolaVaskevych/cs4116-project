@@ -7,7 +7,8 @@ from decimal import Decimal
 from django import forms
 from .models import (
     User, Wallet, Transaction, Category, Service, 
-    Inquiry, InquiryMessage, Review, ReviewComment
+    Inquiry, InquiryMessage, Review, ReviewComment,
+    BlogCategory, BlogPost, BlogComment
 )
 
 
@@ -462,6 +463,36 @@ class ReviewCommentAdmin(admin.ModelAdmin):
             self.message_user(request, str(e), level='error')
 
 
+# Blog admin classes
+class BlogCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'created_at', 'updated_at')
+    search_fields = ('name', 'description')
+    readonly_fields = ('created_at', 'updated_at')
+
+
+class BlogPostAdmin(admin.ModelAdmin):
+    list_display = ('title', 'slug', 'author', 'category', 'is_published', 'views', 'created_at')
+    list_filter = ('is_published', 'category', 'author', 'created_at')
+    search_fields = ('title', 'content', 'summary')
+    prepopulated_fields = {'slug': ('title',)}
+    readonly_fields = ('views', 'created_at', 'updated_at')
+
+
+class BlogCommentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'blog_post', 'author', 'content_preview', 'created_at')
+    list_filter = ('created_at', 'blog_post')
+    search_fields = ('content', 'author__email', 'blog_post__title')
+    readonly_fields = ('created_at', 'updated_at')
+    
+    def content_preview(self, obj):
+        """Display truncated comment content"""
+        max_length = 50
+        if len(obj.content) > max_length:
+            return f"{obj.content[:max_length]}..."
+        return obj.content
+    content_preview.short_description = "Comment"
+
+
 # Register all models with their admin classes
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Wallet, WalletAdmin)
@@ -472,3 +503,8 @@ admin.site.register(Inquiry, InquiryAdmin)
 admin.site.register(InquiryMessage, InquiryMessageAdmin)
 admin.site.register(Review, ReviewAdmin)
 admin.site.register(ReviewComment, ReviewCommentAdmin)
+
+# Register blog models
+admin.site.register(BlogCategory, BlogCategoryAdmin)
+admin.site.register(BlogPost, BlogPostAdmin)
+admin.site.register(BlogComment, BlogCommentAdmin)
