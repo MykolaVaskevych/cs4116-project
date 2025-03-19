@@ -1,9 +1,10 @@
 # accounts/serializers.py
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from django.utils.text import slugify
 from .models import (
     Wallet, Transaction, Service, Inquiry, InquiryMessage,
-    Review, ReviewComment, Category
+    Review, ReviewComment, Category, BlogCategory, BlogPost, BlogComment
 )
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -442,3 +443,116 @@ class ReviewSerializer(serializers.ModelSerializer):
         """
         validated_data['user'] = self.context['request'].user
         return Review.objects.create(**validated_data)
+
+
+class BlogCategorySerializer(serializers.ModelSerializer):
+    """Serializer for blog categories"""
+    post_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = BlogCategory
+        fields = ['id', 'name', 'description', 'created_at', 'updated_at', 'post_count']
+        read_only_fields = ['created_at', 'updated_at', 'post_count']
+    
+    def get_post_count(self, obj):
+        """Return count of published posts in this category"""
+        return obj.blog_posts.filter(is_published=True).count()
+
+
+class BlogCommentSerializer(serializers.ModelSerializer):
+    """Serializer for blog comments"""
+    author_name = serializers.CharField(source='author.username', read_only=True)
+    author_role = serializers.CharField(source='author.get_role_display', read_only=True)
+    author_image = serializers.ImageField(source='author.profile_image', read_only=True)
+    
+    class Meta:
+        model = BlogComment
+        fields = ['id', 'blog_post', 'author', 'author_name', 'author_role', 
+                 'author_image', 'content', 'created_at', 'updated_at']
+        read_only_fields = ['author', 'created_at', 'updated_at']
+    
+    def create(self, validated_data):
+        """Set the comment author to the current user"""
+        validated_data['author'] = self.context['request'].user
+        return BlogComment.objects.create(**validated_data)
+
+
+class BlogPostListSerializer(serializers.ModelSerializer):
+    """Serializer for listing blog posts with limited fields"""
+    author_name = serializers.CharField(source='author.username', read_only=True)
+    author_image = serializers.ImageField(source='author.profile_image', read_only=True)
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    comment_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = BlogPost
+        fields = ['id', 'title', 'slug', 'summary', 'image', 'author', 'author_name', 
+                 'author_image', 'category', 'category_name', 'created_at', 
+                 'updated_at', 'views', 'comment_count', 'is_published']
+        read_only_fields = ['slug', 'views', 'created_at', 'updated_at', 'comment_count', 'author']
+    
+    def get_comment_count(self, obj):
+        """Return count of comments on this post"""
+        return obj.comments.count()
+
+
+class BlogPostDetailSerializer(serializers.ModelSerializer):
+    """Serializer for detailed blog post view including comments"""
+    author_name = serializers.CharField(source='author.username', read_only=True)
+    author_image = serializers.ImageField(source='author.profile_image', read_only=True)
+    author_bio = serializers.CharField(source='author.bio', read_only=True)
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    comments = BlogCommentSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = BlogPost
+        fields = ['id', 'title', 'slug', 'content', 'summary', 'image', 
+                 'author', 'author_name', 'author_image', 'author_bio',
+                 'category', 'category_name', 'created_at', 'updated_at', 
+                 'is_published', 'views', 'comments']
+        read_only_fields = ['slug', 'views', 'created_at', 'updated_at']
+    
+    def validate(self, data):
+        """Ensure only authors and moderators can change publish status"""
+        if 'is_published' in data and self.instance:
+            user = self.context['request'].user
+            is_author = user == self.instance.author
+            is_moderator = user.is_moderator
+            
+            if not (is_author or is_moderator):
+                raise serializers.ValidationError(
+                    {"is_published": "Only the author or moderators can change publication status."}
+                )
+        return data
+
+
+class BlogPostCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating blog posts with automatic slug generation"""
+    slug = serializers.SlugField(read_only=True)
+    author = serializers.PrimaryKeyRelatedField(read_only=True)
+    
+    class Meta:
+        model = BlogPost
+        fields = ['title', 'content', 'summary', 'image', 'category', 'is_published', 'slug', 'author']
+        read_only_fields = ['slug', 'author']
+    
+    def create(self, validated_data):
+        """Create blog post with the current user as author and generate slug"""
+        # Set author to current user
+        user = self.context['request'].user
+        validated_data['author'] = user
+        
+        # Generate slug from title
+        base_slug = slugify(validated_data['title'])
+        slug = base_slug
+        
+        # Ensure slug is unique
+        counter = 1
+        while BlogPost.objects.filter(slug=slug).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        
+        validated_data['slug'] = slug
+        
+        # Create the blog post
+        return BlogPost.objects.create(**validated_data)

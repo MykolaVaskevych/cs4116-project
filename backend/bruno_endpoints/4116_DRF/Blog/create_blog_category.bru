@@ -1,0 +1,35 @@
+meta {
+  name: Create Blog Category
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/api/blog/categories/
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "name": "Educational",
+    "description": "Educational content and tutorials about our services"
+  }
+}
+
+assert {
+  res.status: oneOf(201 403)
+}
+
+docs {
+  Note: This endpoint requires moderator permissions. Will return 403 Forbidden if the authenticated user is not a moderator.
+}

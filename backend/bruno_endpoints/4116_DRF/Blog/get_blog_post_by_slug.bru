@@ -1,0 +1,30 @@
+meta {
+  name: Get Blog Post by Slug
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{base_url}}/api/blog/posts/slug/introduction-to-our-platform/
+  body: none
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+assert {
+  res.status: oneOf(200 404)
+}
+
+docs {
+  This endpoint retrieves a blog post by its slug (URL-friendly version of the title).
+  It's useful for creating SEO-friendly URLs.
+  The view count will be incremented when the post is viewed by someone other than the author.
+}

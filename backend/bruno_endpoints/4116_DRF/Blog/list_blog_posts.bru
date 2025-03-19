@@ -1,0 +1,37 @@
+meta {
+  name: List Blog Posts
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/api/blog/posts/
+  body: none
+  auth: bearer
+}
+
+query {
+  ~author: 1
+  ~category: 1
+  ~search: tutorial
+  ~ordering: -created_at
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+assert {
+  res.status: 200
+}
+
+docs {
+  This endpoint supports filtering by author, category, and search terms.
+  It also supports ordering by various fields like created_at, views, etc.
+  Add a minus sign (-) before the field name to sort in descending order.
+}

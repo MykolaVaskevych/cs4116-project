@@ -1,0 +1,34 @@
+meta {
+  name: Create Blog Post
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{base_url}}/api/blog/posts/
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "title": "Introduction to our Platform",
+    "content": "This is a comprehensive guide to using our platform services...",
+    "summary": "Learn the basics of our platform and how to get started",
+    "category": 1,
+    "is_published": true
+  }
+}
+
+assert {
+  res.status: 201
+}

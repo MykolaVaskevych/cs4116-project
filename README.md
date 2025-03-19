@@ -16,6 +16,7 @@ A web application that enables customers to browse business services, request in
 - **Messaging**: Built-in chat system between customers, businesses, and moderators
 - **Wallet System**: Digital wallet with deposit, withdrawal, and transfer capabilities
 - **Review System**: Customers can leave reviews for services after closed inquiries, with business owners able to respond
+- **Blog System**: Educational content platform where users can create, categorize, and comment on blog posts with SEO-friendly URLs and view tracking
 
 ## Backend Setup
 
@@ -230,6 +231,26 @@ The backend API will be available at http://127.0.0.1:8000/
 - Create Review Comment: `POST /api/reviews/{review_id}/comments/`
 - Update Review Comment: `PATCH /api/reviews/{review_id}/comments/{comment_id}/`
 - Delete Review Comment: `DELETE /api/reviews/{review_id}/comments/{comment_id}/`
+
+### Blog System
+
+- List Blog Categories: `GET /api/blog/categories/`
+- Create Blog Category: `POST /api/blog/categories/` (moderator only)
+- Get Category Details: `GET /api/blog/categories/{id}/`
+- Update Category: `PUT/PATCH /api/blog/categories/{id}/` (moderator only)
+- Delete Category: `DELETE /api/blog/categories/{id}/` (moderator only)
+- List Blog Posts: `GET /api/blog/posts/` (with filtering and search)
+- Create Blog Post: `POST /api/blog/posts/`
+- Get Post Details: `GET /api/blog/posts/{id}/`
+- Get Post by Slug: `GET /api/blog/posts/slug/{slug}/` (SEO-friendly URL)
+- Update Post: `PUT/PATCH /api/blog/posts/{id}/` (author or moderator only)
+- Delete Post: `DELETE /api/blog/posts/{id}/` (author or moderator only)
+- List User Posts: `GET /api/users/{id}/blog-posts/`
+- List Post Comments: `GET /api/blog/posts/{id}/comments/`
+- Create Post Comment: `POST /api/blog/posts/{id}/comments/`
+- Get Comment Details: `GET /api/blog/comments/{id}/`
+- Update Comment: `PUT/PATCH /api/blog/comments/{id}/` (author or moderator only)
+- Delete Comment: `DELETE /api/blog/comments/{id}/` (author or moderator only)
 
 ## Testing with Bruno API Client
 

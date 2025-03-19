@@ -1,0 +1,36 @@
+meta {
+  name: Create Blog Comment
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{base_url}}/api/blog/posts/1/comments/
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "content": "Great article! This was very helpful for understanding how to use the platform."
+  }
+}
+
+assert {
+  res.status: oneOf(201 404)
+}
+
+docs {
+  This endpoint creates a new comment on a blog post.
+  The URL contains the ID of the blog post to comment on.
+  The author is automatically set to the authenticated user.
+}

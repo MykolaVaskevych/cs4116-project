@@ -6,13 +6,18 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model, authenticate
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Wallet, Transaction, Service, Inquiry, InquiryMessage, Review, ReviewComment, Category
+from .models import (
+    Wallet, Transaction, Service, Inquiry, InquiryMessage, 
+    Review, ReviewComment, Category, BlogCategory, BlogPost, BlogComment
+)
 from .serializers import (
     UserSerializer, UserProfileSerializer, WalletSerializer,
     TransactionSerializer, DepositSerializer, WithdrawSerializer,
     TransferSerializer, ServiceSerializer, InquirySerializer,
     InquiryMessageSerializer, InquiryCreateSerializer, 
-    ReviewSerializer, ReviewCommentSerializer, CategorySerializer
+    ReviewSerializer, ReviewCommentSerializer, CategorySerializer,
+    BlogCategorySerializer, BlogPostListSerializer, BlogPostDetailSerializer,
+    BlogPostCreateSerializer, BlogCommentSerializer
 )
 
 User = get_user_model()
@@ -622,3 +627,230 @@ class ReviewCommentDetailView(generics.RetrieveUpdateDestroyAPIView):
         """Get the comment, filtering by review"""
         review_id = self.kwargs.get('review_pk')
         return ReviewComment.objects.filter(review__review_id=review_id)
+
+
+from django.utils import timezone
+from django.shortcuts import get_object_or_404
+from rest_framework.exceptions import ValidationError
+
+
+class BlogCategoryViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for blog categories.
+    
+    Allows listing, creating, retrieving, updating, and deleting blog categories.
+    Only moderators can create, update, or delete categories.
+    """
+    queryset = BlogCategory.objects.all()
+    serializer_class = BlogCategorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'created_at']
+    ordering = ['name']
+    
+    def get_permissions(self):
+        """
+        Allow anyone to view categories, but only moderators to modify them
+        """
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [permissions.IsAuthenticated(), IsModeratorUser()]
+        return [permissions.IsAuthenticated()]
+
+
+class IsAuthorOrModeratorPermission(permissions.BasePermission):
+    """
+    Custom permission to only allow owners of an object or moderators to edit it.
+    """
+    def has_object_permission(self, request, view, obj):
+        # Read permissions are allowed to any authenticated user
+        if request.method in permissions.SAFE_METHODS:
+            return True
+            
+        # Check if user is author or moderator
+        return obj.author == request.user or request.user.is_moderator
+
+
+class BlogPostViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for blog posts.
+    
+    Allows listing, creating, retrieving, updating, and deleting blog posts.
+    Only the author or moderators can update or delete posts.
+    """
+    permission_classes = [permissions.IsAuthenticated, IsAuthorOrModeratorPermission]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
+    search_fields = ['title', 'content', 'summary', 'author__username']
+    ordering_fields = ['created_at', 'updated_at', 'views']
+    ordering = ['-created_at']
+    filterset_fields = ['author', 'category', 'is_published']
+    
+    def get_queryset(self):
+        """
+        Filter queryset based on user and published status.
+        
+        - Moderators see all posts
+        - Authors see their own posts (published and unpublished)
+        - Everyone else sees only published posts
+        """
+        user = self.request.user
+        
+        # Base queryset
+        queryset = BlogPost.objects.all()
+        
+        # If user is moderator, show all posts
+        if user.is_moderator:
+            return queryset
+            
+        # For regular users, show all published posts plus their own unpublished posts
+        return queryset.filter(
+            Q(is_published=True) | Q(author=user)
+        )
+    
+    def get_serializer_class(self):
+        """
+        Use different serializers for different actions
+        """
+        if self.action == 'list':
+            return BlogPostListSerializer
+        elif self.action == 'create':
+            return BlogPostCreateSerializer
+        return BlogPostDetailSerializer
+    
+    def perform_create(self, serializer):
+        """Set author to current user"""
+        serializer.save(author=self.request.user)
+    
+    def perform_update(self, serializer):
+        """Track when post is updated"""
+        serializer.save(updated_at=timezone.now())
+    
+    def retrieve(self, request, *args, **kwargs):
+        """Increment view count when retrieving a blog post"""
+        instance = self.get_object()
+        # Only increment views for published posts and not from the author
+        if instance.is_published and instance.author != request.user:
+            instance.increment_views()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+
+class BlogPostBySlugView(generics.RetrieveAPIView):
+    """
+    API view for retrieving a blog post by its slug.
+    This provides a more SEO-friendly URL for accessing posts.
+    """
+    serializer_class = BlogPostDetailSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'slug'
+    
+    def get_queryset(self):
+        """
+        Filter queryset based on user and published status, similar to viewset.
+        """
+        user = self.request.user
+        
+        if user.is_moderator:
+            return BlogPost.objects.all()
+            
+        return BlogPost.objects.filter(
+            Q(is_published=True) | Q(author=user)
+        )
+    
+    def retrieve(self, request, *args, **kwargs):
+        """Increment view count when retrieving a blog post"""
+        instance = self.get_object()
+        # Only increment views for published posts and not from the author
+        if instance.is_published and instance.author != request.user:
+            instance.increment_views()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+
+class UserBlogPostListView(generics.ListAPIView):
+    """
+    API view for listing blog posts by a specific user.
+    """
+    serializer_class = BlogPostListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['title', 'content', 'summary']
+    ordering_fields = ['created_at', 'updated_at', 'views']
+    ordering = ['-created_at']
+    
+    def get_queryset(self):
+        """
+        Filter blog posts by user ID from URL and published status.
+        """
+        user_pk = self.kwargs.get('user_pk')
+        current_user = self.request.user
+        target_user = get_object_or_404(User, pk=user_pk)
+        
+        # Determine which posts should be visible
+        if current_user.is_moderator or current_user == target_user:
+            # Moderators and post authors see all posts
+            return BlogPost.objects.filter(author=target_user)
+        else:
+            # Others see only published posts
+            return BlogPost.objects.filter(author=target_user, is_published=True)
+
+
+class BlogCommentListCreateView(generics.ListCreateAPIView):
+    """
+    API view for listing and creating blog comments.
+    """
+    serializer_class = BlogCommentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        """Filter comments by blog post ID from URL"""
+        blog_post_pk = self.kwargs.get('blog_post_pk')
+        return BlogComment.objects.filter(blog_post_id=blog_post_pk)
+    
+    def perform_create(self, serializer):
+        """Set blog post and author when creating a comment"""
+        blog_post_pk = self.kwargs.get('blog_post_pk')
+        blog_post = get_object_or_404(BlogPost, pk=blog_post_pk)
+        
+        # Check if the blog post exists and is accessible
+        if not blog_post.is_published:
+            user = self.request.user
+            if user != blog_post.author and not user.is_moderator:
+                raise ValidationError("Cannot comment on unpublished blog posts")
+                
+        serializer.save(
+            blog_post=blog_post,
+            author=self.request.user
+        )
+        
+    def get_serializer(self, *args, **kwargs):
+        """Pre-populate the blog_post field in the serializer data"""
+        if kwargs.get('data') and not kwargs['data'].get('blog_post'):
+            blog_post_pk = self.kwargs.get('blog_post_pk')
+            if isinstance(kwargs['data'], dict):
+                kwargs['data']['blog_post'] = blog_post_pk
+            else:
+                # Handle immutable QueryDict by copying it
+                data = kwargs['data'].copy()
+                data['blog_post'] = blog_post_pk
+                kwargs['data'] = data
+        return super().get_serializer(*args, **kwargs)
+
+
+class BlogCommentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    API view for retrieving, updating, or deleting a specific blog comment.
+    """
+    queryset = BlogComment.objects.all()
+    serializer_class = BlogCommentSerializer
+    permission_classes = [permissions.IsAuthenticated, IsAuthorOrModeratorPermission]
+    lookup_url_kwarg = 'comment_pk'
+    
+    def get_object(self):
+        """Get the comment by its ID from the URL"""
+        comment_pk = self.kwargs.get('comment_pk')
+        comment = get_object_or_404(BlogComment, pk=comment_pk)
+        
+        # Check permissions
+        self.check_object_permissions(self.request, comment)
+        return comment

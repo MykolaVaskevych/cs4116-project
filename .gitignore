@@ -4,3 +4,35 @@
 **/__pycache__/
 my.cnf
 backend/check_admin.py
+
+# Python bytecode files
+*.py[cod]
+*$py.class
+
+# Django
+*.log
+*.pot
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Media files created during development/testing
+**/media/profile_images/test_*
+**/media/service_logos/test_*
+
+# Static files collected during development
+**/staticfiles/
+
+# Coverage reports
+.coverage
+**/htmlcov/
+
+# Virtual environments
+venv/
+env/
+.env/
+
+# Database Schema visual files
+**/*.pdf
+**/database_schema.html
+**/diagram*.png

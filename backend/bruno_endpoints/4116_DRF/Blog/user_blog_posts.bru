@@ -1,0 +1,30 @@
+meta {
+  name: Get User's Blog Posts
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{base_url}}/api/users/1/blog-posts/
+  body: none
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+assert {
+  res.status: 200
+}
+
+docs {
+  This endpoint retrieves all blog posts created by a specific user.
+  If you are viewing your own posts or are a moderator, you'll see both published and unpublished posts.
+  Otherwise, you'll only see published posts.
+}

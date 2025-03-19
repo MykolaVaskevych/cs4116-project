@@ -555,3 +555,107 @@ class ReviewComment(models.Model):
     class Meta:
         ordering = ['created_at']
 
+
+class BlogCategory(models.Model):
+    """
+    Categories for blog posts and educational content
+    """
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name_plural = "Blog Categories"
+        ordering = ['name']
+
+
+class BlogPost(models.Model):
+    """
+    Blog posts for educational content and information sharing.
+    Can be created by any user.
+    """
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=250, unique=True)
+    content = models.TextField()
+    summary = models.TextField(blank=True, help_text="Short summary of the blog post")
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='blog_posts'
+    )
+    category = models.ForeignKey(
+        BlogCategory, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='blog_posts'
+    )
+    image = models.ImageField(
+        upload_to='blog_images/', 
+        null=True, 
+        blank=True,
+        help_text="Featured image for the blog post"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_published = models.BooleanField(default=True)
+    views = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['slug']),
+            models.Index(fields=['created_at']),
+            models.Index(fields=['category']),
+        ]
+    
+    def __str__(self):
+        return self.title
+    
+    def save(self, *args, **kwargs):
+        """
+        Resize the blog image on save if present and changed
+        """
+        if self.image:
+            if not self.pk or (BlogPost.objects.filter(pk=self.pk).exists() and 
+                               BlogPost.objects.get(pk=self.pk).image != self.image):
+                self.image = resize_image(self.image, size=(1200, 800))
+        
+        super().save(*args, **kwargs)
+        
+    def increment_views(self):
+        """
+        Increment the view count for this blog post
+        """
+        self.views += 1
+        self.save(update_fields=['views'])
+
+
+class BlogComment(models.Model):
+    """
+    Comments on blog posts from any user
+    """
+    blog_post = models.ForeignKey(
+        BlogPost, 
+        on_delete=models.CASCADE, 
+        related_name='comments'
+    )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='blog_comments'
+    )
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['created_at']
+    
+    def __str__(self):
+        return f"Comment on '{self.blog_post.title}' by {self.author.username}"
+
