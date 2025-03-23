@@ -15,6 +15,8 @@ A web application that enables customers to browse business services, request in
 - **Inquiries**: Customers can create inquiries about services
 - **Messaging**: Built-in chat system between customers, businesses, and moderators
 - **Wallet System**: Digital wallet with deposit, withdrawal, and transfer capabilities
+- **Payment Requests**: Business users can request payments from customers for services
+- **Moderator Management**: Smart moderator assignment system based on current workload
 - **Review System**: Customers can leave reviews for services after closed inquiries, with business owners able to respond
 - **Blog System**: Educational content platform where users can create, categorize, and comment on blog posts with SEO-friendly URLs and view tracking
 
@@ -219,6 +221,19 @@ The backend API will be available at http://127.0.0.1:8000/
 - List Messages: `GET /api/messages/?inquiry={inquiry_id}`
 - Send Message: `POST /api/messages/`
 
+### Moderator Management
+
+- List Moderators: `GET /api/moderators/`
+- Request Moderator: `POST /api/moderators/request/`
+
+### Payment Requests
+
+- List Payment Requests: `GET /api/payment-requests/`
+- List Pending Payment Requests: `GET /api/payment-requests/pending/`
+- Create Payment Request (Business): `POST /api/payment-requests/`
+- Get Payment Request Details: `GET /api/payment-requests/{request_id}/`
+- Respond to Payment Request: `POST /api/payment-requests/{request_id}/respond/`
+
 ### Reviews
 
 - List Service Reviews: `GET /api/services/{service_id}/reviews/`
@@ -281,13 +296,16 @@ coverage html  # Generates HTML report in htmlcov/
 
 ### Test Coverage
 
-The project currently maintains >90% test coverage, with comprehensive tests for:
+The project currently maintains >85% test coverage, with comprehensive tests for:
 - User authentication and permissions
 - Admin interface functionality and validation
 - API endpoint behavior for all resources
 - Wallet transactions and validation
 - Service and review system logic
 - Inquiry and messaging system
+- Moderator management and smart assignment
+- Payment request processing and validation
+- Blog system functionality
 
 ## Troubleshooting
 
