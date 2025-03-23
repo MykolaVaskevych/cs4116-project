@@ -1,0 +1,69 @@
+meta {
+  name: Respond to Payment Request
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{host}}/api/payment-requests/{{request_id}}/respond/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "action": "accept"
+  }
+}
+
+docs {
+  title: Respond to Payment Request
+  description: Accepts or declines a payment request. Only the recipient can respond to a payment request.
+  
+  params: |
+    request_id: The UUID of the payment request
+  
+  body: |
+    {
+      "action": "accept"  // Can be "accept" or "decline"
+    }
+  
+  response_for_accept: |
+    {
+      "message": "Payment request accepted",
+      "transaction_id": "12345678-1234-5678-1234-567812345678",
+      "amount": "100.00",
+      "new_balance": "400.00"
+    }
+  
+  response_for_decline: |
+    {
+      "message": "Payment request declined"
+    }
+  
+  errors: |
+    // If not the payment recipient
+    {
+      "detail": "You can only respond to payment requests sent to you"
+    }
+    
+    // If payment request is not pending
+    {
+      "non_field_errors": [
+        "Cannot accept a payment request that is not pending"
+      ]
+    }
+    
+    // If insufficient funds for accepting
+    {
+      "error": "Payment failed: Insufficient funds"
+    }
+}

@@ -1,0 +1,79 @@
+meta {
+  name: Create Payment Request
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/api/payment-requests/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "inquiry": 1,
+    "amount": "100.00",
+    "description": "Payment for cleaning services"
+  }
+}
+
+docs {
+  title: Create Payment Request
+  description: Creates a new payment request for a customer in an existing inquiry (Business users only).
+  
+  body: |
+    {
+      "inquiry": 1,           // ID of the inquiry this payment request is for
+      "amount": "100.00",     // Amount requested
+      "description": "Payment for cleaning services"  // Optional description
+    }
+  
+  response: |
+    {
+      "id": 1,
+      "request_id": "e964c113-1846-46c7-abf8-6962b1635e7f",
+      "inquiry": 1,
+      "creator": 2,
+      "creator_name": "business",
+      "recipient": 1,
+      "recipient_name": "customer",
+      "amount": "100.00",
+      "description": "Payment for cleaning services",
+      "status": "PENDING",
+      "status_display": "Pending",
+      "service_name": "Home Cleaning",
+      "transaction": null,
+      "transaction_id": null,
+      "created_at": "2023-03-22T15:30:00Z",
+      "updated_at": "2023-03-22T15:30:00Z"
+    }
+  
+  errors: |
+    // If not a business user
+    {
+      "detail": "You do not have permission to perform this action."
+    }
+    
+    // If inquiry is closed
+    {
+      "non_field_errors": [
+        "Cannot create payment requests for closed inquiries"
+      ]
+    }
+    
+    // If the business doesn't own the service
+    {
+      "non_field_errors": [
+        "You can only create payment requests for your own services"
+      ]
+    }
+}

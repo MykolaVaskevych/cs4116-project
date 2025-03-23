@@ -1,0 +1,46 @@
+meta {
+  name: List Pending Requests
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{host}}/api/payment-requests/pending/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  title: List Pending Payment Requests
+  description: Returns all pending payment requests directed to the authenticated user.
+  
+  response: |
+    [
+      {
+        "id": 1,
+        "request_id": "e964c113-1846-46c7-abf8-6962b1635e7f",
+        "inquiry": 1,
+        "creator": 2,
+        "creator_name": "business",
+        "recipient": 1,
+        "recipient_name": "customer",
+        "amount": "100.00",
+        "description": "Payment for cleaning services",
+        "status": "PENDING",
+        "status_display": "Pending",
+        "service_name": "Home Cleaning",
+        "transaction": null,
+        "transaction_id": null,
+        "created_at": "2023-03-22T15:30:00Z",
+        "updated_at": "2023-03-22T15:30:00Z"
+      }
+    ]
+}
