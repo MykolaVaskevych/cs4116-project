@@ -10,17 +10,17 @@ get {
   auth: bearer
 }
 
-auth:bearer {
-  token: {{token}}
+params:query {
+  status: PENDING
+  inquiry: 1
 }
 
 headers {
   Content-Type: application/json
 }
 
-query {
-  status: PENDING
-  inquiry: 1
+auth:bearer {
+  token: {{token}}
 }
 
 docs {
