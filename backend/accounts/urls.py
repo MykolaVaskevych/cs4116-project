@@ -8,7 +8,9 @@ from .views import (
     ServiceReviewListView, ServiceReviewCreateView, UserReviewListView,
     ReviewDetailView, ReviewCommentListCreateView, ReviewCommentDetailView,
     BlogCategoryViewSet, BlogPostViewSet, BlogPostBySlugView, 
-    BlogCommentListCreateView, BlogCommentDetailView, UserBlogPostListView
+    BlogCommentListCreateView, BlogCommentDetailView, UserBlogPostListView,
+    ModeratorListView, ModeratorRequestView, PaymentRequestListCreateView,
+    PaymentRequestDetailView, PendingPaymentRequestListView, PaymentRequestActionView
 )
 
 # Create a router for viewsets
@@ -67,6 +69,16 @@ urlpatterns = [
     # Blog comments
     path('blog/posts/<int:blog_post_pk>/comments/', BlogCommentListCreateView.as_view(), name='blog-comments-list'),
     path('blog/comments/<int:comment_pk>/', BlogCommentDetailView.as_view(), name='blog-comment-detail'),
+    
+    # Moderator management endpoints
+    path('moderators/', ModeratorListView.as_view(), name='moderator-list'),
+    path('moderators/request/', ModeratorRequestView.as_view(), name='moderator-request'),
+    
+    # Payment request endpoints
+    path('payment-requests/', PaymentRequestListCreateView.as_view(), name='payment-request-list-create'),
+    path('payment-requests/pending/', PendingPaymentRequestListView.as_view(), name='pending-payment-requests'),
+    path('payment-requests/<uuid:request_id>/', PaymentRequestDetailView.as_view(), name='payment-request-detail'),
+    path('payment-requests/<uuid:request_id>/respond/', PaymentRequestActionView.as_view(), name='payment-request-action'),
     
     # Include routers for the new viewsets
     path('', include(router.urls)),

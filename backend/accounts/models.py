@@ -401,13 +401,18 @@ class Inquiry(models.Model):
         on_delete=models.CASCADE,
         related_name='moderated_inquiries',
         limit_choices_to={'role': User.Role.MODERATOR},
-        null=True
+        null=True,
+        blank=True
     )
     subject = models.CharField(max_length=100)
     status = models.CharField(
         max_length=10,
         choices=Status.choices,
         default=Status.OPEN
+    )
+    has_moderator_request = models.BooleanField(
+        default=False,
+        help_text="Indicates if a moderator has been requested for this inquiry"
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -422,6 +427,42 @@ class Inquiry(models.Model):
         self.status = self.Status.CLOSED
         self.moderator = moderator
         self.save(update_fields=['status', 'moderator', 'updated_at'])
+    
+    def request_moderator(self):
+        """Request a moderator for this inquiry"""
+        if self.moderator is not None:
+            raise ValueError("This inquiry already has a moderator assigned")
+        if self.has_moderator_request:
+            raise ValueError("A moderator has already been requested for this inquiry")
+        
+        self.has_moderator_request = True
+        self.save(update_fields=['has_moderator_request', 'updated_at'])
+        
+        # Find the moderator with the fewest active inquiries
+        User = get_user_model()
+        moderators = User.objects.filter(role=User.Role.MODERATOR)
+        
+        if not moderators.exists():
+            return None
+            
+        # Count active inquiries for each moderator
+        moderator_counts = []
+        for moderator in moderators:
+            active_count = Inquiry.objects.filter(
+                moderator=moderator,
+                status=Inquiry.Status.OPEN
+            ).count()
+            moderator_counts.append((moderator, active_count))
+        
+        # Sort by count and assign the moderator with fewest inquiries
+        moderator_counts.sort(key=lambda x: x[1])
+        assigned_moderator = moderator_counts[0][0]
+        
+        # Assign the moderator
+        self.moderator = assigned_moderator
+        self.save(update_fields=['moderator', 'updated_at'])
+        
+        return assigned_moderator
 
 
 class InquiryMessage(models.Model):
@@ -658,4 +699,112 @@ class BlogComment(models.Model):
     
     def __str__(self):
         return f"Comment on '{self.blog_post.title}' by {self.author.username}"
+
+
+class PaymentRequest(models.Model):
+    """
+    Model for payment requests from businesses to customers within an inquiry.
+    
+    Payment requests are created by business users and directed to customers.
+    Customers can accept (triggers a transfer) or decline the request.
+    """
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', _('Pending')
+        ACCEPTED = 'ACCEPTED', _('Accepted')
+        DECLINED = 'DECLINED', _('Declined')
+        
+    request_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    inquiry = models.ForeignKey(
+        Inquiry,
+        on_delete=models.CASCADE,
+        related_name='payment_requests'
+    )
+    creator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='created_payment_requests',
+        limit_choices_to={'role': User.Role.BUSINESS}
+    )
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='received_payment_requests',
+        limit_choices_to={'role': User.Role.CUSTOMER}
+    )
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField(blank=True, help_text="Description of what this payment is for")
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    transaction = models.ForeignKey(
+        Transaction,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='payment_request'
+    )
+    
+    def __str__(self):
+        return f"Payment request {self.request_id} - {self.amount} - {self.status}"
+    
+    def save(self, *args, **kwargs):
+        # Validate that creator is business and recipient is customer
+        if not self.creator.is_business:
+            raise ValueError("Only business users can create payment requests")
+        
+        if self.recipient.role != User.Role.CUSTOMER:
+            raise ValueError("Payment requests can only be sent to customers")
+        
+        # Ensure the creator is the business that owns the service in the inquiry
+        if self.inquiry.service.business != self.creator:
+            raise ValueError("You can only create payment requests for your own services")
+        
+        # Ensure the recipient is the customer who created the inquiry
+        if self.inquiry.customer != self.recipient:
+            raise ValueError("Payment requests must be sent to the customer who created the inquiry")
+        
+        super().save(*args, **kwargs)
+    
+    def accept(self):
+        """
+        Accept the payment request, transferring funds from recipient to creator.
+        Creates a transaction record and updates the payment request status.
+        """
+        if self.status != self.Status.PENDING:
+            raise ValueError("Only pending payment requests can be accepted")
+            
+        recipient_wallet = self.recipient.wallet
+        creator_wallet = self.creator.wallet
+        
+        try:
+            # Transfer the funds
+            transaction = recipient_wallet.transfer(creator_wallet, self.amount)
+            
+            # Update payment request
+            self.status = self.Status.ACCEPTED
+            self.transaction = transaction
+            self.save(update_fields=['status', 'transaction', 'updated_at'])
+            
+            return transaction
+        except ValueError as e:
+            # Re-raise the error with a more descriptive message
+            raise ValueError(f"Payment failed: {str(e)}")
+    
+    def decline(self):
+        """
+        Decline the payment request.
+        """
+        if self.status != self.Status.PENDING:
+            raise ValueError("Only pending payment requests can be declined")
+            
+        self.status = self.Status.DECLINED
+        self.save(update_fields=['status', 'updated_at'])
+        
+        # No need to keep declined requests for long, they can be deleted after a certain period
+        # For now, we just mark them as declined
+        return True
 

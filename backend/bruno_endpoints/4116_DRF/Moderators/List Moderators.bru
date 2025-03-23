@@ -1,0 +1,46 @@
+meta {
+  name: List Moderators
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/api/moderators/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  title: List Moderators
+  description: Returns a list of all moderators with their active inquiry counts.
+  
+  response: |
+    [
+      {
+        "id": 3,
+        "username": "moderator1",
+        "email": "moderator1@example.com",
+        "first_name": "Mod",
+        "last_name": "One",
+        "profile_image": "/media/profile_images/mod1.jpg",
+        "active_inquiry_count": 5
+      },
+      {
+        "id": 4,
+        "username": "moderator2",
+        "email": "moderator2@example.com",
+        "first_name": "Mod",
+        "last_name": "Two",
+        "profile_image": "/media/profile_images/mod2.jpg",
+        "active_inquiry_count": 2
+      }
+    ]
+}

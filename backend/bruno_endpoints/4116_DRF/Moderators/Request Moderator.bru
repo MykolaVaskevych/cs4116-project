@@ -1,0 +1,75 @@
+meta {
+  name: Request Moderator
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/api/moderators/request/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "inquiry_id": 1
+  }
+}
+
+docs {
+  title: Request Moderator
+  description: Allows customers and businesses to explicitly request a moderator for an active inquiry.
+  
+  body: |
+    {
+      "inquiry_id": 1  // ID of the inquiry for which you want to request a moderator
+    }
+  
+  response: |
+    // The API returns the updated inquiry information
+    {
+      "id": 1,
+      "service": 1,
+      "service_name": "Home Cleaning",
+      "business_name": "CleanCo",
+      "customer": 2,
+      "customer_name": "JohnDoe",
+      "moderator": 3,
+      "moderator_name": "ModeratorUser",
+      "subject": "Question about cleaning services",
+      "status": "OPEN",
+      "status_display": "Open",
+      "created_at": "2023-03-23T10:00:00Z",
+      "updated_at": "2023-03-23T10:10:00Z"
+    }
+  
+  errors: |
+    // If the inquiry already has a moderator
+    {
+      "inquiry_id": [
+        "This inquiry already has a moderator assigned"
+      ]
+    }
+    
+    // If a moderator has already been requested
+    {
+      "inquiry_id": [
+        "A moderator has already been requested for this inquiry"
+      ]
+    }
+    
+    // If inquiry is closed
+    {
+      "inquiry_id": [
+        "Cannot request a moderator for a closed inquiry"
+      ]
+    }
+}

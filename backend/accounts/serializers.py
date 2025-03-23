@@ -4,7 +4,8 @@ from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 from .models import (
     Wallet, Transaction, Service, Inquiry, InquiryMessage,
-    Review, ReviewComment, Category, BlogCategory, BlogPost, BlogComment
+    Review, ReviewComment, Category, BlogCategory, BlogPost, BlogComment,
+    PaymentRequest
 )
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -321,7 +322,7 @@ class InquiryCreateSerializer(serializers.ModelSerializer):
         if service and service.business == user:
             raise serializers.ValidationError("You cannot create an inquiry for your own service")
         
-        # Create the inquiry
+        # Create the inquiry without assigning a moderator
         inquiry = Inquiry.objects.create(**validated_data)
         
         # Create the initial message
@@ -556,3 +557,173 @@ class BlogPostCreateSerializer(serializers.ModelSerializer):
         
         # Create the blog post
         return BlogPost.objects.create(**validated_data)
+
+
+class ModeratorSerializer(serializers.ModelSerializer):
+    """Serializer for moderator information and activity"""
+    active_inquiry_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'profile_image',
+            'active_inquiry_count',
+        ]
+        
+    def get_active_inquiry_count(self, obj):
+        """Return the count of active (open) inquiries assigned to this moderator"""
+        return Inquiry.objects.filter(
+            moderator=obj,
+            status=Inquiry.Status.OPEN
+        ).count()
+
+
+class ModeratorRequestSerializer(serializers.Serializer):
+    """Serializer for requesting a moderator for an inquiry"""
+    inquiry_id = serializers.IntegerField()
+    
+    def validate_inquiry_id(self, value):
+        """Validate that the inquiry exists and can have a moderator assigned"""
+        try:
+            inquiry = Inquiry.objects.get(pk=value)
+        except Inquiry.DoesNotExist:
+            raise serializers.ValidationError("Inquiry not found")
+            
+        # Check if user is a participant in this inquiry
+        user = self.context['request'].user
+        is_participant = (
+            inquiry.customer == user or 
+            inquiry.service.business == user
+        )
+        
+        if not is_participant:
+            raise serializers.ValidationError("You are not a participant in this inquiry")
+            
+        # Check if inquiry is still open
+        if inquiry.status != Inquiry.Status.OPEN:
+            raise serializers.ValidationError("Cannot request a moderator for a closed inquiry")
+            
+        # Check if inquiry already has a moderator
+        if inquiry.moderator is not None:
+            raise serializers.ValidationError("This inquiry already has a moderator assigned")
+            
+        # Check if a moderator request has already been made
+        if inquiry.has_moderator_request:
+            raise serializers.ValidationError("A moderator has already been requested for this inquiry")
+            
+        return value
+        
+    def save(self):
+        """Process the moderator request"""
+        inquiry_id = self.validated_data['inquiry_id']
+        inquiry = Inquiry.objects.get(pk=inquiry_id)
+        
+        # Request and assign a moderator
+        moderator = inquiry.request_moderator()
+        return inquiry
+
+
+class PaymentRequestSerializer(serializers.ModelSerializer):
+    """Serializer for payment requests"""
+    creator_name = serializers.CharField(source='creator.username', read_only=True)
+    recipient_name = serializers.CharField(source='recipient.username', read_only=True)
+    service_name = serializers.CharField(source='inquiry.service.name', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    transaction_id = serializers.UUIDField(source='transaction.transaction_id', read_only=True, allow_null=True)
+    
+    class Meta:
+        model = PaymentRequest
+        fields = [
+            'id',
+            'request_id',
+            'inquiry',
+            'creator',
+            'creator_name',
+            'recipient',
+            'recipient_name',
+            'amount',
+            'description',
+            'status',
+            'status_display',
+            'service_name',
+            'transaction',
+            'transaction_id',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = [
+            'request_id', 
+            'creator', 
+            'recipient', 
+            'status', 
+            'transaction',
+            'created_at', 
+            'updated_at'
+        ]
+    
+    def validate(self, data):
+        """Validate payment request data"""
+        user = self.context['request'].user
+        
+        # Ensure user is a business
+        if not user.is_business:
+            raise serializers.ValidationError("Only business users can create payment requests")
+        
+        # Validate inquiry
+        inquiry = data.get('inquiry')
+        if inquiry:
+            # Ensure the inquiry is open
+            if inquiry.status != Inquiry.Status.OPEN:
+                raise serializers.ValidationError("Cannot create payment requests for closed inquiries")
+                
+            # Ensure user owns the service in the inquiry
+            if inquiry.service.business != user:
+                raise serializers.ValidationError("You can only create payment requests for your own services")
+        
+        # Validate amount
+        amount = data.get('amount')
+        if amount and amount <= 0:
+            raise serializers.ValidationError({"amount": "Amount must be positive"})
+            
+        return data
+    
+    def create(self, validated_data):
+        """Create a payment request"""
+        user = self.context['request'].user
+        inquiry = validated_data['inquiry']
+        
+        # Set the creator and recipient
+        validated_data['creator'] = user
+        validated_data['recipient'] = inquiry.customer
+        
+        return PaymentRequest.objects.create(**validated_data)
+
+
+class PaymentRequestActionSerializer(serializers.Serializer):
+    """Serializer for accepting or declining payment requests"""
+    action = serializers.ChoiceField(choices=['accept', 'decline'])
+    
+    def validate(self, data):
+        """Validate the payment request action"""
+        # The payment request object should be available in the context
+        payment_request = self.context.get('payment_request')
+        if not payment_request:
+            raise serializers.ValidationError("Payment request not found")
+            
+        # Ensure the payment request is pending
+        if payment_request.status != PaymentRequest.Status.PENDING:
+            raise serializers.ValidationError(
+                f"Cannot {data['action']} a payment request that is not pending"
+            )
+            
+        # Ensure the user is the recipient of the payment request
+        user = self.context['request'].user
+        if payment_request.recipient != user:
+            raise serializers.ValidationError("You can only respond to payment requests sent to you")
+            
+        return data

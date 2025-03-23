@@ -35,6 +35,30 @@ class ViewsTestCase(APITestCase):
             role=User.Role.MODERATOR
         )
         
+        # Create a second customer for testing
+        self.customer2 = User.objects.create_user(
+            username="customer2",
+            email="customer2@example.com",
+            password="password123",
+            role=User.Role.CUSTOMER
+        )
+        
+        # Create a second business for testing
+        self.business2 = User.objects.create_user(
+            username="business2",
+            email="business2@example.com",
+            password="password123",
+            role=User.Role.BUSINESS
+        )
+        
+        # Create a second moderator for testing
+        self.moderator2 = User.objects.create_user(
+            username="moderator2",
+            email="moderator2@example.com",
+            password="password123",
+            role=User.Role.MODERATOR
+        )
+        
         # Set up API clients
         self.customer_client = APIClient()
         self.customer_client.force_authenticate(user=self.customer)
@@ -44,6 +68,12 @@ class ViewsTestCase(APITestCase):
         
         self.moderator_client = APIClient()
         self.moderator_client.force_authenticate(user=self.moderator)
+        
+        self.customer2_client = APIClient()
+        self.customer2_client.force_authenticate(user=self.customer2)
+        
+        self.business2_client = APIClient()
+        self.business2_client.force_authenticate(user=self.business2)
         
         # Create category
         self.category = Category.objects.create(
@@ -56,6 +86,14 @@ class ViewsTestCase(APITestCase):
             name="Home Cleaning",
             description="Professional home cleaning service",
             business=self.business,
+            category=self.category
+        )
+        
+        # Create service for business2
+        self.service2 = Service.objects.create(
+            name="Office Cleaning",
+            description="Professional office cleaning service",
+            business=self.business2,
             category=self.category
         )
 
@@ -249,7 +287,7 @@ class ViewsTestCase(APITestCase):
         services_url = '/api/services/'
         response = self.customer_client.get(services_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data), 2)
         
         # Get service detail
         service_detail_url = f'/api/services/{self.service.id}/'
@@ -360,3 +398,197 @@ class ViewsTestCase(APITestCase):
         response = self.customer_client.get(inquiry_detail_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'CLOSED')
+        
+    def test_moderator_request_endpoints(self):
+        """Test moderator request and list endpoints"""
+        # Create an inquiry without a moderator
+        inquiry = Inquiry.objects.create(
+            service=self.service,
+            customer=self.customer,
+            subject="Need moderator inquiry"
+        )
+        
+        # List moderators
+        moderator_list_url = reverse('accounts:moderator-list')
+        response = self.customer_client.get(moderator_list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)  # We have two moderators
+        
+        # Request a moderator
+        moderator_request_url = reverse('accounts:moderator-request')
+        request_data = {'inquiry_id': inquiry.id}
+        
+        # Customer can request a moderator
+        response = self.customer_client.post(moderator_request_url, request_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        # Update inquiry from database
+        inquiry.refresh_from_db()
+        
+        # Inquiry should now have moderator request flag set and moderator assigned
+        self.assertTrue(inquiry.has_moderator_request)
+        self.assertIsNotNone(inquiry.moderator)
+        
+        # Can't request a moderator if one is already assigned
+        response = self.customer_client.post(moderator_request_url, request_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        
+        # Create another inquiry for testing
+        inquiry2 = Inquiry.objects.create(
+            service=self.service2,
+            customer=self.customer2,
+            subject="Another inquiry needing moderator"
+        )
+        
+        # Business can also request moderator
+        request_data = {'inquiry_id': inquiry2.id}
+        response = self.business2_client.post(moderator_request_url, request_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        # Update inquiry from database
+        inquiry2.refresh_from_db()
+        self.assertTrue(inquiry2.has_moderator_request)
+        self.assertIsNotNone(inquiry2.moderator)
+        
+        # User not involved in inquiry can't request moderator
+        inquiry3 = Inquiry.objects.create(
+            service=self.service,
+            customer=self.customer2,
+            subject="Third inquiry"
+        )
+        
+        request_data = {'inquiry_id': inquiry3.id}
+        # This business isn't involved in inquiry3
+        response = self.business2_client.post(moderator_request_url, request_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+    
+    def test_payment_request_workflow(self):
+        """Test payment request creation, listing, and processing workflow"""
+        # Create an open inquiry for payment testing
+        inquiry = Inquiry.objects.create(
+            service=self.service,
+            customer=self.customer,
+            subject="Payment inquiry"
+        )
+        
+        # Fund customer wallet for testing payment acceptance
+        self.customer.wallet.deposit(Decimal('500.00'))
+        
+        # Create payment request
+        payment_requests_url = reverse('accounts:payment-request-list-create')
+        
+        payment_data = {
+            'inquiry': inquiry.id,
+            'amount': '100.00',
+            'description': 'Payment for cleaning services'
+        }
+        
+        # Customer shouldn't be able to create payment requests
+        response = self.customer_client.post(payment_requests_url, payment_data, format='json')
+        self.assertIn(response.status_code, [status.HTTP_403_FORBIDDEN, status.HTTP_400_BAD_REQUEST])
+        
+        # Business should be able to create payment requests
+        response = self.business_client.post(payment_requests_url, payment_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['amount'], '100.00')
+        
+        payment_request_id = response.data['request_id']
+        
+        # Business can list their created payment requests
+        response = self.business_client.get(payment_requests_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        
+        # Customer can see payment requests directed to them
+        response = self.customer_client.get(payment_requests_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        
+        # Moderator can see all payment requests
+        response = self.moderator_client.get(payment_requests_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        
+        # List pending payment requests
+        pending_url = reverse('accounts:pending-payment-requests')
+        response = self.customer_client.get(pending_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        
+        # Get payment request details by ID
+        detail_url = reverse('accounts:payment-request-detail', args=[payment_request_id])
+        response = self.customer_client.get(detail_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'PENDING')
+        
+        # Accept payment request
+        action_url = reverse('accounts:payment-request-action', args=[payment_request_id])
+        action_data = {'action': 'accept'}
+        
+        # Only recipient can accept
+        response = self.business_client.post(action_url, action_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        
+        # Customer accepting payment
+        response = self.customer_client.post(action_url, action_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('transaction_id', response.data)
+        
+        # Check that payment request status is updated
+        response = self.customer_client.get(detail_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'ACCEPTED')
+        
+        # Refresh objects from database to get updated wallet balances
+        self.customer.refresh_from_db()
+        self.business.refresh_from_db()
+        
+        # Check that customer balance is reduced
+        wallet_url = reverse('accounts:wallet')
+        response = self.customer_client.get(wallet_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Decimal(response.data['balance']), Decimal('400.00'))
+        
+        # Check that business balance is increased
+        response = self.business_client.get(wallet_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Decimal(response.data['balance']), Decimal('100.00'))
+        
+        # Create another payment request to test declination
+        inquiry2 = Inquiry.objects.create(
+            service=self.service,
+            customer=self.customer,
+            subject="Another payment inquiry"
+        )
+        
+        payment_data = {
+            'inquiry': inquiry2.id,
+            'amount': '50.00',
+            'description': 'Another payment request'
+        }
+        
+        response = self.business_client.post(payment_requests_url, payment_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        payment_request_id2 = response.data['request_id']
+        action_url2 = reverse('accounts:payment-request-action', args=[payment_request_id2])
+        
+        # Decline payment request
+        decline_data = {'action': 'decline'}
+        response = self.customer_client.post(action_url2, decline_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['message'], 'Payment request declined')
+        
+        # Check that request is marked as declined
+        detail_url2 = reverse('accounts:payment-request-detail', args=[payment_request_id2])
+        response = self.customer_client.get(detail_url2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'DECLINED')
+        
+        # Refresh customer from database
+        self.customer.refresh_from_db()
+        
+        # Verify balance is unchanged after decline
+        response = self.customer_client.get(wallet_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Decimal(response.data['balance']), Decimal('400.00'))

@@ -8,7 +8,8 @@ from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import (
     Wallet, Transaction, Service, Inquiry, InquiryMessage, 
-    Review, ReviewComment, Category, BlogCategory, BlogPost, BlogComment
+    Review, ReviewComment, Category, BlogCategory, BlogPost, BlogComment,
+    PaymentRequest, User
 )
 from .serializers import (
     UserSerializer, UserProfileSerializer, WalletSerializer,
@@ -17,7 +18,8 @@ from .serializers import (
     InquiryMessageSerializer, InquiryCreateSerializer, 
     ReviewSerializer, ReviewCommentSerializer, CategorySerializer,
     BlogCategorySerializer, BlogPostListSerializer, BlogPostDetailSerializer,
-    BlogPostCreateSerializer, BlogCommentSerializer
+    BlogPostCreateSerializer, BlogCommentSerializer, ModeratorSerializer,
+    ModeratorRequestSerializer, PaymentRequestSerializer, PaymentRequestActionSerializer
 )
 
 User = get_user_model()
@@ -854,3 +856,168 @@ class BlogCommentDetailView(generics.RetrieveUpdateDestroyAPIView):
         # Check permissions
         self.check_object_permissions(self.request, comment)
         return comment
+
+
+class ModeratorListView(generics.ListAPIView):
+    """
+    API endpoint for listing all moderators with their active inquiry counts.
+    """
+    serializer_class = ModeratorSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        """Return all users with the moderator role"""
+        return User.objects.filter(role=User.Role.MODERATOR)
+
+
+class ModeratorRequestView(generics.CreateAPIView):
+    """
+    API endpoint for requesting a moderator for an inquiry.
+    
+    This allows customers and businesses to explicitly request moderators
+    for active inquiries.
+    """
+    serializer_class = ModeratorRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def perform_create(self, serializer):
+        inquiry = serializer.save()
+        return inquiry
+
+
+class PaymentRequestListCreateView(generics.ListCreateAPIView):
+    """
+    API endpoint for listing and creating payment requests.
+    
+    GET:
+    - For business users: Returns payment requests they've created
+    - For customers: Returns payment requests directed to them
+    - For moderators: Returns all payment requests
+    
+    POST (business users only):
+    - Creates a new payment request for a customer in an existing inquiry
+    """
+    serializer_class = PaymentRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['status', 'inquiry']
+    ordering_fields = ['created_at', 'updated_at', 'amount']
+    ordering = ['-created_at']
+    
+    def get_queryset(self):
+        """Filter payment requests based on user role"""
+        user = self.request.user
+        
+        # Moderators can see all payment requests
+        if user.is_moderator:
+            return PaymentRequest.objects.all()
+            
+        # Business users can see payment requests they created
+        if user.is_business:
+            return PaymentRequest.objects.filter(creator=user)
+            
+        # Customers can see payment requests directed to them
+        return PaymentRequest.objects.filter(recipient=user)
+        
+    def perform_create(self, serializer):
+        """Create a payment request with the current user as creator"""
+        if not self.request.user.is_business:
+            raise permissions.PermissionDenied("Only business users can create payment requests")
+            
+        serializer.save(creator=self.request.user)
+
+
+class PaymentRequestDetailView(generics.RetrieveAPIView):
+    """
+    API endpoint for retrieving details of a payment request.
+    
+    GET: Returns the details of a specific payment request.
+    """
+    serializer_class = PaymentRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'request_id'
+    lookup_url_kwarg = 'request_id'
+    
+    def get_queryset(self):
+        """Filter payment requests based on user role"""
+        user = self.request.user
+        
+        # Moderators can see all payment requests
+        if user.is_moderator:
+            return PaymentRequest.objects.all()
+            
+        # Business users can see payment requests they created
+        if user.is_business:
+            return PaymentRequest.objects.filter(creator=user)
+            
+        # Customers can see payment requests directed to them
+        return PaymentRequest.objects.filter(recipient=user)
+
+
+class PendingPaymentRequestListView(generics.ListAPIView):
+    """
+    API endpoint for listing pending payment requests for the authenticated user.
+    
+    GET: Returns all pending payment requests directed to the authenticated user.
+    """
+    serializer_class = PaymentRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        """Return pending payment requests for the current user"""
+        return PaymentRequest.objects.filter(
+            recipient=self.request.user,
+            status=PaymentRequest.Status.PENDING
+        ).order_by('-created_at')
+
+
+class PaymentRequestActionView(generics.GenericAPIView):
+    """
+    API endpoint for accepting or declining a payment request.
+    
+    POST: Accepts or declines a payment request based on the action parameter.
+    """
+    serializer_class = PaymentRequestActionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_object(self):
+        """Get the payment request by its request_id from the URL"""
+        request_id = self.kwargs.get('request_id')
+        payment_request = get_object_or_404(PaymentRequest, request_id=request_id)
+        
+        # Check if user is the recipient
+        if payment_request.recipient != self.request.user:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("You can only respond to payment requests sent to you")
+            
+        return payment_request
+    
+    def post(self, request, *args, **kwargs):
+        """Process the payment request action"""
+        payment_request = self.get_object()
+        
+        # Add payment request to serializer context
+        serializer = self.get_serializer(data=request.data)
+        serializer.context['payment_request'] = payment_request
+        
+        serializer.is_valid(raise_exception=True)
+        action = serializer.validated_data['action']
+        
+        try:
+            if action == 'accept':
+                # Accept and process the payment
+                transaction = payment_request.accept()
+                return Response({
+                    'message': 'Payment request accepted',
+                    'transaction_id': str(transaction.transaction_id),
+                    'amount': str(payment_request.amount),
+                    'new_balance': str(request.user.wallet.balance)
+                })
+            elif action == 'decline':
+                # Decline the payment request
+                payment_request.decline()
+                return Response({
+                    'message': 'Payment request declined'
+                })
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
