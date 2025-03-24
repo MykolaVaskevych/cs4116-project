@@ -440,7 +440,12 @@ class Inquiry(models.Model):
         
         # Find the moderator with the fewest active inquiries
         User = get_user_model()
-        moderators = User.objects.filter(role=User.Role.MODERATOR)
+        # Only select moderators who are not admins (is_staff=False, is_superuser=False)
+        moderators = User.objects.filter(
+            role=User.Role.MODERATOR,
+            is_staff=False,
+            is_superuser=False
+        )
         
         if not moderators.exists():
             return None

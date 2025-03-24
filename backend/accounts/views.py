@@ -861,13 +861,18 @@ class BlogCommentDetailView(generics.RetrieveUpdateDestroyAPIView):
 class ModeratorListView(generics.ListAPIView):
     """
     API endpoint for listing all moderators with their active inquiry counts.
+    Excludes admin users from the list.
     """
     serializer_class = ModeratorSerializer
     permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
-        """Return all users with the moderator role"""
-        return User.objects.filter(role=User.Role.MODERATOR)
+        """Return all users with the moderator role, excluding admins"""
+        return User.objects.filter(
+            role=User.Role.MODERATOR,
+            is_staff=False,
+            is_superuser=False
+        )
 
 
 class ModeratorRequestView(generics.CreateAPIView):

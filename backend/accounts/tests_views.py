@@ -461,6 +461,63 @@ class ViewsTestCase(APITestCase):
         # This business isn't involved in inquiry3
         response = self.business2_client.post(moderator_request_url, request_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        
+    def test_admin_not_assigned_to_inquiries(self):
+        """Test that admin users (moderators with is_staff=True) are not assigned to inquiries"""
+        # Create an admin moderator
+        admin_moderator = User.objects.create_user(
+            username="admin_mod",
+            email="admin_mod@example.com",
+            password="password123",
+            role=User.Role.MODERATOR,
+            is_staff=True,
+            is_superuser=True
+        )
+        
+        # Create a regular moderator with fewer inquiries
+        new_moderator = User.objects.create_user(
+            username="new_mod",
+            email="new_mod@example.com",
+            password="password123",
+            role=User.Role.MODERATOR,
+            is_staff=False,
+            is_superuser=False
+        )
+        
+        # Create an inquiry
+        inquiry = Inquiry.objects.create(
+            service=self.service,
+            customer=self.customer,
+            subject="Admin test inquiry"
+        )
+        
+        # Request a moderator
+        moderator_request_url = reverse('accounts:moderator-request')
+        request_data = {'inquiry_id': inquiry.id}
+        
+        response = self.customer_client.post(moderator_request_url, request_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        # Update inquiry from database
+        inquiry.refresh_from_db()
+        
+        # Verify that the admin moderator was not assigned
+        self.assertNotEqual(inquiry.moderator, admin_moderator)
+        
+        # Verify that a regular moderator was assigned instead
+        self.assertIn(inquiry.moderator, [self.moderator, self.moderator2, new_moderator])
+        
+        # Check that admin is not in the list of moderators returned by the API
+        moderator_list_url = reverse('accounts:moderator-list')
+        response = self.customer_client.get(moderator_list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Should have the original 2 moderators plus the new one (not the admin)
+        self.assertEqual(len(response.data), 3) 
+        
+        # Make sure none of the moderators in the list is the admin
+        moderator_ids = [m['id'] for m in response.data]
+        self.assertNotIn(admin_moderator.id, moderator_ids)
     
     def test_payment_request_workflow(self):
         """Test payment request creation, listing, and processing workflow"""
