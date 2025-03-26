@@ -67,7 +67,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "date_joined",
             "last_login",
         ]
-        read_only_fields = ["id", "email", "date_joined", "last_login", "is_business", "is_moderator", "role"]
+        read_only_fields = ["id", "email", "date_joined", "last_login", "is_business", "is_moderator"]
         extra_kwargs = {
             "username": {"required": True},
             "first_name": {"required": True},
@@ -90,11 +90,45 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
         
     def validate(self, data):
-        # Role changes should be restricted
+        # Role changes logic
         if 'role' in data and data['role'] != self.instance.role:
-            # Check if user is staff or superuser (admin)
-            if not self.context['request'].user.is_staff and not self.context['request'].user.is_superuser:
-                raise serializers.ValidationError({'role': 'You do not have permission to change your role'})
+            current_role = self.instance.role
+            new_role = data['role']
+            user = self.instance
+            
+            # No one can become a moderator through this API
+            if new_role == User.Role.MODERATOR:
+                raise serializers.ValidationError({'role': 'Cannot change role to moderator'})
+                
+            # Moderators cannot change their role
+            if current_role == User.Role.MODERATOR:
+                raise serializers.ValidationError({'role': 'Moderators cannot change their role'})
+                
+            # Business to Customer: must close all inquiries and delete services
+            if current_role == User.Role.BUSINESS and new_role == User.Role.CUSTOMER:
+                # Check if user has any open inquiries for their services
+                open_inquiries = Inquiry.objects.filter(
+                    service__business=user,
+                    status=Inquiry.Status.OPEN
+                ).exists()
+                
+                if open_inquiries:
+                    raise serializers.ValidationError(
+                        {'role': 'You must close all open inquiries before changing to customer role'}
+                    )
+                
+                # Check if user has any services
+                has_services = Service.objects.filter(business=user).exists()
+                if has_services:
+                    raise serializers.ValidationError(
+                        {'role': 'You must delete all your services before changing to customer role'}
+                    )
+                    
+            # Customer can become Business without restrictions
+            if current_role == User.Role.CUSTOMER and new_role == User.Role.BUSINESS:
+                # No restrictions, allowed to change
+                pass
+            
         return data
 
 
