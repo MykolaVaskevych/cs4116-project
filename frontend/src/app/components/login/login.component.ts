@@ -33,8 +33,9 @@ export class LoginComponent {
             email: this.loginForm.value.email,
             password: this.loginForm.value.password
         }).subscribe(result => {
-            console.log(result.access);
+            console.log(result);
             localStorage.setItem('access', result.access);
+            localStorage.setItem('user', JSON.stringify(result.user));
 
             this.router.navigate(['home']);
         }, error => {

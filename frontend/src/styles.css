@@ -16,3 +16,12 @@ body.login-page {
 .no-icon {
     display: none !important;
 }
+
+html, body {
+    overflow: scroll;
+    scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+    display: none;
+}

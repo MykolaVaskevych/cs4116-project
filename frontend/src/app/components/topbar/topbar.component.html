@@ -17,14 +17,23 @@
                         <i class="bi bi-house" style="font-size: 2rem; cursor: pointer"></i>
                     </a>
                 </li>
+
                 <li class="nav-item">
                     <a class="nav-link topbar-font-color" style="font-size: x-large; font-weight: bold" href="/about">101</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link active topbar-font-color" aria-current="page" href="#">
-                        <i class="bi bi-envelope" style="font-size: 2rem; cursor: pointer"></i>
+
+                <li>
+                    <a class="nav-link active topbar-font-color" aria-current="page" href="/inquiry">
+                        <i class="bi bi-chat-left-dots" style="font-size: 2rem; cursor: pointer" ngbTooltip="Inquiry"></i>
                     </a>
                 </li>
+
+<!--                <li class="nav-item">-->
+<!--                    <a class="nav-link active topbar-font-color" aria-current="page" href="#">-->
+<!--                        <i class="bi bi-envelope" style="font-size: 2rem; cursor: pointer"></i>-->
+<!--                    </a>-->
+<!--                </li>-->
+
                 <li class="nav-item">
                     <a class="nav-link active topbar-font-color" aria-current="page" href="#">
                         <i class="bi bi-person-circle" style="font-size: 2rem; cursor: pointer"></i>
@@ -49,6 +58,7 @@
                     </a>
                 </li>
             </ul>
+            <span>Logged In: {{current_user_login}}</span> <span style="font-style: italic; text-decoration: underline">({{current_user_role}})</span>
 
         </div>
     </div>

@@ -1,0 +1,204 @@
+.customer-name-under-topbar {
+    position: relative;
+    height: 10%;
+    margin-top: -16px; /* Adjust based on Bootstrap's `.mt-3` */
+    /* Optional spacing */
+    padding: 10px 0 10px 50px;
+    text-align: center; /* Optional */
+    background-color: #5EB8B0; /* Optional for visibility */
+    border-top: 1px solid black;
+
+    color: black;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    font-size: xxx-large;
+    font-weight: bold;
+}
+
+
+/* Ensure the wrapper is displayed as a flex container */
+#wrapper {
+    display: flex;
+    height: 100vh; /* Full viewport height */
+    width: 100vw;
+    flex-direction: row;
+    position: fixed;
+    font-family: 'Outfit', sans-serif;
+}
+
+/* Sidebar styling */
+#sidebar {
+    margin-top: -16px;
+    margin-left: -16px;
+    width: 450px; /* Set the sidebar width */
+    background-color: #56CCF2 !important; /* Sidebar background */
+    color: white;
+    overflow-y: auto; /* Enable scrolling if content exceeds the height */
+    border-top: 1px solid rgba(0, 0, 0, 1);
+    border-right: 1px solid rgba(0, 0, 0, 1);
+}
+
+/* Content area */
+#page-content-wrapper {
+    width: 100vw;
+    flex-grow: 1; /* Make sure the content fills the remaining space */
+    /*padding: 20px;*/
+}
+
+.list-group > .list-group-item {
+    background-color: #56CCF2 !important;
+}
+
+/* Chat container styling */
+.inquiry-message-area {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    /*overflow: hidden;*/
+    /*justify-content: flex-end; !* Align content to the bottom *!*/
+}
+
+hr {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    border: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0);
+}
+
+.mark-completed {
+    /*visibility: hidden;*/
+    /*background-color: green;*/
+    text-align: center;
+}
+
+.messages {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    overflow-y: scroll;
+    margin-top: -16px;
+    /*background-color: hotpink;*/
+    padding: 10px 10px 10px 50px;
+
+    scroll-behavior: smooth;
+    /*transition: transform 20s ease-out;*/
+}
+
+
+.single-message {
+    border-radius: 25px;
+    background-color: #007BE5 !important;
+    padding: 15px;
+    max-width: 50%;
+    color: white;
+    margin-bottom: 0.5%;
+    border: 1px black solid;
+    font-family: 'Outfit', sans-serif;
+}
+
+.right {
+    align-self: flex-end;
+    margin-right: 3%;
+    background-color: rgb(0, 0, 0, 0) !important;
+    color: black;
+}
+
+.left {
+    align-self: flex-start;
+}
+
+/* For screens larger than 15-inch (approximately 1920px width, adjust if needed) */
+@media (min-width: 1280px) {
+    .messages {
+        /*height: 65vh; !* Adjust height for larger screens, such as a 23-inch display *!*/
+    }
+    .chat-container {
+        height: 63%;
+    }
+
+    .mark-completed {
+        top: 87%;
+    }
+}
+
+/* For screens larger than 23-inch (e.g., 2560px width, adjust as needed) */
+@media (min-width: 1920px) {
+    .messages {
+        /*height: 72vh; !* Further adjust if needed for larger desktop monitors *!*/
+    }
+
+    .chat-container {
+        height: 72%;
+    }
+
+    .mark-completed {
+        top: 90%;
+    }
+}
+
+.message-input {
+    /*height: 35%;*/
+    background-color: #5EB8B0; /* Optional for visibility */
+    border-top: 1px solid black;
+
+    color: black;
+    display: flex;
+    font-size: xxx-large;
+    font-weight: bold;
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+}
+
+#messageInput {
+    border-radius: 0 !important;
+    height: 70px;
+    font-size: xx-large;
+}
+
+#messageInput::placeholder {
+    font-size: xx-large;
+    font-weight: bold;
+    font-family: 'Outfit', sans-serif;
+    /*width: 85%;*/
+    /*padding: 10px;*/
+}
+
+#messageInput:focus,
+#messageInput:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc; /* Optional: Keeps a consistent border */
+}
+
+
+#sendMessageBtn {
+    width: 10%;
+}
+
+.inquiry-recipient {
+    display: flex;
+    align-items: center;
+
+    cursor: pointer;
+    border: none;
+    margin-bottom: 2% !important;
+}
+
+.inquiry-recipient:hover {
+    /*color: red;*/
+}
+
+.inquiry-recipient-name {
+    font-weight: bold;
+    font-size: large;
+}
+
+.dp-thumbnail {
+    border-radius: 50px;
+}
+
+.disable-input::placeholder {
+    color: gray;
+}

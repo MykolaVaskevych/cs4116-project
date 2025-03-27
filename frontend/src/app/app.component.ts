@@ -7,7 +7,7 @@ import {TopbarComponent} from './components/topbar/topbar.component';
 
 @Component({
   selector: 'app-root',
-    imports: [RouterOutlet, BusinessListComponent, RouterLink, RouterLinkActive, ReactiveFormsModule, NgIf, TopbarComponent],
+    imports: [RouterOutlet, ReactiveFormsModule, NgIf, TopbarComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })

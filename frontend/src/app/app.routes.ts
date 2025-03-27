@@ -4,6 +4,7 @@ import {AboutComponent} from './components/about/about.component';
 import {LoginComponent} from './components/login/login.component';
 import {SignUpComponent} from './components/sign-up/sign-up.component';
 import {AuthGuard} from './services/auth-guard/authGuard';
+import {InquiryComponent} from './components/inquiry/inquiry.component';
 
 export let routes: Routes;
 routes = [
@@ -11,5 +12,6 @@ routes = [
     {path: 'about', component: AboutComponent, canActivate: [AuthGuard]},
     {path: 'login', component: LoginComponent, canActivate: [AuthGuard]},
     {path: 'sign-up', component: SignUpComponent, canActivate: [AuthGuard]},
+    {path: 'inquiry', component: InquiryComponent, canActivate: [AuthGuard]},
     {path: '', redirectTo: '/home', pathMatch: 'full'},
 ];
