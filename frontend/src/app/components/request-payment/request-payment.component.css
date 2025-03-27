@@ -1,0 +1,21 @@
+.modal-parent {
+    font-family: 'Outfit', sans-serif;
+}
+
+.recipient-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.recipient-info img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.email {
+    color: gray;
+    font-size: 12px;
+}

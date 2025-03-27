@@ -35,6 +35,7 @@ export class LoginComponent {
         }).subscribe(result => {
             console.log(result);
             localStorage.setItem('access', result.access);
+            localStorage.setItem('refresh', result.refresh);
             localStorage.setItem('user', JSON.stringify(result.user));
 
             this.router.navigate(['home']);

@@ -8,3 +8,6 @@
     flex-direction: row;
 }
 
+.nav-item {
+    padding-bottom: 5% !important;
+}

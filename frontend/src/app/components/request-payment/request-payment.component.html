@@ -1,0 +1,44 @@
+<span class="modal-parent">
+
+    <div class="modal-header">
+        <h5 class="modal-title">Request Payment</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+    </div>
+
+    <div class="modal-body">
+        <p class="small text-muted">Requesting payment from:</p>
+        <div class="recipient-info">
+    <!--        <img [src]="recipient?.image" alt="User">-->
+            <div>
+                <p>{{ recipient?.customer_name }}</p>
+                <p class="email">{{ recipient?.email }}</p>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Amount</label>
+            <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input type="number" class="form-control" [(ngModel)]="amount" min="1">
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Payment Method</label>
+            <select class="form-select" [(ngModel)]="paymentMethod">
+                <option value="wallet">Wallet</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Message (Optional)</label>
+            <textarea class="form-control" [(ngModel)]="message" rows="3" placeholder="Add a note..."></textarea>
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <button class="btn btn-light" (click)="closeModal()">Cancel</button>
+        <button class="btn btn-primary" [disabled]="amount <= 0" (click)="request()">Request Payment</button>
+    </div>
+
+</span>

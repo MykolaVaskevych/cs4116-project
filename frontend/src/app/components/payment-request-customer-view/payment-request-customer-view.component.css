@@ -1,0 +1,39 @@
+.modal-parent {
+    font-family: 'Outfit', sans-serif;
+}
+
+.part-one {
+    display: flex;
+    flex-direction: column;
+    /*height: 150px;*/
+    justify-content: space-around;
+}
+
+.po-first {
+    padding-bottom: 5%;
+    height: 50%;
+    width: 90%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.po-second {
+    height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+}
+
+.po-first > *, .po-second > * {
+    display: flex;
+    flex-direction: column;
+}
+
+.head-label {
+    color: gray;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: space-between;
+}

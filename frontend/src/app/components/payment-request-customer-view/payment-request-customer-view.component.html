@@ -1,0 +1,84 @@
+<span class="modal-parent">
+    <span
+        role="status"
+        *ngIf="keepLoading"
+        style="display: flex; height: 300px; justify-content: center; align-items: center;"
+    >
+        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+        &nbsp;&nbsp;&nbsp;
+        <span role="status">Loading...</span>
+    </span>
+
+    <span *ngIf="!keepLoading">
+        <div class="modal-header">
+            <div>
+                <span style="display: flex; align-items: baseline">
+                    <h5 class="modal-title">Payment Request</h5>
+                    &nbsp;&nbsp;&nbsp;
+                    <div style="color: gray">#{{ updatedPaymentRequest?.id }}</div>
+                </span>
+                <span style="font-size: smaller">Payment To: {{ updatedPaymentRequest.creator_name }}</span>
+            </div>
+            <button type="button" class="btn-close" (click)="closeModal()"></button>
+        </div>
+
+        <div class="modal-body">
+            <div class="part-one">
+                <span class="po-first">
+                    <span>
+                        <span class="head-label">Issued On</span>
+                        <span>{{ getDateString(updatedPaymentRequest.created_at) }}</span>
+                    </span>
+
+                    <span>
+                        <span class="head-label">Service</span>
+                        <span>{{ updatedPaymentRequest.service_name }}</span>
+                    </span>
+
+                    <span>
+                        <span class="head-label">Status</span>
+                        <span>{{ updatedPaymentRequest.status }}</span>
+                    </span>
+                </span>
+
+                <hr class="my-0">
+            </div>
+
+            <div class="part-two">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">Invoice Items</li>
+                    <li
+                        class="list-group-item d-flex justify-content-between align-items-center"
+                        style="font-size: x-large;"
+                    >
+                        Amount
+                        <span
+                            class="badge text-bg-primary"
+                            style="background-color: unset !important; color: black !important; font-size: x-large"
+                        >
+                            {{ updatedPaymentRequest.amount }}
+                        </span>
+                    </li>
+                </ul>
+                <hr class="my-0">
+            </div>
+            <span style="padding-top: 5%; display: flex; flex-direction: column">
+                <span style="color: gray;">Comment:</span>
+                <span>{{ updatedPaymentRequest.description }}</span>
+            </span>
+        </div>
+
+        <div class="modal-footer">
+            <span style="{{loadingAcceptReject()}}">
+                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                &nbsp;&nbsp;&nbsp;
+                <span role="status">Loading...</span>
+            </span>
+            <span>
+                <button class="btn btn-light" (click)="request('decline')">REJECT</button>
+                &nbsp;
+                <button class="btn btn-primary" (click)="request('accept')">ACCEPT</button>
+            </span>
+        </div>
+    </span>
+</span>

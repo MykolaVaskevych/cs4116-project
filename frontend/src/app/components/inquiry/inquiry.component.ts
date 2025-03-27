@@ -1,16 +1,23 @@
 import {AfterViewChecked, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
-import {NgForOf, NgIf, NgOptimizedImage} from '@angular/common';
-import {NgbScrollSpy, NgbScrollSpyFragment} from '@ng-bootstrap/ng-bootstrap';
+import {NgClass, NgForOf, NgIf, NgOptimizedImage, NgStyle} from '@angular/common';
+import {NgbModal, NgbPopover, NgbScrollSpy, NgbScrollSpyFragment, NgbTooltip} from '@ng-bootstrap/ng-bootstrap';
 import {InquiryService} from '../../services/inquiry-service/inquiry.service';
 import {FormsModule} from '@angular/forms';
 import Swal from 'sweetalert2';
+import {CommonUtilsService} from '../../services/common-utils/common-utils.service';
+import {RequestPaymentComponent} from '../request-payment/request-payment.component';
+import {
+    PaymentRequestCustomerViewComponent
+} from '../payment-request-customer-view/payment-request-customer-view.component';
 
 @Component({
   selector: 'app-inquiry',
     imports: [
         NgForOf,
         NgIf,
-        FormsModule
+        FormsModule,
+        NgbTooltip,
+        NgbPopover,
     ],
   templateUrl: './inquiry.component.html',
   styleUrl: './inquiry.component.css'
@@ -164,9 +171,25 @@ export class InquiryComponent implements OnInit, AfterViewChecked, OnDestroy {
     ];
 
     timeoutId: any;
+    timeoutId_PaymentRequest: any;
     shouldScrollToBottom = false;
 
-    constructor(private inquiryService: InquiryService) {
+    inputFiledVisibilityFlag = false;
+    paymentRequestSent = false;
+    paymentRequestReceived = false;
+    paymentRequestReceivedText = '';
+    paymentRequestSentText = '';
+
+    lastAcceptedOrDeclinedRequest!: boolean;
+    lastAcceptedOrDeclinedRequestText = '';
+
+    activePaymentRequest: any;
+
+    constructor(
+        private inquiryService: InquiryService,
+        private commonUtilsService: CommonUtilsService,
+        private modalService: NgbModal
+    ) {
     }
 
     ngOnDestroy(): void {
@@ -176,11 +199,15 @@ export class InquiryComponent implements OnInit, AfterViewChecked, OnDestroy {
     ngOnInit() {
         this.inquiryService.getAllInquiries().subscribe(response => {
             // console.log(response);
-            response.map((item: any) => {
-                this.inquiry_list.push(item);
+            response
+                // .filter((item: any) => item.status === 'OPEN')
+                .map((item: any) => {
+                    this.inquiry_list.push(item);
             });
             this.selectedRecipient = this.inquiry_list[0];
             this.startPolling(this.selectedRecipient);
+            this.inputFiledVisibilityFlag = true;
+            // this.viewPaymentRequest();
             // this.textMessages = response[0].messages;
             // this.currentInquiryOpenOrClosed = (response[0].status === 'CLOSED');
             // console.log(this.currentInquiryOpenOrClosed);
@@ -205,7 +232,7 @@ export class InquiryComponent implements OnInit, AfterViewChecked, OnDestroy {
     }
 
     getInquiryName(inquiry: any): any {
-        const current_user = JSON.parse(<string>localStorage.getItem('user'));
+        const current_user = this.commonUtilsService.getCurrentUser();
         // console.log(current_user);
 
         if (!inquiry) {
@@ -228,7 +255,7 @@ export class InquiryComponent implements OnInit, AfterViewChecked, OnDestroy {
 
     getSingleMessageClass(message: any): any {
         // console.log(message);
-        const current_user = JSON.parse(<string>localStorage.getItem('user'));
+        const current_user = this.commonUtilsService.getCurrentUser();
         if (current_user.role === 'CUSTOMER') {
             if (message.sender_role.toLowerCase() === 'customer') {
                 return 'right';
@@ -252,14 +279,69 @@ export class InquiryComponent implements OnInit, AfterViewChecked, OnDestroy {
         let isFirstLoad = true;
         // console.log(user);
         this.selectedRecipient = user;
+        this.lastAcceptedOrDeclinedRequest = false;
 
         this.messageText = '';
         this.currentInquiryOpenOrClosed = (user.status === 'CLOSED');
         // console.log(this.currentInquiryOpenOrClosed);
         // this.textMessages = user.messages;
 
+        let isRefreshing = false;
+
         if (this.timeoutId) {
             clearTimeout(this.timeoutId);
+        }
+
+        let lookForData_PaymentRequest = () => {
+            let subscription = this.inquiryService.getPaymentRequest().subscribe(response => {
+                this.lastAcceptedOrDeclinedRequest = false;
+                response = response.filter((item: any) => item.inquiry === this.selectedRecipient.id);
+
+                let filteredData = response
+                    .filter((item: any) => item.status === 'PENDING')
+                    .find((item: any) => item.inquiry === this.selectedRecipient.id);
+
+                // console.log(this.commonUtilsService.getCurrentUser());
+                // console.log(this.selectedRecipient.id);
+
+                if (filteredData?.status === 'PENDING') {
+                    this.activePaymentRequest = filteredData;
+                    // console.log('PENDING FOUND')
+                    this.paymentRequestSent = (
+                        this.commonUtilsService.getCurrentUser().is_business === true ||
+                        this.commonUtilsService.getCurrentUser().is_moderator === true
+                    );
+                    this.paymentRequestSentText = `Payment Request sent. Amount: ${filteredData.amount}`;
+
+                    this.paymentRequestReceived = (
+                        this.commonUtilsService.getCurrentUser().is_business === false &&
+                        this.commonUtilsService.getCurrentUser().is_moderator === false
+                    );
+                    this.paymentRequestReceivedText = `New Payment Request Received.`;
+                } else {
+                    console.log('NO PENDING');
+
+                    if (response.length !== 0) {
+                        // @ts-ignore
+                        response.sort((a: any, b: any) => a.id - b.id);
+
+                        const temp_object = response[response.length - 1];
+                        // @ts-ignore
+                        this.lastAcceptedOrDeclinedRequest = true;
+                        this.lastAcceptedOrDeclinedRequestText = `The last payment request was ${temp_object.status}`;
+
+                        console.log(this.lastAcceptedOrDeclinedRequest);
+                    }
+
+                    this.paymentRequestSent = false;
+                    this.paymentRequestReceived = false;
+                }
+
+                this.timeoutId_PaymentRequest = setTimeout(() => {
+                    subscription.unsubscribe();
+                    lookForData_PaymentRequest();
+                }, 2000);
+            });
         }
 
         let lookForData = () => {
@@ -278,10 +360,19 @@ export class InquiryComponent implements OnInit, AfterViewChecked, OnDestroy {
                     subscription.unsubscribe(); // Stop previous API call
                     lookForData(); // Call again
                 }, 2000);
+            }, error => {
+                console.error(error);
+                if (error.status === 401) {
+                    this.commonUtilsService.showSessionExpired()
+                        .then((result) => {
+                            window.location.reload();
+                        });
+                }
             });
         };
 
         lookForData(); // Start the polling
+        lookForData_PaymentRequest(); // Start the polling
     }
 
     sendMessage() {
@@ -313,4 +404,94 @@ export class InquiryComponent implements OnInit, AfterViewChecked, OnDestroy {
         const opacityValue = this.selectedRecipient.id === inquiry.id ? 1 : 0;
         return `opacity: ${opacityValue}`;
     }
+
+    isClosedInquiry(inquiry: any) {
+        let isClosed = inquiry.status === 'CLOSED' ? 1 : 0;
+
+        return `opacity: ${isClosed}`;
+    }
+
+    showInquiryCloseButton(inquiry: any) {
+        let isClosed = inquiry.status === 'CLOSED' ? 0 : 1;
+        const current_user = this.commonUtilsService.getCurrentUser();
+        if (current_user.role !== 'MODERATOR') {
+            isClosed = 0;
+        }
+
+        return `opacity: ${isClosed}`;
+    }
+
+    acceptClose(p: any) {
+        this.inquiryService.closeInquiry(this.selectedRecipient.id).subscribe(response => {
+            this.inquiryService.getSingleInquiry(this.selectedRecipient.id).subscribe(response => {
+                console.log(response);
+
+                this.inquiry_list = this.inquiry_list.map((inquiry: any) => {
+                    if (inquiry.id === response.id) {
+                        return { ...inquiry, ...response };
+                    }
+                    return inquiry;
+                });
+                this.selectedRecipient = response;
+                this.currentInquiryOpenOrClosed = (this.selectedRecipient.status === 'CLOSED');
+            });
+        });
+
+
+
+        p.close();
+    }
+
+    rejectClose(p: any) {
+        p.close();
+    }
+
+    openRequestPaymentView() {
+        const modalRef = this.modalService.open(RequestPaymentComponent, { centered: true });
+        modalRef.componentInstance.recipient = this.selectedRecipient;
+        modalRef.componentInstance.modalTitle = 'Modal Title';  // Pass data into the modal
+        modalRef.componentInstance.modalMessage = 'This is the content of the modal';  // Pass more data
+
+        // Listen for the response when modal is closed
+        modalRef.componentInstance.responseEvent.subscribe((response: any) => {
+            console.log(response);  // Handle the response from the modal
+            modalRef.close();
+
+            if (response.info === 'request') {
+                const payload = {
+                    inquiry: this.selectedRecipient.id,
+                    description: response.message,
+                    amount: response.amount
+                }
+
+                this.inquiryService.createPaymentRequest(payload).subscribe(response => {
+                    console.log(response);
+                });
+            }
+        });
+    }
+
+    viewPaymentRequest() {
+        const modalRef = this.modalService.open(PaymentRequestCustomerViewComponent, { centered: true });
+        modalRef.componentInstance.paymentRequestUUID = this.activePaymentRequest.request_id;
+        modalRef.componentInstance.modalTitle = 'Modal Title';  // Pass data into the modal
+        modalRef.componentInstance.modalMessage = 'This is the content of the modal';  // Pass more data
+
+        // Listen for the response when modal is closed
+        modalRef.componentInstance.responseEvent.subscribe((response: any) => {
+            console.log(response);  // Handle the response from the modal
+            modalRef.close();
+        });
+    }
+
+    shouldRequestPaymentButtonBeVisible() {
+        let visibility = true;
+        const current_user = this.commonUtilsService.getCurrentUser();
+        if (current_user.role == 'CUSTOMER') {
+            visibility = false;
+        }
+
+        return visibility;
+    }
+
 }

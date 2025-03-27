@@ -27,6 +27,19 @@
     font-family: 'Outfit', sans-serif;
 }
 
+#wrapper.disabled {
+    pointer-events: none;  /* Disable pointer events */
+    opacity: 0.5;          /* Optional: dim the content */
+}
+
+#wrapper.disabled .list-group-item,
+#wrapper.disabled button,
+#wrapper.disabled input {
+    pointer-events: none;  /* Disable pointer events for these elements */
+    opacity: 0.5;          /* Optional: dim these elements */
+}
+
+
 /* Sidebar styling */
 #sidebar {
     margin-top: -16px;
@@ -137,6 +150,13 @@ hr {
     }
 }
 
+.ask-payment {
+    cursor: pointer;
+    background-color: white;
+    padding-left: 1%;
+    padding-right: 1%;
+}
+
 .message-input {
     /*height: 35%;*/
     background-color: #5EB8B0; /* Optional for visibility */
@@ -144,17 +164,20 @@ hr {
 
     color: black;
     display: flex;
+    flex-direction: row;
     font-size: xxx-large;
     font-weight: bold;
-    width: 100%;
     position: fixed;
     bottom: 0;
+    /*max-width: 75vw;*/
+    width: 85%;
 }
 
 #messageInput {
     border-radius: 0 !important;
-    height: 70px;
+    /*height: 70px;*/
     font-size: xx-large;
+    /*width: 70% !important;*/
 }
 
 #messageInput::placeholder {
