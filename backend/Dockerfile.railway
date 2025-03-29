@@ -25,10 +25,10 @@ RUN uv venv /project/.venv
 ENV PATH="/project/.venv/bin:$PATH"
 
 # Install dependencies using uv sync
-RUN uv sync --frozen
+RUN uv sync
 
-# Install gunicorn for production
-RUN uv pip install gunicorn
+# Install required packages explicitly for redundancy
+RUN uv pip install django-cors-headers gunicorn
 
 # Copy backend project files
 WORKDIR /app
