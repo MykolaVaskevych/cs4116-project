@@ -1,6 +1,7 @@
 # accounts/serializers.py
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
 from django.utils.text import slugify
 from .models import (
     Wallet, Transaction, Service, Inquiry, InquiryMessage,
@@ -759,5 +760,43 @@ class PaymentRequestActionSerializer(serializers.Serializer):
         user = self.context['request'].user
         if payment_request.recipient != user:
             raise serializers.ValidationError("You can only respond to payment requests sent to you")
+            
+        return data
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    """
+    Serializer for changing a user's password.
+    Requires old password for security verification.
+    New password must meet all password validation requirements.
+    """
+    old_password = serializers.CharField(required=True, style={'input_type': 'password'})
+    new_password = serializers.CharField(required=True, style={'input_type': 'password'})
+    confirm_password = serializers.CharField(required=True, style={'input_type': 'password'})
+    
+    def validate_old_password(self, value):
+        """Validate that the old password is correct"""
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Old password is incorrect")
+        return value
+    
+    def validate_new_password(self, value):
+        """Validate that the new password meets all requirements"""
+        # Use Django's built-in password validators
+        user = self.context['request'].user
+        try:
+            validate_password(value, user)
+        except Exception as e:
+            raise serializers.ValidationError(list(e))
+        return value
+    
+    def validate(self, data):
+        """Validate that new password and confirm password match"""
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError({'confirm_password': "Passwords don't match"})
+        
+        if data['old_password'] == data['new_password']:
+            raise serializers.ValidationError({'new_password': "New password cannot be the same as old password"})
             
         return data

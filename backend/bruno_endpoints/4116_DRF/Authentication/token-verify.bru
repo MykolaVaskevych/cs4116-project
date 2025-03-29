@@ -1,0 +1,33 @@
+meta {
+  name: token-verify
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/api/token/verify/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "token": "{{token}}"
+  }
+}
+
+docs {
+  # JWT Token Verify
+
+  This endpoint verifies if a JWT token is valid and not expired.
+
+  ## Request Body
+  - `token`: The JWT token to verify (can be either access or refresh token)
+
+  ## Response
+  - 200 OK: Token is valid
+  - 401 Unauthorized: Token is invalid or expired
+
+  ## Usage
+  Use this endpoint to check if a stored token is still valid before using it or to validate tokens provided by clients.
+}

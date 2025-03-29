@@ -19,7 +19,8 @@ from .serializers import (
     ReviewSerializer, ReviewCommentSerializer, CategorySerializer,
     BlogCategorySerializer, BlogPostListSerializer, BlogPostDetailSerializer,
     BlogPostCreateSerializer, BlogCommentSerializer, ModeratorSerializer,
-    ModeratorRequestSerializer, PaymentRequestSerializer, PaymentRequestActionSerializer
+    ModeratorRequestSerializer, PaymentRequestSerializer, PaymentRequestActionSerializer,
+    ChangePasswordSerializer
 )
 
 User = get_user_model()
@@ -146,6 +147,35 @@ def user_profile(request):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def change_password(request):
+    """
+    Change password for the authenticated user.
+    
+    Requires old_password, new_password, and confirm_password.
+    Validates that old password is correct, new passwords match,
+    and the new password meets all security requirements.
+    """
+    serializer = ChangePasswordSerializer(
+        data=request.data,
+        context={'request': request}
+    )
+    
+    if serializer.is_valid():
+        user = request.user
+        # Set the new password
+        user.set_password(serializer.validated_data['new_password'])
+        user.save()
+        
+        return Response(
+            {'message': 'Password updated successfully'},
+            status=status.HTTP_200_OK
+        )
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 

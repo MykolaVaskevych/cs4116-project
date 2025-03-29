@@ -33,6 +33,7 @@ urlpatterns = [
     
     # User profiles endpoints
     path('profile/', views.user_profile, name='profile'),
+    path('change-password/', views.change_password, name='change_password'),
     
     # Wallet endpoints
     path('wallet/', views.wallet_detail, name='wallet'),

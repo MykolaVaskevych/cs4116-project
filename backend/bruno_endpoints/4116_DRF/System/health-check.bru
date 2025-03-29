@@ -1,0 +1,24 @@
+meta {
+  name: health-check
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/api/health/
+  auth: none
+}
+
+docs {
+  # API Health Check
+
+  This endpoint provides system health information.
+
+  ## Usage
+  Use this endpoint to check if the API is operational and responsive.
+  It can be used by monitoring systems, load balancers, or during deployment verification.
+
+  ## Response
+  - 200 OK: API is operational
+  - Contains basic health metrics about the system
+}

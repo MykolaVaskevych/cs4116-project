@@ -1,0 +1,41 @@
+meta {
+  name: token-refresh
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{host}}/api/token/refresh/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "refresh": "{{refresh_token}}"
+  }
+}
+
+script:post-response {
+  bru.setVar("token", res.body.access);
+}
+
+docs {
+  # JWT Token Refresh
+
+  This endpoint allows refreshing an expired access token using a valid refresh token.
+
+  ## Request Body
+  - `refresh`: The refresh token obtained during login or previous token refresh
+
+  ## Response
+  - `access`: New access token that can be used for authenticated requests
+  - `refresh`: New refresh token (if rotate refresh tokens is enabled)
+
+  ## Usage
+  Access tokens expire after 60 minutes, while refresh tokens last for 1 day.
+  Use this endpoint to get a new access token without requiring the user to log in again.
+
+  ## Error Cases
+  - 401 Unauthorized: Invalid or expired refresh token
+}
