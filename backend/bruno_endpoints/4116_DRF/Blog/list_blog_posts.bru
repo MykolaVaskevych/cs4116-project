@@ -19,11 +19,23 @@ params:query {
 
 headers {
   Content-Type: application/json
-  Authorization: Bearer {{access_token}}
+  Authorization: Bearer {{token}}
 }
 
 auth:bearer {
   token: {{token}}
+}
+
+script:post-response {
+  // Set variables from the first blog post in the list (if available)
+  if (res.body && res.body.results && res.body.results.length > 0) {
+    const firstPost = res.body.results[0];
+    bru.setVar("blog_post_id", firstPost.id);
+    bru.setVar("blog_slug", firstPost.slug);
+    
+    // Log to console that variables were set from first result
+    console.log(`Set blog_post_id=${firstPost.id} and blog_slug=${firstPost.slug} from first result`);
+  }
 }
 
 assert {
@@ -34,4 +46,8 @@ docs {
   This endpoint supports filtering by author, category, and search terms.
   It also supports ordering by various fields like created_at, views, etc.
   Add a minus sign (-) before the field name to sort in descending order.
+  
+  Note: This request has a script that automatically sets the blog_post_id and blog_slug
+  environment variables from the first result in the list. You can use these variables
+  in subsequent requests.
 }

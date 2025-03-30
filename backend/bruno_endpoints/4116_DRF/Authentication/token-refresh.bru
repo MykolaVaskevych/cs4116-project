@@ -12,12 +12,16 @@ post {
 
 body:json {
   {
-    "refresh": "{{refresh_token}}"
+    "refresh": "{{refresh}}"
   }
 }
 
 script:post-response {
   bru.setVar("token", res.body.access);
+  // Optionally save new refresh token if provided
+  if (res.body.refresh) {
+    bru.setVar("refresh", res.body.refresh);
+  }
 }
 
 docs {

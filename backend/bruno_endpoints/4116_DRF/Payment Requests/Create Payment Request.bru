@@ -18,6 +18,10 @@ headers {
   Content-Type: application/json
 }
 
+script:post-response {
+  bru.setVar("request_id", res.body.request_id);
+}
+
 body:json {
   {
     "inquiry": 1,

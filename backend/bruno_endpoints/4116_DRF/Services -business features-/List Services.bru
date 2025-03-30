@@ -13,3 +13,19 @@ get {
 auth:bearer {
   token: {{token}}
 }
+
+script:post-response {
+  // Set service_id from the first service in the list (if available)
+  if (res.body && res.body.length > 0) {
+    bru.setVar("service_id", res.body[0].id);
+    console.log(`Set service_id=${res.body[0].id} from first result`);
+  }
+}
+
+docs {
+  This endpoint lists all available services.
+  
+  Note: This request has a script that automatically sets the service_id
+  environment variable from the first result in the list. You can use this variable
+  in subsequent requests.
+}

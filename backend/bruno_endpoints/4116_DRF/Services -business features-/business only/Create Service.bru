@@ -14,6 +14,10 @@ auth:bearer {
   token: {{token}}
 }
 
+script:post-response {
+  bru.setVar("service_id", res.body.id);
+}
+
 body:json {
   {
     "name": "Service 1",

@@ -13,3 +13,19 @@ get {
 auth:bearer {
   token: {{token}}
 }
+
+script:post-response {
+  // Set inquiry_id from the first inquiry in the list (if available)
+  if (res.body && res.body.length > 0) {
+    bru.setVar("inquiry_id", res.body[0].id);
+    console.log(`Set inquiry_id=${res.body[0].id} from first result`);
+  }
+}
+
+docs {
+  This endpoint lists all inquiries relevant to the current user.
+  
+  Note: This request has a script that automatically sets the inquiry_id
+  environment variable from the first result in the list. You can use this variable
+  in subsequent requests.
+}

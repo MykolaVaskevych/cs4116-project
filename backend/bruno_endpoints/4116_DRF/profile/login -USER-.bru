@@ -19,4 +19,5 @@ body:json {
 
 script:post-response {
   bru.setVar("token", res.body.access);
+  bru.setVar("refresh", res.body.refresh);
 }

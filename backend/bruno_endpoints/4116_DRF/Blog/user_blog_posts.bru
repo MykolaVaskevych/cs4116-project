@@ -5,18 +5,18 @@ meta {
 }
 
 get {
-  url: {{base_url}}/api/users/1/blog-posts/
+  url: {{host}}/api/users/1/blog-posts/
   body: none
   auth: bearer
 }
 
 headers {
   Content-Type: application/json
-  Authorization: Bearer {{access_token}}
+  Authorization: Bearer {{token}}
 }
 
 auth:bearer {
-  token: {{access_token}}
+  token: {{token}}
 }
 
 assert {

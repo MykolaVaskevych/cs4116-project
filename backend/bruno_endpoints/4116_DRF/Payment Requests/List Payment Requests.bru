@@ -23,6 +23,14 @@ auth:bearer {
   token: {{token}}
 }
 
+script:post-response {
+  // Set request_id from the first payment request in the list (if available)
+  if (res.body && res.body.length > 0) {
+    bru.setVar("request_id", res.body[0].request_id);
+    console.log(`Set request_id=${res.body[0].request_id} from first result`);
+  }
+}
+
 docs {
   title: List Payment Requests
   description: Returns a list of payment requests filtered by user role and optional query parameters.
@@ -52,4 +60,8 @@ docs {
         "updated_at": "2023-03-22T15:30:00Z"
       }
     ]
+    
+  Note: This request has a script that automatically sets the request_id
+  environment variable from the first result in the list. You can use this variable
+  in subsequent requests.
 }

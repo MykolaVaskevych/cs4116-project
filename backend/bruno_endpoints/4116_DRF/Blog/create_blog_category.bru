@@ -5,18 +5,18 @@ meta {
 }
 
 post {
-  url: {{base_url}}/api/blog/categories/
+  url: {{host}}/api/blog/categories/
   body: json
   auth: bearer
 }
 
 headers {
   Content-Type: application/json
-  Authorization: Bearer {{access_token}}
+  Authorization: Bearer {{token}}
 }
 
 auth:bearer {
-  token: {{access_token}}
+  token: {{token}}
 }
 
 body:json {
