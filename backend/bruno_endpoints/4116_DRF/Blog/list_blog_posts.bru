@@ -5,12 +5,12 @@ meta {
 }
 
 get {
-  url: {{base_url}}/api/blog/posts/
+  url: {{host}}/api/blog/posts/
   body: none
   auth: bearer
 }
 
-query {
+params:query {
   ~author: 1
   ~category: 1
   ~search: tutorial
@@ -23,7 +23,7 @@ headers {
 }
 
 auth:bearer {
-  token: {{access_token}}
+  token: {{token}}
 }
 
 assert {

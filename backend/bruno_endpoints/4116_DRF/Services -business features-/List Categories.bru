@@ -1,0 +1,15 @@
+meta {
+  name: List Categories
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{host}}/api/categories/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
