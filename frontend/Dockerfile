@@ -20,7 +20,7 @@ RUN npm run build
 FROM nginx:alpine
 
 # Copy the build output to replace the default nginx contents
-COPY --from=build /app/dist/cs4116-project /usr/share/nginx/html
+COPY --from=build /app/dist/marketplace /usr/share/nginx/html
 
 # Setup nginx configuration for Angular routing
 RUN echo 'server { \
