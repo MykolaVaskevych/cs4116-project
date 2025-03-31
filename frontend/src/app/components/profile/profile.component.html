@@ -1,0 +1,132 @@
+<div  [ngClass]="{'main': !applyStyle, 'main-custom': applyStyle}">
+
+    <div class="left-sec">
+        <div class="header">
+            <div class="profile-pic">
+                <img src="profilepic.avif" alt="Profile Photo">
+            </div>
+            <div class="name">{{user.username}}</div>
+        </div>
+
+        <div class="main-sec">
+            <div class="general-info">
+                <div class="header">
+                    General Info
+                </div>
+                <div class="bottom-sec">
+                    <div class="username">
+                        <div class="username-left-sec">
+                            {{user.username}}
+                        </div>
+
+                        <div class="username-right-sec">
+                            Username
+                        </div>
+                    </div>
+
+                    <div class="email">
+                        <div class="email-left-sec">
+                            {{user.email}}
+                        </div>
+
+                        <div class="email-right-sec">
+                            Email
+                        </div>
+                    </div>
+
+                </div>
+                <div class="update-info">
+                        update info
+                </div>
+            </div>
+        </div>
+
+
+        <div class="main-sec">
+            <div class="update-password">
+                <div class="header">
+                    Update Password
+                </div>
+                <form [formGroup]="passwordForm" class="bottom-sec">
+                    <div class="new-pass">
+                        <input type="password" class="new-pass-left-sec" formControlName="newPassword" />
+
+                        <div class="new-pass-right-sec">
+                            New Password
+                        </div>
+                    </div>
+                    <div class="old-pass">
+                        <input type="password" class="old-pass-left-sec" formControlName="oldPassword"/>
+
+                        <div class="old-pass-right-sec">
+                            Old Password
+                        </div>
+                    </div>
+
+
+                </form>
+                <div class="update-pass-field" (click)="onUpdatePassword()">
+                        Update Password
+                </div>
+                <div *ngIf="passwordFormError" class="form-error">
+                    Kindly fill all fields!
+                </div>
+                <div class="login-out-field">
+                        Login out
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="divider">
+    </div>
+
+    <div  *ngIf="!isProvider" class="right-sec">
+        <div class="right-top-sec">
+            <div class="header">
+                Become a Provider
+            </div>
+
+            <div class="desc">
+                as a service provider you can create listings, recieve bookings and grow your business
+            </div>
+        </div>
+
+        <form [formGroup]="businessForm"  class="right-bottom-sec">
+            <div class="full-name">
+                <label class="full-name-label">
+                    Your Full Name
+                </label>
+                <input type="text" class="full-name-field" formControlName="fullName">
+            </div>
+
+            <div class="business-info">
+                <div class="business-info-label header">
+                    Tell Us About your business
+                </div>
+                <textarea class="business-info-field" formControlName="businessInfo"></textarea>
+                <div class="apply-btn" (click)="onSubmitBusinessForm()">
+                    Apply
+                </div>
+                <div *ngIf="businessFormError" class="form-error">
+                    Kindly fill all fields!
+                </div>
+            </div>
+        </form>
+
+    </div>
+
+    <div *ngIf="isProvider" class="right-sec">
+        <div class="provider-panel">
+            <div class="header">Provider Panel</div>
+            <div class="desc">Login to your panel to access provider functions</div>
+        </div>
+
+        <div class="panel-btns">
+            <div class="enter-panel">Enter Panel</div>
+            <div class="report-issue">Report Issue</div>
+        </div>
+    </div>
+
+
+</div>

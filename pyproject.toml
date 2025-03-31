@@ -19,5 +19,5 @@ dependencies = [
     "gunicorn>=21.2.0",
     "whitenoise>=6.9.0",
     "coverage>=7.7.0",
-    "django-cors-headers>=4.7.0",
+    "django-cors-headers>=4.3.1",
 ]

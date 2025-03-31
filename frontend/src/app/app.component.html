@@ -22,7 +22,11 @@
     </div>
 
     <!-- Main content section -->
-    <div class="container-fluid mt-3">
+    <div  [ngClass]="{
+        '': isListingPage(),
+        'container-fluid mt-3': !isProfilePage() && !isListingPage() && !isBlogPage(),
+        'container-fluid': isProfilePage(),
+      }">
         <router-outlet></router-outlet>
     </div>
 </body>

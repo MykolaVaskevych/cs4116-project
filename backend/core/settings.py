@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 if not SECRET_KEY and os.environ.get("DJANGO_ENV") != "production":
     # Only for development - generate a temporary key
-    SECRET_KEY = 'dev-only-insecure-key-do-not-use-in-production'
+    SECRET_KEY = "dev-only-insecure-key-do-not-use-in-production"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # Temporarily enable DEBUG for troubleshooting admin issues
@@ -35,46 +35,45 @@ allowed_hosts_str = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1")
 ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_str.split(",")]
 
 # Add railway domains
-ALLOWED_HOSTS.extend([
-    'railway.app',
-    'up.railway.app',
-    'cs4116-project-production.up.railway.app',
-    '*',  # Allow all hosts temporarily
-])
+ALLOWED_HOSTS.extend(
+    [
+        "railway.app",
+        "up.railway.app",
+        "cs4116-project-production.up.railway.app",
+        "*",  # Allow all hosts temporarily
+    ]
+)
 ALLOWED_HOSTS = [host for host in ALLOWED_HOSTS if host]
 
 # CSRF settings
 CSRF_TRUSTED_ORIGINS = [
-    'https://*.up.railway.app',
-    'https://*.railway.app',
-    'https://cs4116-project-production.up.railway.app',
+    "https://*.up.railway.app",
+    "https://*.railway.app",
+    "https://cs4116-project-production.up.railway.app",
 ]
 
 # CSRF and cookie security settings
 CSRF_COOKIE_SECURE = os.environ.get("DJANGO_ENV") == "production"
 SESSION_COOKIE_SECURE = os.environ.get("DJANGO_ENV") == "production"
 CSRF_COOKIE_HTTPONLY = True
-CSRF_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SAMESITE = "Lax"
 
 
 # Application definition
 
 INSTALLED_APPS = [
     "accounts",
-
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     "rest_framework",
     "rest_framework_simplejwt",
     "django_filters",
     "corsheaders",
-    
     "django_extensions",
 ]
 
@@ -91,11 +90,13 @@ MIDDLEWARE = [
 MIDDLEWARE.append("django.middleware.csrf.CsrfViewMiddleware")
 
 # Add remaining middleware
-MIDDLEWARE.extend([
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
-])
+MIDDLEWARE.extend(
+    [
+        "django.contrib.auth.middleware.AuthenticationMiddleware",
+        "django.contrib.messages.middleware.MessageMiddleware",
+        "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    ]
+)
 
 ROOT_URLCONF = "core.urls"
 
@@ -124,13 +125,11 @@ WSGI_APPLICATION = "core.wsgi.application"
 import dj_database_url
 
 # Get the DATABASE_URL from environment or use the my.cnf file
-DATABASE_URL = os.environ.get('DATABASE_URL')
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
     # Parse the DATABASE_URL
-    DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL)
-    }
+    DATABASES = {"default": dj_database_url.parse(DATABASE_URL)}
 else:
     # Use the default configuration from my.cnf
     DATABASES = {
@@ -181,7 +180,7 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Use WhiteNoise to serve static files in production
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 WHITENOISE_USE_FINDERS = True
 WHITENOISE_AUTOREFRESH = True
 
@@ -231,22 +230,22 @@ AUTH_USER_MODEL = "accounts.User"
 
 # Configure logging
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
         },
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": os.environ.get("DJANGO_LOG_LEVEL", "INFO"),
         },
-        'django.request': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
+        "django.request": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
         },
     },
 }
@@ -254,28 +253,29 @@ LOGGING = {
 # CORS Configuration - Full Access for Debugging
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken', 'Authorization']
+CORS_EXPOSE_HEADERS = ["Content-Type", "X-CSRFToken", "Authorization"]
 CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
 
 CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-    'access-control-allow-headers',
-    'access-control-allow-origin',
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+    "access-control-allow-headers",
+    "access-control-allow-origin",
 ]
 
 CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
 ]
+

@@ -37,7 +37,9 @@ const COUNTRIES: Country[] = [
 
 @Component({
     selector: 'app-business-list',
-    imports: [],
+    imports: [
+        DecimalPipe
+    ],
     templateUrl: './business-list.component.html',
     styleUrl: './business-list.component.css'
 })

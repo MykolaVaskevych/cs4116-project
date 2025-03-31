@@ -13,29 +13,23 @@
             </form>
             <ul class="navbar-nav me-auto mb-2 mb-lg-0 topbar-ul">
                 <li class="nav-item">
-                    <a class="nav-link active topbar-font-color" aria-current="page" href="#">
+                    <a class="nav-link active topbar-font-color" aria-current="page" href="/home">
                         <i class="bi bi-house" style="font-size: 2rem; cursor: pointer" ngbTooltip="Home"></i>
                     </a>
                 </li>
-
                 <li class="nav-item">
                     <a class="nav-link topbar-font-color" style="font-size: x-large; font-weight: bold" href="/about" ngbTooltip="About">101</a>
                 </li>
 
-                <li>
+                <!-- Inquiry Page -->
+                <li class="nav-item">
                     <a class="nav-link active topbar-font-color" aria-current="page" href="/inquiry">
                         <i class="bi bi-chat-left-dots" style="font-size: 2rem; cursor: pointer" ngbTooltip="Inquiry"></i>
                     </a>
                 </li>
 
-<!--                <li class="nav-item">-->
-<!--                    <a class="nav-link active topbar-font-color" aria-current="page" href="#">-->
-<!--                        <i class="bi bi-envelope" style="font-size: 2rem; cursor: pointer"></i>-->
-<!--                    </a>-->
-<!--                </li>-->
-
                 <li class="nav-item">
-                    <a class="nav-link active topbar-font-color" aria-current="page" href="/modal">
+                    <a class="nav-link active topbar-font-color" aria-current="page" href="/profile">
                         <i class="bi bi-person-circle" style="font-size: 2rem; cursor: pointer" ngbTooltip="Profile"></i>
                     </a>
                 </li>
@@ -58,7 +52,10 @@
                     </a>
                 </li>
             </ul>
-            <span>Logged In: {{current_user_login}}</span> <span style="font-style: italic; text-decoration: underline">({{current_user_role}})</span>
+
+            <!-- Display Logged-In User and Role -->
+            <span>Logged In: {{current_user_login}}</span> 
+            <span style="font-style: italic; text-decoration: underline">({{current_user_role}})</span>
 
         </div>
     </div>
