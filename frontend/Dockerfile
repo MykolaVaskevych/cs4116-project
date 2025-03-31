@@ -18,6 +18,9 @@ RUN rm -rf /usr/share/nginx/html/*
 # Copy the build output
 COPY --from=build /app/dist/marketplace /usr/share/nginx/html
 
+# Copy test HTML file
+COPY test.html /usr/share/nginx/html/test.html
+
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
