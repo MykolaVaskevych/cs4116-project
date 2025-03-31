@@ -1,5 +1,5 @@
 # This is a proxy Dockerfile that pulls in the real frontend Dockerfile
-FROM gcr.io/docker-pull-through/library/node:lts-alpine
+FROM node:lts-alpine
 
 WORKDIR /app
 
