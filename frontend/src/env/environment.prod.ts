@@ -1,15 +1,5 @@
-// This file will be processed during build
-// The window.ENV object will be injected by Nginx
-declare global {
-    interface Window {
-        ENV?: {
-            BACKEND_URL?: string;
-        };
-    }
-}
-
 export const environment = {
     production: true,
-    apiHost: window.ENV?.BACKEND_URL || 'https://backend.railway.app',
+    apiHost: 'https://backend-production-5eff.up.railway.app',  // Your actual backend URL
     randomUserApi: 'https://randomuser.me'
 };
