@@ -1,0 +1,31 @@
+# Build stage
+FROM node:lts-alpine as build
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+# Print build output for debugging
+RUN ls -la dist/
+
+# Production stage
+FROM node:lts-alpine
+
+WORKDIR /app
+
+# Copy built assets
+COPY --from=build /app/dist /app/dist
+COPY --from=build /app/server.js /app/server.js
+
+# Install Express
+RUN npm init -y && npm install express
+
+# Expose port 80
+EXPOSE 80
+
+# Start the Express server
+CMD ["node", "server.js"]

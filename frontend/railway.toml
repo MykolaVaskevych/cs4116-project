@@ -1,12 +1,17 @@
-# Uncomment this if you want to use the standard Nginx-based Dockerfile
+# Option 1: Angular dev server approach (currently active)
 [build]
 builder = "DOCKERFILE"
-#dockerfilePath = "Dockerfile"
+dockerfilePath = "Dockerfile"
 
-# Uncomment these lines if you want to try the Node.js-based Dockerfile instead
-#[build]
-#builder = "DOCKERFILE"
-#dockerfilePath = "Dockerfile.node"
+# Option 2: Express server approach
+# [build]
+# builder = "DOCKERFILE"
+# dockerfilePath = "Dockerfile.express"
+
+# Option 3: Node.js based server
+# [build]
+# builder = "DOCKERFILE"
+# dockerfilePath = "Dockerfile.node"
 
 [deploy]
 numReplicas = 1
