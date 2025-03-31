@@ -1,4 +1,5 @@
 export const environment = {
     production: true,
-    apiHost: 'https://api.productiondomain.com' // Production API URL
+    apiHost: 'https://${BACKEND_URL}',
+    randomUserApi: 'https://randomuser.me'
 };
