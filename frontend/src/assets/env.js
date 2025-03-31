@@ -2,6 +2,6 @@
     window["env"] = window["env"] || {};
   
     // Environment variables
-    window["env"]["apiHost"] = "https://backend-production-5eff.up.railway.app";
+    window["env"]["apiHost"] = "https://cs4116-project-production.up.railway.app";
     window["env"]["production"] = true;
   })(this);
