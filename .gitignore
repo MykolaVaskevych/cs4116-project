@@ -32,6 +32,10 @@ venv/
 env/
 .env/
 
+# Node.js
+node_modules/
+**/node_modules/
+
 # Database Schema visual files
 **/*.pdf
 **/database_schema.html
