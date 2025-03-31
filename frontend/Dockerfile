@@ -1,27 +1,18 @@
-FROM node:18-alpine as build
+FROM node:18-alpine
 
 WORKDIR /app
 
+# Copy package.json and package-lock.json
 COPY package*.json ./
+
+# Install dependencies
 RUN npm ci
 
+# Copy the rest of the application
 COPY . .
-RUN npm run build
 
-FROM nginx:stable-alpine
-
-# Remove default nginx content
-RUN rm -rf /usr/share/nginx/html/*
-
-# Copy the build output
-COPY --from=build /app/dist/marketplace/ /usr/share/nginx/html/
-
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Create a test file
-RUN echo '<html><body><h1>Test Page</h1></body></html>' > /usr/share/nginx/html/test.html
-
+# Expose port 80
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+# Start the Angular dev server
+CMD ["npm", "start", "--", "--port", "80"]
