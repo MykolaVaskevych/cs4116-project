@@ -1,17 +1,5 @@
-# Option 1: Angular dev server approach (currently active)
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
-
-# Option 2: Express server approach
-# [build]
-# builder = "DOCKERFILE"
-# dockerfilePath = "Dockerfile.express"
-
-# Option 3: Node.js based server
-# [build]
-# builder = "DOCKERFILE"
-# dockerfilePath = "Dockerfile.node"
 
 [deploy]
 numReplicas = 1
