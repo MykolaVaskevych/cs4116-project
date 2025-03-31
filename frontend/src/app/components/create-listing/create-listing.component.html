@@ -1,0 +1,47 @@
+<div *ngIf="isSubmitting" class="overlay">
+    <div class="spinner-border text-primary loader" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+
+<div class="main">
+    <form [formGroup]="listingForm" >
+
+        <!-- Title -->
+        <div class="description">
+            <label class="label">Description</label>
+            <input type="text" class="description-field" formControlName="description">
+            <div class="error" *ngIf="listingForm.controls['description'].touched && listingForm.controls['description'].invalid">
+                <span *ngIf="listingForm.controls['description'].errors?.['required']">Description is required.</span>
+            </div>
+        </div>
+
+        <!-- Category -->
+        <div class="category">
+            <label class="label">Category</label>
+            <select formControlName="category" class="category-field form-select">
+                <option *ngFor="let category of categories" [value]="category.id">
+                    {{ category.name }}
+                </option>
+
+                <!-- Other Categories -->
+                <optgroup *ngIf="otherCategories.length > 0" label="Other">
+                    <option *ngFor="let category of otherCategories" [value]="category.id">
+                        {{ category.name }}
+                    </option>
+                </optgroup>
+            </select>
+            <div class="error" *ngIf="listingForm.controls['category'].touched && listingForm.controls['category'].invalid">
+                <span>Category is required.</span>
+            </div>
+        </div>
+        <!-- Submit Button -->
+        <button type="submit" (click)="onSubmit()">Submit</button>
+
+        <!-- API Error -->
+        <div class="error" *ngIf="errorMessage">
+            {{ errorMessage }}
+        </div>
+
+    </form>
+</div>

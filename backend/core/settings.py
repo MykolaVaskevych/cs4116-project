@@ -39,7 +39,6 @@ ALLOWED_HOSTS.extend([
     'railway.app',
     'up.railway.app',
     'cs4116-project-production.up.railway.app',
-    '*',  # Allow all hosts temporarily
 ])
 ALLOWED_HOSTS = [host for host in ALLOWED_HOSTS if host]
 
@@ -82,7 +81,6 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",  # Add WhiteNoise for static files
     "corsheaders.middleware.CorsMiddleware",  # CORS middleware
-    "core.middleware.CorsMiddleware",  # Custom CORS middleware to force headers
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
 ]
@@ -251,12 +249,14 @@ LOGGING = {
     },
 }
 
-# CORS Configuration - Full Access for Debugging
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS Configuration
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
+    "http://localhost:8080",
+]
 CORS_ALLOW_CREDENTIALS = True
-CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken', 'Authorization']
-CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
-
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -267,10 +267,7 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
-    'access-control-allow-headers',
-    'access-control-allow-origin',
 ]
-
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',

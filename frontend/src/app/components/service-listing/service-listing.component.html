@@ -1,0 +1,104 @@
+<div *ngIf="!other" class="header">
+    {{serviceCat.name}}
+</div>
+<div *ngIf="other" class="header">
+    Other
+</div>
+
+<form class="d-flex align-items-center justify-content-center p-3" role="search">
+    <input class="form-control me-2 w-50" type="search" placeholder="Search"
+        [(ngModel)]="searchTerm"  (ngModelChange)="filterServices()" name="search" aria-label="Search">
+</form>
+
+<div *ngIf="isProvider" class="btn-wrapper">
+    <div (click)="redirectToCreateListing()" class="create-btn">
+        Create Listing
+    </div>
+</div>
+
+<div class="" *ngIf="empty">
+    No Services Found
+</div>
+
+<div class="listings">
+    <div *ngFor="let listing of filteredServices" class="listing" (click)="NavigateToDetailsPage(listing)">
+        <span>
+            {{listing.description}}
+        </span>
+        <div class="icon">
+            <img src="icon.png" alt="">
+        </div>
+        <!-- <div *ngIf="listing.trusted" class="trusted-star">
+            <img src="star_filled.png" alt="">
+        </div> -->
+    </div>
+    <!-- <div class="listing-row1">
+        <div class="listing" (click)="NavigateToDetailsPage()">
+            <span>
+                Got caught plagiarizing? Landlord stealing your soul (and security deposit)? Relax—I find legal loopholes faster than your professor finds ChatGPT in your essay. Let’s get you out of this mess before your future is “would you like fries with that?”
+            </span>
+
+            <div class="icon">
+                <img src="icon.png" alt="">
+            </div>
+        </div>
+        <div class="listing" (click)="NavigateToDetailsPage()">
+            Made a few “bad life choices” at that party last weekend? Got caught, but not caught-caught? Good. Because I turn “Oops” into “Case Dismissed” like it’s my side hustle. You make poor choices—I make them disappear. Let’s work.
+
+            <div class="icon">
+                <img src="icon.png" alt="">
+            </div>
+        </div>
+        <div class="listing" (click)="NavigateToDetailsPage()">
+            <div class="icon">
+                <img src="icon.png" alt="">
+            </div>
+        </div>
+    </div>
+    <div class="listing-row2">
+        <div class="listing" (click)="NavigateToDetailsPage()">
+            <div class="icon">
+                <img src="icon.png" alt="">
+            </div>
+        </div>
+        <div class="listing" (click)="NavigateToDetailsPage()">
+            <div class="icon">
+                <img src="icon.png" alt="">
+            </div>
+        </div>
+        <div class="listing" (click)="NavigateToDetailsPage()">
+            <span>
+                Sent some “questionable” messages? Got canceled online? Accidentally hacked your school’s system? I specialize in bad decisions with WiFi. If you’re about to become a case study in legal ethics, call me before your future does a backflip off a cliff.
+            </span>
+
+            <div class="icon">
+                <img src="icon.png" alt="">
+            </div>
+        </div>
+    </div>
+    <div class="listing-row3">
+        <div class="listing" (click)="NavigateToDetailsPage()">
+            <div class="icon">
+                <img src="icon.png" alt="">
+            </div>
+        </div>
+        <div class="listing" (click)="NavigateToDetailsPage()">
+            <div class="icon">
+                <img src="icon.png" alt="">
+            </div>
+        </div>
+        <div class="listing" (click)="NavigateToDetailsPage()">
+            <div class="icon">
+                <img src="icon.png" alt="">
+            </div>
+        </div>
+        <div class="listing" (click)="NavigateToDetailsPage()">
+            <div class="icon">
+                <img src="icon.png" alt="">
+            </div>
+        </div>
+    </div> -->
+</div>
+
+
+

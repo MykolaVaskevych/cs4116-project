@@ -1,0 +1,63 @@
+<div class="header">
+    {{serviceCat.name}} - {{listing.business_name}}
+</div>
+
+<div class="card">
+
+    <div class="profile-detail">
+        <div *ngIf="listing.trusted" class="profile-header">
+            <div>Trusted by us</div>
+            <div class="star-filled">
+                <img src="star_filled.png" alt="">
+            </div>
+        </div>
+
+        <div class="profile-icon">
+            <img src="icon.png" alt="">
+        </div>
+
+        <div class="profile-rating">
+            <div class="profile-rating-star">
+                <img src="stars.png" alt="">
+            </div>
+            <span>{{avgRating.toFixed(1)}}</span>
+        </div>
+    </div>
+
+
+    <div class="desc">
+        {{listing.description}}
+    </div>
+
+    <div class="bottom-sec" [ngClass]="{'bottom-sec-margin-top': listing.description === ''}">
+        <div class="ratings">
+            <div *ngFor="let rev of reviews" class="rating-card"
+            [ngClass]="{
+                'low-rating-bg': rev.rating<2.5,
+                'high-rating-bg': rev.rating>2.5,
+              }">
+                <div class="rating-desc">
+                    {{rev.comment}}
+                </div>
+                <div class="rating">
+                    <div class="star">
+                        <img src="stars.png" alt="">
+                    </div>
+                    <div class="score">{{rev.rating}}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="btns">
+            <div class="inquire">
+                Inquire
+            </div>
+            <div class="back" (click)="goBack()">
+                Back
+            </div>
+            <div class="report">
+                Report
+            </div>
+        </div>
+    </div>
+</div>

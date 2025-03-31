@@ -1,18 +1,17 @@
-import {Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
-import {Observable, tap} from 'rxjs';
-import {environment} from '../../../env/environment';
-import {jwtDecode} from 'jwt-decode';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { jwtDecode } from 'jwt-decode';
+import { environment } from '../../../env/environment';
+
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class AuthService {
-    private apiUrl = `${environment.apiHost}/api`; // Example API URL
-
+    private apiUrl = 'http://localhost:8000/api'; // Example API URL
     accessTokenKey = 'access';
     refreshTokenKey = 'refresh';
-
     constructor(private http: HttpClient) { }
 
     register(user: any): Observable<any> {
@@ -29,8 +28,8 @@ export class AuthService {
 
     logOut(): void {
         localStorage.removeItem('access');
+        localStorage.removeItem('isProvider');
     }
-
     // Refresh JWT token: NOW IN ACTION
     refreshJWT(): Observable<any> {
         const refresh = localStorage.getItem(this.refreshTokenKey);

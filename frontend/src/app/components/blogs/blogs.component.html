@@ -1,0 +1,47 @@
+<div class="header">
+    <div class="header-left-sec">Adulting 101</div>
+    <div class="header-right-sec">
+        <!-- <div *ngFor="let cat of categories" class="category" (click)="getBlogPostsByCat(cat.id)">
+            {{cat.name}}
+        </div> -->
+        <div class="dropdown">
+            <button class="dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Select Category
+            </button>
+            <ul class="dropdown-menu">
+              <li *ngFor="let cat of categories">
+                <a class="dropdown-item" (click)="getBlogPostsByCat(cat.id)">{{ cat.name }}</a>
+              </li>
+            </ul>
+          </div>
+
+    </div>
+
+</div>
+
+<div class="btn-wrapper">
+    <a href="/create-blog" class="create-btn">
+        Create Blog
+    </a>
+</div>
+
+<div class="blogs">
+    <div *ngFor="let blog of blogs" class="blog" (click)="getBlogPostsBySlug(blog.slug)">
+        <div class="title">
+            {{blog.title}}
+        </div>
+
+        <div class="content">
+            <div class="summary">
+                {{blog.summary}}
+            </div>
+            <div class="full-content" *ngIf="selectedBlog?.slug === blog.slug" [innerHTML]="selectedBlog.content">
+            </div>
+        </div>
+
+        <div class="profile-img">
+            <img class="icon" *ngIf="user.profile_img" [src]="user.profile_img" alt="">
+            <img class="icon" *ngIf="!user.profile_img" src="icon.png" alt="">
+        </div>
+    </div>
+</div>

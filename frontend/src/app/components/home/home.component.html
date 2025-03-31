@@ -3,9 +3,23 @@
 
     <div class="container">
         <div class="row d-flex flex-wrap">
-            <div *ngFor="let service of serviceList" [ngStyle]="{'flex-basis': '300px'}" class="square">
-                {{ service.title }}
-            </div>
+            <div *ngFor="let service of filteredCategories"
+            [ngStyle]="{'flex-basis': '300px'}"
+            class="square"
+            (click)="NavigateToServiceListing(service)">
+           {{ service.name }}
+       </div>
+
+       <!-- Display 'Other' Category -->
+       <div *ngIf="hasOtherCategories">
+           <div [ngStyle]="{'flex-basis': '300px'}"
+                class="square"
+                (click)="NavigateToServiceListing(otherCategories)">
+               Other
+           </div>
+       </div>
+
+
         </div>
     </div>
 
