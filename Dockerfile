@@ -1,10 +1,10 @@
-# This is a proxy Dockerfile that pulls in the real frontend Dockerfile
+# Simple Dockerfile for Angular app
 FROM node:lts-alpine
 
 WORKDIR /app
 
-# Copy the frontend files
-COPY frontend/ ./
+# Copy all files from the current directory (frontend)
+COPY . .
 
 # Install dependencies
 RUN npm ci
