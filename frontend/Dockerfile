@@ -22,18 +22,9 @@ FROM nginx:alpine
 # Copy the build output to replace the default nginx contents
 COPY --from=build /app/dist/marketplace /usr/share/nginx/html
 
-# Create a script to inject environment variables into the app
-RUN echo '#!/bin/sh\n\
-# Inject environment variables into the app at runtime\n\
-cat > /usr/share/nginx/html/env-config.js << EOF\n\
-window.ENV = {\n\
-  BACKEND_URL: "$BACKEND_URL"\n\
-};\n\
-EOF\n\
-\n\
-# Start nginx\n\
-exec nginx -g "daemon off;"\n\
-' > /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
+# Create a simple entrypoint script
+COPY docker-entrypoint.sh /
+RUN chmod +x /docker-entrypoint.sh
 
 # Setup nginx configuration for Angular routing with IPv6 support and health check
 RUN echo 'server { \
@@ -52,9 +43,6 @@ RUN echo 'server { \
         try_files $uri $uri/ /index.html; \
     } \
 }' > /etc/nginx/conf.d/default.conf
-
-# Add script to inject the env-config.js reference to index.html
-RUN echo 'sed -i "s/<head>/<head><script src=\\"env-config.js\\"><\\/script>/" /usr/share/nginx/html/index.html' >> /docker-entrypoint.sh
 
 # Expose port 80
 EXPOSE 80
