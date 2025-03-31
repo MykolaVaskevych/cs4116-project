@@ -255,6 +255,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
     "http://127.0.0.1:4200",
     "http://localhost:8080",
+    # Railway domains
+    "https://frontend-production.up.railway.app",
+    "https://*.up.railway.app",
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
