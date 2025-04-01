@@ -2,13 +2,13 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth-service/auth.service';
-import { environment } from '../../env/environment';
+import { environment } from '../env/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BlogService {
-private apiUrl = `${environment.apiHost}/api/blog`;
+  private apiUrl = `${environment.apiHost}/api/blog`;
 
   constructor(private http: HttpClient) { }
 
