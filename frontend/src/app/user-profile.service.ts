@@ -2,13 +2,13 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { AuthService } from './auth-service/auth.service';
 import { Observable } from 'rxjs';
-import { environment } from '../../env/environment';
+import { environment } from '../env/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserProfileService {
-    private apiUrl = `${environment.apiHost}/api/profile`;
+  private apiUrl = `${environment.apiHost}/api/profile`;
 
   constructor(private http: HttpClient, private authService: AuthService) { }
 
@@ -19,15 +19,15 @@ export class UserProfileService {
 
   updateProfile(token: string, profileData: any): Observable<any> {
     const headers = new HttpHeaders()
-    .set('Authorization', `Bearer ${token}`)
-    .set('Content-Type', 'application/json'); // Ensure JSON request format
+      .set('Authorization', `Bearer ${token}`)
+      .set('Content-Type', 'application/json'); // Ensure JSON request format
     return this.http.patch(`${this.apiUrl}/`, profileData, { headers });
   }
 
-  updatePassword(token: string, data: any){
+  updatePassword(token: string, data: any) {
     const headers = new HttpHeaders()
-    .set('Authorization', `Bearer ${token}`)
-    .set('Content-Type', 'application/json'); // Ensure JSON request format
+      .set('Authorization', `Bearer ${token}`)
+      .set('Content-Type', 'application/json'); // Ensure JSON request format
     return this.http.put(`${environment.apiHost}/api/change-password/`, data, { headers });
   }
 }
