@@ -2,12 +2,13 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { AuthService } from './auth-service/auth.service';
 import { Observable } from 'rxjs';
+import { environment } from '../../../env/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserProfileService {
-    private apiUrl = 'http://localhost:8000/api/profile';
+    private apiUrl = `${environment.apiHost}/api/profile`;
 
   constructor(private http: HttpClient, private authService: AuthService) { }
 
@@ -27,6 +28,6 @@ export class UserProfileService {
     const headers = new HttpHeaders()
     .set('Authorization', `Bearer ${token}`)
     .set('Content-Type', 'application/json'); // Ensure JSON request format
-    return this.http.put(`http://localhost:8000/api/change-password/`, data, { headers });
+    return this.http.put(`${environment.apiHost}/api/change-password/`, data, { headers });
   }
 }
