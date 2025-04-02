@@ -3,16 +3,16 @@ FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    UV_COMPILE_BYTECODE=1
+  PYTHONDONTWRITEBYTECODE=1 \
+  UV_COMPILE_BYTECODE=1
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    default-libmysqlclient-dev \
-    pkg-config \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+  build-essential \
+  default-libmysqlclient-dev \
+  pkg-config \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /project
@@ -36,7 +36,7 @@ COPY backend/ .
 
 # Create media directories
 RUN mkdir -p media/profile_images media/service_logos && \
-    chmod -R 755 media
+  chmod -R 755 media
 
 # Create static files directory
 RUN mkdir -p staticfiles
@@ -48,7 +48,7 @@ RUN mkdir -p staticfiles
 EXPOSE 8000
 
 # Add entrypoint script
-COPY backend/docker-entrypoint.sh /usr/local/bin/
+COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Set entrypoint
