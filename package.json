@@ -1,7 +1,0 @@
-{
-  "dependencies": {
-    "ngx-editor": "^18.0.0",
-    "ngx-quill": "^27.0.1",
-    "quill": "^2.0.3"
-  }
-}
