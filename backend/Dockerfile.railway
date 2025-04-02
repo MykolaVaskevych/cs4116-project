@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Set working directory
 WORKDIR /project
 
-# Copy the pyproject.toml and uv.lock from the project root
+# Copy the pyproject.toml and uv.lock files
 COPY pyproject.toml uv.lock ./
 
 # Create a virtual environment for the project 
@@ -30,9 +30,9 @@ RUN uv sync
 # Install required packages explicitly for redundancy
 RUN uv pip install django-cors-headers gunicorn
 
-# Copy backend project files
+# Copy project files
 WORKDIR /app
-COPY backend/ .
+COPY . .
 
 # Create media directories
 RUN mkdir -p media/profile_images media/service_logos && \
@@ -47,9 +47,10 @@ RUN mkdir -p staticfiles
 # Expose port (Railway automatically sets PORT environment variable)
 EXPOSE 8000
 
-# Add entrypoint script
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+# Add entrypoint script (already copied in previous step)
+RUN chmod +x docker-entrypoint.sh
+# Move to bin directory
+RUN cp docker-entrypoint.sh /usr/local/bin/
 
 # Set entrypoint
 ENTRYPOINT ["docker-entrypoint.sh"]
