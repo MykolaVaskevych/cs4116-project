@@ -2,12 +2,13 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AuthService } from '../auth-service/auth.service';
+import { environment } from '../../../env/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ServicesService {
-private apiUrl = 'http://localhost:8000/api/services';
+private apiUrl = `${environment.apiHost}/api/services`;
 
   constructor(private http: HttpClient) { }
 
@@ -23,7 +24,7 @@ private apiUrl = 'http://localhost:8000/api/services';
 
   getServiceCategories(token: string): Observable<any> {
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-    return this.http.get(`http://localhost:8000/api/categories`, { headers });
+    return this.http.get(`${environment.apiHost}/api/categories`, { headers });
   }
 
   createService(token: string, servData: any): Observable<any> {
