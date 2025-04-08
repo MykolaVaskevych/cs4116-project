@@ -200,6 +200,8 @@ export class InquiryComponent implements OnInit, AfterViewChecked, OnDestroy {
         this.inquiryService.getAllInquiries().subscribe(response => {
             // console.log(response);
             response
+                // @ts-ignore
+                .sort((a: any, b: any) => new Date(b.updated_at) - new Date(a.updated_at))
                 // .filter((item: any) => item.status === 'OPEN')
                 .map((item: any) => {
                     this.inquiry_list.push(item);

@@ -29,6 +29,7 @@ export class AuthService {
     logOut(): void {
         localStorage.removeItem('access');
         localStorage.removeItem('isProvider');
+        localStorage.removeItem('user');
     }
     // Refresh JWT token: NOW IN ACTION
     refreshJWT(): Observable<any> {

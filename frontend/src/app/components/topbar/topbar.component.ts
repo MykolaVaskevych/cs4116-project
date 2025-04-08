@@ -29,7 +29,7 @@ export class TopbarComponent implements OnInit {
       this.isLoggedIn = true;
     }
   }
-  
+
   logOut(): void {
     this.authService.logOut();
   }

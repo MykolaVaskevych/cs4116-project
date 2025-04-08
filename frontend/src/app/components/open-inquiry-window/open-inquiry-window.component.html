@@ -1,0 +1,37 @@
+<div class="modal-parent">
+    <div class="modal-header">
+        <div>
+            <h4 class="modal-title">{{ targetBusinessName }}</h4>
+<!--            <h4 class="modal-title">Enter your inquiry</h4>-->
+<!--            <span style="font-size: smaller; color: gray">{{ targetBusinessName }}</span>-->
+        </div>
+        <button
+            (click)="closeModal()"
+            type="button"
+            class="btn-close"
+            aria-label="Close"
+        ></button>
+    </div>
+    <div class="modal-body" style="max-height: 400px; overflow-y: auto">
+        <div class="mb-3">
+            <label class="form-label">To: {{ targetBusinessPersonnel }}</label>
+            <textarea
+                style="resize: none"
+                class="form-control"
+                id="exampleFormControlTextarea1"
+                rows="10" cols="3"
+                placeholder="Enter Your Inquiry"
+                [(ngModel)]="initial_message"
+            ></textarea>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button
+            (click)="inquire()"
+            type="button"
+            class="btn btn-outline-danger"
+        >
+            Send Message
+        </button>
+    </div>
+</div>

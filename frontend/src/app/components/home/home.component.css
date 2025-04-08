@@ -47,7 +47,7 @@
     justify-content: center;
     align-items: center;
     color: black;
-    font-size: 36px;
+    font-size: 150px;
     font-family: Arial, sans-serif;
     text-align: center;
 
@@ -59,6 +59,18 @@
     margin-left: 50%; /* Re-center */
     margin-top: -16px; /* Adjust based on Bootstrap's `.mt-3` */
     padding: 10px 0; /* Optional spacing */
+}
+
+.grid-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); /* Creates a responsive grid */
+    grid-gap: 0 8px; /* Adds space between grid items */
+}
+
+/* Force the 'Other' category to the second row */
+.other-category {
+    grid-column: 1 / -1; /* Make the 'Other' div span across the entire row */
+    /*grid-row: 2; !* Always place 'Other' in the second row *!*/
 }
 
 .square, .about-us-square {
@@ -89,4 +101,26 @@
     font-size: xxx-large;
     font-weight: bold;
     /*border-radius: 5px;*/
+}
+
+.inner-value-about-us-right {
+    background-color: transparent;
+    display: flex;
+    font-size: medium !important;
+    justify-content: flex-start;
+    /*align-items: flex-start;*/
+    padding-top: 1rem;
+    padding-left: 1rem;
+    text-align: justify;
+}
+
+.inner-value-about-us-bottom {
+    background-color: transparent !important;
+    display: flex !important;
+    font-size: medium !important;
+    /*justify-content: flex-start !important;*/
+    align-items: flex-start !important;
+    padding-top: 1rem;
+    padding-left: 1rem;
+    text-align: justify !important;
 }

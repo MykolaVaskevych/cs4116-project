@@ -18,7 +18,9 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link topbar-font-color" style="font-size: x-large; font-weight: bold" href="/about" ngbTooltip="About">101</a>
+                    <a class="nav-link topbar-font-color" style="font-size: x-large; font-weight: bold" href="/about">
+                        <i class="bi bi-info-circle" style="font-size: 2rem; cursor: pointer" ngbTooltip="About"></i>
+                    </a>
                 </li>
 
                 <!-- Inquiry Page -->
@@ -34,17 +36,17 @@
                     </a>
                 </li>
 
-                <li class="nav-item" *ngIf="!isLoggedIn">
-                    <a class="nav-link active topbar-font-color" aria-current="page" href="/login">
-                        <i class="bi bi-key" style="font-size: 2rem; cursor: pointer" ngbTooltip="Login"></i>
-                    </a>
-                </li>
+<!--                <li class="nav-item" *ngIf="!isLoggedIn">-->
+<!--                    <a class="nav-link active topbar-font-color" aria-current="page" href="/login">-->
+<!--                        <i class="bi bi-key" style="font-size: 2rem; cursor: pointer" ngbTooltip="Login"></i>-->
+<!--                    </a>-->
+<!--                </li>-->
 
-                <li class="nav-item" *ngIf="!isLoggedIn">
-                    <a class="nav-link active topbar-font-color" aria-current="page" href="/sign-up">
-                        <i class="bi bi-file-earmark-person" style="font-size: 2rem; cursor: pointer" ngbTooltip="Sign-Up"></i>
-                    </a>
-                </li>
+<!--                <li class="nav-item" *ngIf="!isLoggedIn">-->
+<!--                    <a class="nav-link active topbar-font-color" aria-current="page" href="/sign-up">-->
+<!--                        <i class="bi bi-file-earmark-person" style="font-size: 2rem; cursor: pointer" ngbTooltip="Sign-Up"></i>-->
+<!--                    </a>-->
+<!--                </li>-->
 
                 <li class="nav-item" *ngIf="isLoggedIn">
                     <a class="nav-link active topbar-font-color" aria-current="page" href="/login">
@@ -54,7 +56,7 @@
             </ul>
 
             <!-- Display Logged-In User and Role -->
-            <span *ngIf="isLoggedIn">Logged In: {{current_user_login}}</span> 
+            <span *ngIf="isLoggedIn">Logged In: {{current_user_login}}</span>
             <span *ngIf="isLoggedIn" style="font-style: italic; text-decoration: underline">({{current_user_role}})</span>
 
         </div>

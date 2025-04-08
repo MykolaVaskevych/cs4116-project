@@ -130,3 +130,48 @@
 
 
 </div>
+
+<div class="wallet-container">
+    <div class="wallet-header">Wallet</div>
+    <div class="wallet-amount">
+        <span>Amount: {{ walletAmount }}</span>
+    </div>
+
+    <div class="button-container">
+        <button class="action-button" (click)="toggleForm('deposit')">Deposit</button>
+        <button class="action-button" (click)="toggleForm('withdraw')">Withdraw</button>
+        <button class="action-button" (click)="toggleForm('transfer')">Transfer</button>
+    </div>
+
+    <!-- Deposit Form -->
+    <div *ngIf="depositSelectionFlag" class="action-form" id="deposit-form">
+        <input [(ngModel)]="depositAmount" type="number" placeholder="Enter amount to deposit" min="0"/>
+        <button (click)="walletDeposit()" class="submit-button">Deposit</button>
+        <div style="visibility: hidden" *ngIf="depositError">Invalid Input</div>
+        <div *ngIf="depositError">Invalid Input Amount</div>
+    </div>
+
+    <!-- Withdraw Form -->
+    <div *ngIf="withdrawSelectionFlag" class="action-form" id="withdraw-form">
+        <input [(ngModel)]="withdrawAmount" type="number" placeholder="Enter amount to withdraw" min="0"/>
+        <button (click)="walletWithdraw()" class="submit-button">Withdraw</button>
+        <div style="visibility: hidden" *ngIf="depositError">Invalid Input</div>
+        <div *ngIf="depositError">Invalid Input Amount</div>
+    </div>
+
+    <!-- Transfer Form -->
+    <div *ngIf="transferSelectionFlag" class="action-form" id="transfer-form">
+        <input [(ngModel)]="transferAmount" type="number" placeholder="Enter amount to transfer" min="0"/>
+        <input [(ngModel)]="transferRecipient" type="text" placeholder="Enter recipient email"/>
+        <button (click)="walletTransfer()" class="submit-button">Transfer</button>
+        <div style="visibility: hidden" *ngIf="depositError">Invalid Input</div>
+        <div style="visibility: hidden" *ngIf="transferError">{{ transferErrorText }}</div>
+        <div *ngIf="transferError">{{ transferErrorText }}</div>
+    </div>
+</div>
+
+<div style="height: 300px; visibility: hidden">
+    Hidden Length
+</div>
+
+<div style="visibility: hidden">This is a gap</div>

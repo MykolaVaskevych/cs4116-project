@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ReviewsService } from '../../services/review-service/reviews.service';
+import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {OpenInquiryWindowComponent} from '../open-inquiry-window/open-inquiry-window.component';
 
 
 @Component({
@@ -10,7 +12,7 @@ import { ReviewsService } from '../../services/review-service/reviews.service';
     templateUrl: './listing-details.component.html',
     styleUrl: './listing-details.component.css'
 })
-export class ListingDetailsComponent {
+export class ListingDetailsComponent implements OnInit {
     listing: any
     serviceCat: any
     token: any
@@ -22,7 +24,12 @@ export class ListingDetailsComponent {
         { id: 3, desc: 'Meh', score: 2.1 }
     ]
 
-    constructor(private router: Router, private route: ActivatedRoute, private reviewsService: ReviewsService) { }
+    constructor(
+        private router: Router,
+        private route: ActivatedRoute,
+        private reviewsService: ReviewsService,
+        private modalService: NgbModal
+    ) { }
 
 
     ngOnInit() {
@@ -63,6 +70,21 @@ export class ListingDetailsComponent {
         this.router.navigate(['/service-listing'], {
             queryParams: {
                 service: JSON.stringify(this.serviceCat)
+            }
+        });
+    }
+
+    openInquiryWindow() {
+        const modalRef = this.modalService.open(OpenInquiryWindowComponent, { centered: true, scrollable: true });
+        modalRef.componentInstance.listing = this.listing;
+
+        // Listen for the response when modal is closed
+        modalRef.componentInstance.responseEvent.subscribe((response: any) => {
+            console.log(response);  // Handle the response from the modal
+            modalRef.close();
+
+            if (response.info === 'request') {
+
             }
         });
     }

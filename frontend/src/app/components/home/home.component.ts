@@ -5,7 +5,7 @@ import { ServicesService } from '../../services/services-service/services.servic
 
 
 @Component({
-    selector: 'app-home',
+    selector: 'app-banners',
     imports: [
         NgForOf,
         NgStyle,
@@ -32,9 +32,32 @@ export class HomeComponent {
     }
 
     aboutUsItems = [
-        { id: 1, size: '600px', value: '' },
-        { id: 2, size: '600px', value: '' },  // Wider
-        { id: 3, size: '600px', value: '' },
+        {
+            id: 1, size: '600px',
+            value: '',
+            img: 'assets/banners/about_us.jpg',
+            className: '',
+        },
+        {
+            id: 2, size: '600px',
+            value: `
+                <div>
+                    <h2>Urban Life Hub</h2>
+                    <h5>We are a comprehensive platform designed to bridge the gap between customers and businesses in urban environments. We create meaningful connections that enhance urban living through seamless service delivery and community building. </h5>
+                </div>
+            `,
+            className: 'inner-value-about-us-right',
+        },  // Wider
+        {
+            id: 3, size: '600px',
+            value: `
+                <div>
+<!--                    <h2>Our Origin</h2>-->
+                    <h5>Urban Life Hub was created by Group 11 for the CS4116 project at the University of Limerick. Our team of dedicated developers combined their expertise in web development, user experience design, and business analytics to build this platform.</h5>
+                </div>
+            `,
+            className: 'inner-value-about-us-bottom',
+        },
     ];
 
 
@@ -67,5 +90,9 @@ export class HomeComponent {
 
     NavigateToServiceListing(service: any) {
         this.router.navigate(['/service-listing'], { queryParams: { service: JSON.stringify(service)  } });
+    }
+
+    navigateToBlogs(): any {
+        this.router.navigate(['/blogs']);
     }
 }

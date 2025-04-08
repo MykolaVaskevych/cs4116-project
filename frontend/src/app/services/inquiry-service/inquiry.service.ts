@@ -56,6 +56,12 @@ export class InquiryService {
         return this.http.post(`${this.apiUrl}/messages/`, { content, inquiry }, { headers });
     }
 
+    createInquiry(body: any): any {
+        const headers = this.getHeadersWithJwt();
+
+        return this.http.post(`${this.apiUrl}/inquiries/`, body, { headers });
+    }
+
     getInquiryMessage(inquiry: any): Observable<any> {
         const headers = this.getHeadersWithJwt();
 
@@ -85,5 +91,30 @@ export class InquiryService {
         const headers = this.getHeadersWithJwt();
 
         return this.http.post(`${this.apiUrl}/payment-requests/${uuid}/respond/`, { action }, { headers });
+    }
+
+    //  Wallet API
+
+    getWallet(): Observable<any> {
+        const headers = this.getHeadersWithJwt();
+        return this.http.get(`${this.apiUrl}/wallet/`, { headers });
+    }
+
+    walletDeposit(amount: any): Observable<any> {
+        const headers = this.getHeadersWithJwt();
+
+        return this.http.post(`${this.apiUrl}/wallet/deposit/`, { amount }, { headers })
+    }
+
+    walletWithdraw(amount: any): Observable<any> {
+        const headers = this.getHeadersWithJwt();
+
+        return this.http.post(`${this.apiUrl}/wallet/withdraw/`, { amount }, { headers })
+    }
+
+    walletTransfer(amount: any, recipient_email: any): Observable<any> {
+        const headers = this.getHeadersWithJwt();
+
+        return this.http.post(`${this.apiUrl}/wallet/transfer/`, { amount, recipient_email }, { headers })
     }
 }

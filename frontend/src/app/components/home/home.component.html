@@ -2,41 +2,64 @@
     <p class="home-container-header">Our Services</p>
 
     <div class="container">
-        <div class="row d-flex flex-wrap">
-            <div *ngFor="let service of filteredCategories"
-            [ngStyle]="{'flex-basis': '300px'}"
+        <div class="row grid-layout">
+        <div *ngFor="let service of filteredCategories"
+            [ngStyle]="{
+            'grid-column': 'span 1',
+            'background-image': 'url(assets/banners/' + service.name.toLowerCase() + '.png)',
+            'background-size': 'cover',
+            'background-position': 'center'
+            }"
             class="square"
             (click)="NavigateToServiceListing(service)">
-           {{ service.name }}
-       </div>
-
-       <!-- Display 'Other' Category -->
-       <div *ngIf="hasOtherCategories">
-           <div [ngStyle]="{'flex-basis': '300px'}"
-                class="square"
-                (click)="NavigateToServiceListing(otherCategories)">
-               Other
-           </div>
-       </div>
-
-
+<!--            {{ service.name }}-->
+        </div>
+        <!-- Display 'Other' Category -->
+        <div *ngIf="hasOtherCategories"
+             [ngStyle]="{
+            'background-image': 'url(assets/banners/other.png)',
+            'font-size': '100px',
+            'font-weight': '550',
+            'color': 'honeydew'
+            }"
+             class="square other-category"
+             (click)="NavigateToServiceListing(otherCategories)">
+           Other
+        </div>
         </div>
     </div>
 
     <h1 style="visibility: hidden">HI</h1>
 
-    <p class="home-container-header">Adulting 101</p>
-    <div class="adulting-101-banner">
+    <p class="home-container-header">Blogs</p>
+    <div
+        style="
+            background-image: url('assets/banners/adulting 101.png');
+            color: white;
+            font-family: 'Outfit', sans-serif;
+        "
+        (click)="navigateToBlogs()"
+         class="adulting-101-banner">
         ADULTING 101
     </div>
 
     <h1 style="visibility: hidden">HI</h1>
 
-    <p class="home-container-header">About Us</p>
+    <p class="home-container-header">Who are we</p>
     <div class="container">
         <div class="row d-flex flex-wrap">
-            <div *ngFor="let aboutUs of aboutUsItems" [ngStyle]="{'flex-basis': aboutUs.size}" class="about-us-square">
-                {{ aboutUs.value }}
+            <div *ngFor="let aboutUs of aboutUsItems"
+                 [ngStyle]="{
+                    'flex-basis': aboutUs.size,
+                    'grid-column': 'span 1',
+                    'background-image': 'url(' + aboutUs?.img + ')',
+                    'background-size': 'cover',
+                    'background-position': 'center'
+                 }"
+                 class="about-us-square {{aboutUs?.className}}"
+                 [innerHTML]="aboutUs?.value"
+            >
+
             </div>
         </div>
     </div>

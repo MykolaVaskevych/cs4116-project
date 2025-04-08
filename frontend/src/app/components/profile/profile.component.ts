@@ -1,14 +1,15 @@
 import { Component, HostListener } from '@angular/core';
-import { FormGroup, FormControl, Validators, FormBuilder } from '@angular/forms';
+import {FormGroup, FormControl, Validators, FormBuilder, FormsModule} from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth-service/auth.service';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { UserProfileService } from '../../services/user-profile.service';
+import {InquiryService} from '../../services/inquiry-service/inquiry.service';
 
 @Component({
     selector: 'app-profile',
-    imports: [CommonModule, ReactiveFormsModule],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule],
     templateUrl: './profile.component.html',
     styleUrl: './profile.component.css',
 })
@@ -24,6 +25,26 @@ export class ProfileComponent {
     user: any
     token: any
 
+    depositSelectionFlag = false;
+    withdrawSelectionFlag = false;
+    transferSelectionFlag = false;
+
+
+    depositError = false;
+    depositErrorText = '';
+
+    transferError = false;
+    transferErrorText = '';
+
+    walletAmount = 0;
+    depositAmount = 0;
+    withdrawAmount = 0;
+    transferAmount = 0;
+
+    transferRecipient = '';
+
+
+
     @HostListener('window:resize', ['$event'])
     onResize(event: any) {
         this.applyStyle = window.innerWidth < 1200 && !this.isProvider;
@@ -31,7 +52,7 @@ export class ProfileComponent {
 
 
     constructor(private fb: FormBuilder, private router: Router, private authService: AuthService,
-        private userProfileService: UserProfileService
+        private userProfileService: UserProfileService, private inquiryService: InquiryService
     ) { }
 
     ngOnInit(){
@@ -59,6 +80,8 @@ export class ProfileComponent {
         this.onResize(null);
 
         this.loadUserProfile()
+
+        this.updateWalletAmount();
     }
 
     loadUserProfile() {
@@ -151,4 +174,69 @@ export class ProfileComponent {
           }
         });
     }
+
+    walletDeposit(): any {
+        this.depositError = false;
+        this.inquiryService.walletDeposit(this.depositAmount).subscribe(result => {
+            console.log(result);
+            this.depositAmount = 0;
+            this.walletAmount = result.new_balance;
+        }, error => {
+            this.depositError = true;
+        });
+    }
+
+    walletWithdraw(): any {
+        this.depositError = false;
+        this.inquiryService.walletWithdraw(this.withdrawAmount).subscribe(result => {
+            console.log(result);
+            this.withdrawAmount = 0;
+            this.walletAmount = result.new_balance;
+        }, error => {
+            this.depositError = true;
+        });
+    }
+
+    walletTransfer(): any {
+        this.transferError = false;
+        this.depositError = false;
+        this.inquiryService.walletTransfer(this.transferAmount, this.transferRecipient).subscribe(result => {
+            console.log(result);
+            this.transferAmount = 0;
+            this.transferRecipient = '';
+            this.walletAmount = result.new_balance;
+        }, error => {
+            this.transferError = true;
+            this.transferErrorText = error.error.error || error.error.recipient_email || error.error.amount;
+            console.log(error.error)
+        });
+    }
+
+    updateWalletAmount(): any {
+        this.inquiryService.getWallet().subscribe(response => {
+            this.walletAmount = response.balance;
+        });
+    }
+
+    toggleForm(action: any): any {
+        console.log(`Selection: ${action}`);
+        // Show the relevant form based on action
+        if (action === 'deposit') {
+            this.depositSelectionFlag = true;
+
+            this.withdrawSelectionFlag = false;
+            this.transferSelectionFlag = false;
+        } else if (action === 'withdraw') {
+            this.withdrawSelectionFlag = true;
+
+            this.depositSelectionFlag = false;
+            this.transferSelectionFlag = false;
+        } else if (action === 'transfer') {
+            this.transferSelectionFlag = true;
+
+            this.depositSelectionFlag = false;
+            this.withdrawSelectionFlag = false;
+        }
+    }
+
 }

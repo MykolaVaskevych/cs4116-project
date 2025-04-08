@@ -58,6 +58,7 @@ export class LoginComponent {
         }).subscribe(result => {
             console.log(result.access);
             localStorage.setItem('access', result.access);
+            localStorage.setItem('user', JSON.stringify(result.user));
             this.token =  localStorage.getItem('access');
             this.loadUserProfile()
 
