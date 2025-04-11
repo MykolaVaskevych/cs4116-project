@@ -10,7 +10,9 @@ from .views import (
     BlogCategoryViewSet, BlogPostViewSet, BlogPostBySlugView, 
     BlogCommentListCreateView, BlogCommentDetailView, UserBlogPostListView,
     ModeratorListView, ModeratorRequestView, PaymentRequestListCreateView,
-    PaymentRequestDetailView, PendingPaymentRequestListView, PaymentRequestActionView
+    PaymentRequestDetailView, PendingPaymentRequestListView, PaymentRequestActionView,
+    ConversationListCreateView, ConversationDetailView, ConversationActionView,
+    ConversationMessageListCreateView, UnreadConversationCountView
 )
 
 # Create a router for viewsets
@@ -80,6 +82,13 @@ urlpatterns = [
     path('payment-requests/pending/', PendingPaymentRequestListView.as_view(), name='pending-payment-requests'),
     path('payment-requests/<uuid:request_id>/', PaymentRequestDetailView.as_view(), name='payment-request-detail'),
     path('payment-requests/<uuid:request_id>/respond/', PaymentRequestActionView.as_view(), name='payment-request-action'),
+    
+    # Conversation endpoints
+    path('conversations/', ConversationListCreateView.as_view(), name='conversation-list-create'),
+    path('conversations/unread-count/', UnreadConversationCountView.as_view(), name='unread-conversation-count'),
+    path('conversations/<uuid:conversation_id>/', ConversationDetailView.as_view(), name='conversation-detail'),
+    path('conversations/<uuid:conversation_id>/respond/', ConversationActionView.as_view(), name='conversation-action'),
+    path('conversations/<uuid:conversation_id>/messages/', ConversationMessageListCreateView.as_view(), name='conversation-messages'),
     
     # Include routers for the new viewsets
     path('', include(router.urls)),
