@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models, transaction
+from decimal import Decimal
 from django.contrib.auth.models import AbstractUser, UserManager as DjangoUserManager
 from django.contrib.auth.hashers import make_password
 from django.db.models import DO_NOTHING
@@ -180,7 +181,7 @@ class Wallet(models.Model):
         on_delete=models.CASCADE,
         related_name='wallet'
     )
-    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -243,7 +244,11 @@ class Wallet(models.Model):
         
     def transfer(self, recipient_wallet, amount):
         """Transfer funds to another wallet and create transaction record"""
-        if amount <= 0:
+        # Convert amount to Decimal if it's not already
+        if not isinstance(amount, Decimal):
+            amount = Decimal(str(amount))
+            
+        if amount <= Decimal('0'):
             raise ValueError("Amount must be positive")
             
         if self.balance < amount:
@@ -704,6 +709,110 @@ class BlogComment(models.Model):
     
     def __str__(self):
         return f"Comment on '{self.blog_post.title}' by {self.author.username}"
+
+
+class Conversation(models.Model):
+    """
+    Model for peer-to-peer conversations between users.
+    Each conversation has a unique ID and tracks the 
+    sender and recipient users.
+    """
+    conversation_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='sent_conversations'
+    )
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='received_conversations'
+    )
+    is_accepted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Conversation {self.conversation_id} between {self.sender.username} and {self.recipient.username}"
+    
+    def accept(self):
+        """Accept the conversation request and process payment"""
+        if self.is_accepted:
+            raise ValueError("Conversation is already accepted")
+            
+        with transaction.atomic():
+            # Transfer funds (5€) from sender to recipient
+            fee_amount = Decimal('5.00')  # 5€ fixed fee
+            sender_wallet = self.sender.wallet
+            recipient_wallet = self.recipient.wallet
+            
+            # Process the payment
+            transaction_record = sender_wallet.transfer(recipient_wallet, fee_amount)
+            
+            # Mark conversation as accepted
+            self.is_accepted = True
+            self.save(update_fields=['is_accepted', 'updated_at'])
+            
+            return transaction_record
+    
+    def deny(self):
+        """Deny the conversation request and delete it"""
+        if self.is_accepted:
+            raise ValueError("Cannot deny an already accepted conversation")
+        
+        # Store the IDs for the return value before deletion
+        conversation_data = {
+            'conversation_id': self.conversation_id,
+            'sender_id': self.sender.id,
+            'recipient_id': self.recipient.id
+        }
+        
+        # Delete the conversation and all its messages
+        self.delete()
+        
+        return conversation_data
+    
+    class Meta:
+        ordering = ['-updated_at']
+        # Ensure each pair of users can have only one conversation
+        constraints = [
+            models.UniqueConstraint(
+                fields=['sender', 'recipient'],
+                name='unique_conversation_participants'
+            )
+        ]
+
+
+class ConversationMessage(models.Model):
+    """
+    Model for messages within a P2P conversation.
+    """
+    message_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    conversation = models.ForeignKey(
+        Conversation,
+        on_delete=models.CASCADE,
+        related_name='messages'
+    )
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='sent_p2p_messages'
+    )
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"Message {self.message_id} in conversation {self.conversation.conversation_id}"
+    
+    def mark_as_read(self):
+        """Mark this message as read"""
+        if not self.is_read:
+            self.is_read = True
+            self.save(update_fields=['is_read'])
+    
+    class Meta:
+        ordering = ['created_at']
 
 
 class PaymentRequest(models.Model):
