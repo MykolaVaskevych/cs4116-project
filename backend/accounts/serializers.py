@@ -3,10 +3,12 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.utils.text import slugify
+from django.db import models
+from decimal import Decimal
 from .models import (
     Wallet, Transaction, Service, Inquiry, InquiryMessage,
     Review, ReviewComment, Category, BlogCategory, BlogPost, BlogComment,
-    PaymentRequest
+    PaymentRequest, Conversation, ConversationMessage
 )
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -799,4 +801,258 @@ class ChangePasswordSerializer(serializers.Serializer):
         if data['old_password'] == data['new_password']:
             raise serializers.ValidationError({'new_password': "New password cannot be the same as old password"})
             
+        return data
+
+
+class ConversationMessageSerializer(serializers.ModelSerializer):
+    """Serializer for conversation messages"""
+    sender_name = serializers.CharField(source='sender.username', read_only=True)
+    sender_id = serializers.IntegerField(source='sender.id', read_only=True)
+    is_sender = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = ConversationMessage
+        fields = [
+            'message_id', 
+            'conversation', 
+            'sender',
+            'sender_id', 
+            'sender_name',
+            'content', 
+            'created_at',
+            'is_read',
+            'is_sender'
+        ]
+        read_only_fields = ['message_id', 'sender', 'created_at', 'is_read']
+    
+    def get_is_sender(self, obj):
+        """Check if the requesting user is the sender of this message"""
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            return obj.sender == request.user
+        return False
+    
+    def create(self, validated_data):
+        """Create a new message, setting the sender to the current user"""
+        user = self.context['request'].user
+        conversation = validated_data['conversation']
+        
+        # Verify the user is a participant in this conversation
+        if not (user == conversation.sender or user == conversation.recipient):
+            raise serializers.ValidationError("You are not a participant in this conversation")
+            
+        # Verify the conversation is accepted before allowing messages
+        if not conversation.is_accepted:
+            raise serializers.ValidationError("Cannot send messages in a conversation that has not been accepted")
+            
+        # Create the message
+        validated_data['sender'] = user
+        return ConversationMessage.objects.create(**validated_data)
+
+
+class ConversationSerializer(serializers.ModelSerializer):
+    """Serializer for conversations"""
+    sender_name = serializers.CharField(source='sender.username', read_only=True)
+    recipient_name = serializers.CharField(source='recipient.username', read_only=True)
+    sender_image = serializers.ImageField(source='sender.profile_image', read_only=True)
+    recipient_image = serializers.ImageField(source='recipient.profile_image', read_only=True)
+    last_message = serializers.SerializerMethodField()
+    unread_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Conversation
+        fields = [
+            'conversation_id',
+            'sender',
+            'sender_name',
+            'sender_image',
+            'recipient',
+            'recipient_name',
+            'recipient_image',
+            'is_accepted',
+            'created_at',
+            'updated_at',
+            'last_message',
+            'unread_count'
+        ]
+        read_only_fields = [
+            'conversation_id', 
+            'is_accepted', 
+            'created_at', 
+            'updated_at'
+        ]
+    
+    def get_last_message(self, obj):
+        """Get the last message in the conversation"""
+        last_message = obj.messages.order_by('-created_at').first()
+        if last_message:
+            return {
+                'id': last_message.message_id,
+                'content': last_message.content[:50] + ('...' if len(last_message.content) > 50 else ''),
+                'sender_name': last_message.sender.username,
+                'timestamp': last_message.created_at
+            }
+        return None
+    
+    def get_unread_count(self, obj):
+        """Get the count of unread messages for the current user"""
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            user = request.user
+            return obj.messages.filter(is_read=False).exclude(sender=user).count()
+        return 0
+    
+    def validate(self, data):
+        """Validate conversation data"""
+        # For creation only
+        if not self.instance:
+            sender = self.context['request'].user
+            recipient = data.get('recipient')
+            
+            # Check if sender is trying to start a conversation with themselves
+            if sender == recipient:
+                raise serializers.ValidationError("You cannot start a conversation with yourself")
+                
+            # Check if a conversation already exists between these users
+            existing_conversation = Conversation.objects.filter(
+                (models.Q(sender=sender) & models.Q(recipient=recipient)) |
+                (models.Q(sender=recipient) & models.Q(recipient=sender))
+            ).first()
+            
+            if existing_conversation:
+                raise serializers.ValidationError("A conversation already exists with this user")
+                
+        return data
+    
+    def create(self, validated_data):
+        """Create a new conversation with the current user as sender"""
+        validated_data['sender'] = self.context['request'].user
+        return Conversation.objects.create(**validated_data)
+
+
+class ConversationCreateSerializer(serializers.Serializer):
+    """
+    Serializer for creating a new conversation with an initial message.
+    This serializer handles the special case of starting a conversation
+    from a review.
+    """
+    recipient_id = serializers.IntegerField(required=True)
+    initial_message = serializers.CharField(required=True)
+    review_id = serializers.IntegerField(required=False, allow_null=True)
+    
+    def validate_recipient_id(self, value):
+        """Validate that the recipient exists"""
+        try:
+            recipient = User.objects.get(pk=value)
+            return value
+        except User.DoesNotExist:
+            raise serializers.ValidationError("Recipient not found")
+    
+    def validate_review_id(self, value):
+        """Validate that the review exists if provided"""
+        if value:
+            try:
+                review = Review.objects.get(review_id=value)
+                return value
+            except Review.DoesNotExist:
+                raise serializers.ValidationError("Review not found")
+        return value
+    
+    def validate(self, data):
+        """Validate the conversation request"""
+        sender = self.context['request'].user
+        recipient_id = data.get('recipient_id')
+        review_id = data.get('review_id')
+        
+        try:
+            recipient = User.objects.get(pk=recipient_id)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({"recipient_id": "Recipient not found"})
+        
+        # Check if sender is trying to start a conversation with themselves
+        if sender.id == recipient_id:
+            raise serializers.ValidationError({"recipient_id": "You cannot start a conversation with yourself"})
+        
+        # Check if a conversation already exists between these users
+        existing_conversation = Conversation.objects.filter(
+            (models.Q(sender=sender) & models.Q(recipient=recipient)) |
+            (models.Q(sender=recipient) & models.Q(recipient=sender))
+        ).first()
+        
+        if existing_conversation:
+            raise serializers.ValidationError({"recipient_id": "A conversation already exists with this user"})
+        
+        # If the request is coming from a review, validate that the recipient is actually the reviewer
+        if review_id:
+            try:
+                review = Review.objects.get(review_id=review_id)
+                if review.user.id != recipient_id:
+                    raise serializers.ValidationError(
+                        {"review_id": "The recipient must be the author of the specified review"}
+                    )
+            except Review.DoesNotExist:
+                raise serializers.ValidationError({"review_id": "Review not found"})
+        
+        return data
+    
+    def create(self, validated_data):
+        """
+        Create a new conversation with the initial message.
+        Returns both the conversation and the message objects.
+        """
+        sender = self.context['request'].user
+        recipient_id = validated_data.get('recipient_id')
+        initial_message = validated_data.get('initial_message')
+        
+        # Get the recipient user
+        recipient = User.objects.get(pk=recipient_id)
+        
+        # Create the conversation
+        conversation = Conversation.objects.create(
+            sender=sender,
+            recipient=recipient
+        )
+        
+        # Create the initial message
+        message = ConversationMessage.objects.create(
+            conversation=conversation,
+            sender=sender,
+            content=initial_message
+        )
+        
+        return {
+            'conversation': conversation,
+            'message': message
+        }
+
+
+class ConversationActionSerializer(serializers.Serializer):
+    """Serializer for accepting or denying a conversation request"""
+    action = serializers.ChoiceField(choices=['accept', 'deny'])
+    
+    def validate(self, data):
+        """Validate the conversation action"""
+        # The conversation object should be in the context
+        conversation = self.context.get('conversation')
+        user = self.context['request'].user
+        
+        if not conversation:
+            raise serializers.ValidationError("Conversation not found")
+            
+        # Ensure the user is the recipient of the conversation request
+        if conversation.recipient != user:
+            raise serializers.ValidationError("You can only respond to conversation requests sent to you")
+            
+        # Ensure the conversation is not already accepted
+        if conversation.is_accepted:
+            raise serializers.ValidationError("This conversation has already been accepted")
+            
+        # If accepting, ensure the sender has sufficient funds
+        if data['action'] == 'accept':
+            sender_wallet = conversation.sender.wallet
+            fee_amount = Decimal('5.00')  # 5€ fixed fee
+            
+            if sender_wallet.balance < fee_amount:
+                raise serializers.ValidationError("The sender does not have sufficient funds for this conversation")
+                
         return data
