@@ -145,6 +145,19 @@ class User(AbstractUser):
         help_text="User's biography or description"
     )
     
+    # User expertise field
+    expertise = models.TextField(
+        blank=True, 
+        default="",
+        help_text="User's areas of expertise"
+    )
+    
+    # Customer verification flag
+    is_verified_customer = models.BooleanField(
+        default=False,
+        help_text="Flag indicating if the customer has been verified"
+    )
+    
     # Use our custom manager that handles wallet creation
     objects = UserManager()
     
