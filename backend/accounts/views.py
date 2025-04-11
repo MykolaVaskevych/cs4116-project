@@ -1,5 +1,5 @@
 # accounts/views.py
-from rest_framework import status, permissions, viewsets, generics, filters
+from rest_framework import status, permissions, viewsets, generics, filters, serializers
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -9,7 +9,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import (
     Wallet, Transaction, Service, Inquiry, InquiryMessage, 
     Review, ReviewComment, Category, BlogCategory, BlogPost, BlogComment,
-    PaymentRequest, User
+    PaymentRequest, User, Conversation, ConversationMessage
 )
 from .serializers import (
     UserSerializer, UserProfileSerializer, WalletSerializer,
@@ -20,7 +20,8 @@ from .serializers import (
     BlogCategorySerializer, BlogPostListSerializer, BlogPostDetailSerializer,
     BlogPostCreateSerializer, BlogCommentSerializer, ModeratorSerializer,
     ModeratorRequestSerializer, PaymentRequestSerializer, PaymentRequestActionSerializer,
-    ChangePasswordSerializer
+    ChangePasswordSerializer, ConversationSerializer, ConversationMessageSerializer,
+    ConversationCreateSerializer, ConversationActionSerializer
 )
 
 User = get_user_model()
@@ -1056,3 +1057,218 @@ class PaymentRequestActionView(generics.GenericAPIView):
                 })
         except ValueError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class IsConversationParticipant(permissions.BasePermission):
+    """
+    Custom permission to only allow participants of a conversation to view or interact with it.
+    """
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+        return user == obj.sender or user == obj.recipient
+
+
+class ConversationListCreateView(generics.ListCreateAPIView):
+    """
+    API endpoint for listing and creating conversations.
+    
+    GET: Returns all conversations the authenticated user is a participant in.
+    POST: Creates a new conversation with the authenticated user as the sender.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return ConversationCreateSerializer
+        return ConversationSerializer
+    
+    def get_queryset(self):
+        """Return conversations where the user is either sender or recipient"""
+        user = self.request.user
+        return Conversation.objects.filter(
+            Q(sender=user) | Q(recipient=user)
+        ).select_related('sender', 'recipient')
+    
+    def post(self, request, *args, **kwargs):
+        """Create a new conversation with initial message"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        result = serializer.save()
+        
+        # Return the created conversation with full details
+        conversation_serializer = ConversationSerializer(
+            result['conversation'],
+            context={'request': request}
+        )
+        
+        return Response(conversation_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ConversationDetailView(generics.RetrieveAPIView):
+    """
+    API endpoint for retrieving a specific conversation.
+    
+    GET: Returns the details of a conversation the user is a participant in.
+    """
+    serializer_class = ConversationSerializer
+    permission_classes = [permissions.IsAuthenticated, IsConversationParticipant]
+    lookup_field = 'conversation_id'
+    lookup_url_kwarg = 'conversation_id'
+    
+    def get_queryset(self):
+        """Return conversations where the user is either sender or recipient"""
+        user = self.request.user
+        return Conversation.objects.filter(
+            Q(sender=user) | Q(recipient=user)
+        ).select_related('sender', 'recipient')
+
+
+class ConversationActionView(generics.GenericAPIView):
+    """
+    API endpoint for accepting or denying a conversation request.
+    
+    POST: Accepts or denies a conversation request based on the action parameter.
+    """
+    serializer_class = ConversationActionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_object(self):
+        """Get the conversation by its conversation_id from the URL"""
+        conversation_id = self.kwargs.get('conversation_id')
+        conversation = get_object_or_404(Conversation, conversation_id=conversation_id)
+        
+        # Check if user is the recipient
+        if conversation.recipient != self.request.user:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("You can only respond to conversation requests sent to you")
+            
+        return conversation
+    
+    def post(self, request, *args, **kwargs):
+        """Process the conversation action"""
+        conversation = self.get_object()
+        
+        # Add conversation to serializer context
+        serializer = self.get_serializer(data=request.data)
+        serializer.context['conversation'] = conversation
+        
+        serializer.is_valid(raise_exception=True)
+        action = serializer.validated_data['action']
+        
+        try:
+            if action == 'accept':
+                # Accept and process the payment
+                transaction = conversation.accept()
+                return Response({
+                    'message': 'Conversation request accepted',
+                    'transaction_id': str(transaction.transaction_id),
+                    'amount': "5.00",  # Fixed 5€ fee
+                    'conversation_id': str(conversation.conversation_id),
+                    'new_balance': str(conversation.sender.wallet.balance)
+                })
+            elif action == 'deny':
+                # Deny the conversation request
+                result = conversation.deny()
+                return Response({
+                    'message': 'Conversation request denied',
+                    'conversation_id': str(result['conversation_id'])
+                })
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ConversationMessageListCreateView(generics.ListCreateAPIView):
+    """
+    API endpoint for listing and creating messages within a conversation.
+    
+    GET: Returns all messages in a specific conversation.
+    POST: Creates a new message in the conversation.
+    """
+    serializer_class = ConversationMessageSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        """Return messages for a specific conversation, marking unread ones as read"""
+        user = self.request.user
+        conversation_id = self.kwargs.get('conversation_id')
+        
+        # Check if user is a participant in this conversation
+        conversation = get_object_or_404(
+            Conversation.objects.filter(Q(sender=user) | Q(recipient=user)), 
+            conversation_id=conversation_id
+        )
+        
+        # Mark messages from the other user as read
+        if self.request.method == 'GET':
+            unread_messages = ConversationMessage.objects.filter(
+                conversation=conversation,
+                is_read=False
+            ).exclude(sender=user)
+            
+            for message in unread_messages:
+                message.mark_as_read()
+        
+        return ConversationMessage.objects.filter(
+            conversation__conversation_id=conversation_id
+        ).select_related('sender')
+    
+    def perform_create(self, serializer):
+        """Create a message in the specified conversation"""
+        conversation_id = self.kwargs.get('conversation_id')
+        user = self.request.user
+        
+        # Get the conversation
+        conversation = get_object_or_404(
+            Conversation, 
+            conversation_id=conversation_id
+        )
+        
+        # Check if user is a participant
+        if not (user == conversation.sender or user == conversation.recipient):
+            raise serializers.ValidationError("You are not a participant in this conversation")
+            
+        # Check if the conversation is accepted
+        if not conversation.is_accepted:
+            raise serializers.ValidationError("Cannot send messages in a conversation that has not been accepted")
+            
+        # Create the message
+        serializer.save(
+            sender=user,
+            conversation=conversation
+        )
+        
+        # Update the conversation's updated_at timestamp
+        conversation.save(update_fields=['updated_at'])
+
+
+class UnreadConversationCountView(generics.GenericAPIView):
+    """
+    API endpoint for getting the count of conversations with unread messages.
+    
+    GET: Returns the count of conversations with unread messages for the authenticated user.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, *args, **kwargs):
+        """Get the count of conversations with unread messages"""
+        user = request.user
+        
+        # Get all conversations where the user is a participant
+        conversations = Conversation.objects.filter(
+            Q(sender=user) | Q(recipient=user),
+            is_accepted=True
+        )
+        
+        # Count conversations with unread messages
+        unread_count = 0
+        for conversation in conversations:
+            # Check if there are unread messages from the other user
+            has_unread = ConversationMessage.objects.filter(
+                conversation=conversation,
+                is_read=False
+            ).exclude(sender=user).exists()
+            
+            if has_unread:
+                unread_count += 1
+        
+        return Response({'unread_count': unread_count})
