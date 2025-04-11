@@ -1,0 +1,39 @@
+meta {
+  name: Send Message
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{host}}/api/conversations/{{conversation_id}}/messages/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "content": "This is my message content"
+  }
+}
+
+docs {
+  title: "Send Message in Conversation"
+  description: "Sends a new message in a conversation."
+  
+  requirements: {
+    authentication: "Bearer token required"
+    permissions: "User must be a participant in the conversation"
+    constraints: "Conversation must be accepted"
+  }
+  
+  response: {
+    201: "Message created successfully with details"
+    400: "Bad Request - Conversation not accepted, empty content"
+    403: "Forbidden - User is not a participant in this conversation"
+    404: "Not Found - Conversation does not exist"
+  }
+}

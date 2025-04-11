@@ -1,0 +1,32 @@
+meta {
+  name: List Conversations
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/api/conversations/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  title: "List Conversations"
+  description: "Retrieves a list of all conversations the authenticated user is participating in, either as sender or recipient."
+  
+  response: {
+    200: "Returns a list of conversations with details including participants, last message, and unread count"
+    401: "Unauthorized - User is not authenticated"
+  }
+}
+
+script:post-response {
+  if (res.statusCode === 200 && res.body.length > 0) {
+    // Store the first conversation ID for use in other requests
+    bru.setVar("conversation_id", res.body[0].conversation_id);
+  }
+}

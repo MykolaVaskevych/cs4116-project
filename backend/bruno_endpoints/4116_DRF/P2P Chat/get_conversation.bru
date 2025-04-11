@@ -1,0 +1,31 @@
+meta {
+  name: Get Conversation Details
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{host}}/api/conversations/{{conversation_id}}/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  title: "Get Conversation Details"
+  description: "Retrieves details of a specific conversation including participants, status, and last message."
+  
+  requirements: {
+    authentication: "Bearer token required"
+    permissions: "User must be a participant in the conversation"
+  }
+  
+  response: {
+    200: "Returns conversation details"
+    403: "Forbidden - User is not a participant in this conversation"
+    404: "Not Found - Conversation does not exist"
+  }
+}

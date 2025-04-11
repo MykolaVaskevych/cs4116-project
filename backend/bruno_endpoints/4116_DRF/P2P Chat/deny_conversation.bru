@@ -1,0 +1,38 @@
+meta {
+  name: Deny Conversation
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{host}}/api/conversations/{{conversation_id}}/respond/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "action": "deny"
+  }
+}
+
+docs {
+  title: "Deny Conversation Request"
+  description: "Denies a conversation request. This will delete the conversation and all its messages."
+  
+  requirements: {
+    authentication: "Bearer token required"
+    permissions: "Only the recipient of the conversation can deny it"
+  }
+  
+  response: {
+    200: "Conversation denied and deleted"
+    400: "Bad Request - Already accepted"
+    403: "Forbidden - User is not the recipient of this conversation"
+    404: "Not Found - Conversation does not exist"
+  }
+}

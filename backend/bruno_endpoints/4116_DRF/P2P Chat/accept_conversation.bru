@@ -1,0 +1,39 @@
+meta {
+  name: Accept Conversation
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{host}}/api/conversations/{{conversation_id}}/respond/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "action": "accept"
+  }
+}
+
+docs {
+  title: "Accept Conversation Request"
+  description: "Accepts a conversation request. This will transfer 5€ from the sender to the recipient."
+  
+  requirements: {
+    authentication: "Bearer token required"
+    permissions: "Only the recipient of the conversation can accept it"
+    constraints: "Sender must have sufficient funds (5€)"
+  }
+  
+  response: {
+    200: "Conversation accepted, includes transaction details"
+    400: "Bad Request - Already accepted, insufficient funds"
+    403: "Forbidden - User is not the recipient of this conversation"
+    404: "Not Found - Conversation does not exist"
+  }
+}

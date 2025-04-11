@@ -1,0 +1,44 @@
+meta {
+  name: Create Conversation
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/api/conversations/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "recipient_id": 2,
+    "initial_message": "Hello, I would like to discuss your review."
+  }
+}
+
+docs {
+  title: "Create New Conversation"
+  description: "Creates a new peer-to-peer conversation with an initial message. The authenticated user will be the sender."
+  
+  requirements: {
+    authentication: "Bearer token required"
+    permissions: "Any authenticated user can create a conversation"
+  }
+  
+  response: {
+    201: "Conversation created successfully with details"
+    400: "Bad Request - Invalid data (recipient not found, self-conversation, duplicate conversation)"
+    401: "Unauthorized - User is not authenticated"
+  }
+}
+
+script:post-response {
+  if (res.statusCode === 201) {
+    bru.setVar("conversation_id", res.body.conversation_id);
+  }
+}

@@ -1,0 +1,45 @@
+meta {
+  name: Create Conversation From Review
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/api/conversations/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "recipient_id": 2,
+    "initial_message": "I saw your review and would like to discuss it.",
+    "review_id": "{{review_id}}"
+  }
+}
+
+docs {
+  title: "Create Conversation From Review"
+  description: "Creates a new conversation with the reviewer. This endpoint validates that the recipient is the author of the specified review."
+  
+  requirements: {
+    authentication: "Bearer token required"
+    permissions: "Any authenticated user can create a conversation from a review"
+  }
+  
+  response: {
+    201: "Conversation created successfully with details"
+    400: "Bad Request - Invalid data (recipient not found, recipient is not the review author)"
+    401: "Unauthorized - User is not authenticated"
+  }
+}
+
+script:post-response {
+  if (res.statusCode === 201) {
+    bru.setVar("conversation_id", res.body.conversation_id);
+  }
+}

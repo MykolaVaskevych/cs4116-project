@@ -1,0 +1,29 @@
+meta {
+  name: Get Unread Conversations Count
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{host}}/api/conversations/unread-count/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  title: "Get Unread Conversations Count"
+  description: "Retrieves the number of conversations that have unread messages for the authenticated user."
+  
+  requirements: {
+    authentication: "Bearer token required"
+  }
+  
+  response: {
+    200: "Returns count of conversations with unread messages"
+    401: "Unauthorized - User is not authenticated"
+  }
+}

@@ -1,0 +1,31 @@
+meta {
+  name: List Conversation Messages
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{host}}/api/conversations/{{conversation_id}}/messages/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  title: "List Conversation Messages"
+  description: "Retrieves all messages in a specific conversation. This also marks all unread messages as read."
+  
+  requirements: {
+    authentication: "Bearer token required"
+    permissions: "User must be a participant in the conversation"
+  }
+  
+  response: {
+    200: "Returns list of messages in the conversation"
+    403: "Forbidden - User is not a participant in this conversation"
+    404: "Not Found - Conversation does not exist"
+  }
+}
