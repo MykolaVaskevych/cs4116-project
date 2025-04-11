@@ -30,13 +30,15 @@ class UserSerializer(serializers.ModelSerializer):
             "role", 
             "role_display",
             "profile_image",
-            "bio"
+            "bio",
+            "expertise"
         ]
         extra_kwargs = {
             "password": {"write_only": True},
             "username": {"required": False},
             "profile_image": {"required": False},
             "bio": {"required": False},
+            "expertise": {"required": False},
         }
 
     def create(self, validated_data):
