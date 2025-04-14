@@ -825,7 +825,7 @@ class ConversationMessageSerializer(serializers.ModelSerializer):
             'is_read',
             'is_sender'
         ]
-        read_only_fields = ['message_id', 'sender', 'created_at', 'is_read']
+        read_only_fields = ['message_id', 'sender', 'created_at', 'is_read', 'conversation']
     
     def get_is_sender(self, obj):
         """Check if the requesting user is the sender of this message"""
