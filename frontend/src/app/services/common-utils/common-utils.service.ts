@@ -36,4 +36,15 @@ export class CommonUtilsService {
             title: "Session Expired. You've been logged out.",
         });
     }
+
+    showCustomAlert(warning: any, title: any) {
+        return Swal.fire({
+            icon: warning,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            title,
+        });
+    }
 }

@@ -1,0 +1,91 @@
+<div class="d-flex" id="wrapper" [class.disabled]="conversation_list.length === 0">
+    <!-- Sidebar -->
+    <div class="bg-dark text-white" id="sidebar">
+        <div class="sidebar-heading p-4">
+            <h3 style="font-size: xxx-large; font-weight: bold">Customer</h3>
+        </div>
+        <div class="list-group list-group-flush">
+            <li *ngFor="let customer of conversation_list"
+                class="list-group-item list-group-item-action inquiry-recipient"
+                (click)="startPolling(customer)"
+            >
+                <div style="opacity: 0">..</div>
+                <img
+                    class="dp-thumbnail"
+                    src="{{placeholder_dp}}"
+                    alt="DP"
+                    width="40px"
+                >
+                <div style="opacity: 0">..</div>
+                <div class="inquiry-recipient-name">{{ getCustomerName(customer) }}</div>
+                <div style="opacity: 0">..</div>
+                <div style="{{isClosedInquiry(customer)}}">
+                    <i class="bi bi-c-circle" ngbTooltip="Closed"></i>
+                </div>
+                <div style="opacity: 0">..</div>
+                <div style="{{markAsVisibleConversation(customer)}}">
+                    <i class="bi bi-broadcast"></i>
+                </div>
+            </li>
+        </div>
+
+        <div class="list-group list-group-flush" style="opacity: 0">
+            <li *ngFor="let user of additionalHeightUnderMessages" class="list-group-item list-group-item-action inquiry-recipient" style="cursor:unset;">
+                <div class="inquiry-recipient-name">{{ user.id }}</div>
+            </li>
+        </div>
+    </div>
+
+    <!-- Page Content -->
+    <div id="page-content-wrapper">
+        <div class="container-fluid inquiry-message-area" style="height: 100%; padding: unset">
+            <p class="customer-name-under-topbar">
+                <img
+                    class="dp-thumbnail"
+                    src="{{placeholder_dp}}"
+                    alt="DP"
+                    width="60px"
+                >
+                <span style="opacity: 0">..</span>
+                {{ getCustomerName(selectedConversation) }}
+                <span style="opacity: 0">..</span>
+            </p>
+
+            <!-- Chat Area -->
+            <div class="messages" id="messages" #messageContainer>
+                <div *ngFor="let item of textMessages" class="single-message {{getSingleMessageClass(item)}}">
+                    <!--                    <hr/>-->
+                    <span>
+                        {{ item.content }}
+                        <i style="visibility: hidden" class="bi bi-check2-all"></i>
+                        <i *ngIf="item.is_read && isMine(item)" class="bi bi-check2-all" ngbTooltip="seen"></i>
+                        <i *ngIf="!item.is_read && isMine(item)" class="bi bi-hourglass-split" ngbTooltip="pending"></i>
+                    </span>
+                </div>
+
+                <div *ngIf="conversationRequestPending" class="mark-completed">{{conversationRequestPendingText}}</div>
+                <div *ngIf="showAcceptRejectOption" class="mark-completed">
+                    <button (click)="acceptOrDeny('accept')">Accept</button>
+                    <button (click)="acceptOrDeny('deny')">Reject</button>
+                </div>
+                <div style="opacity: 0">This is a placeholder text for better space allocation and decoration.</div>
+                <div *ngFor="let item of additionalHeightUnderMessages" class="single-message" style="opacity: 0">
+                    <!--                    This is a placeholder <div/> for better space allocation and decoration.-->
+                    <span>{{item.id}}</span>
+                </div>
+            </div>
+            <!-- Text Input Area -->
+            <div class="message-input">
+                <input
+                    (keyup.enter)="sendMessage()"
+                    type="text"
+                    id="messageInput"
+                    class="form-control {{getShouldBeDisabled()}}"
+                    placeholder="Write Something.."
+                    [(ngModel)]="messageText"
+                    [disabled]="conversationRequestPending"
+                />
+            </div>
+        </div>
+    </div>
+</div>

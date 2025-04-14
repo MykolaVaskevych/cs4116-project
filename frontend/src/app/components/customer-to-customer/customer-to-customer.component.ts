@@ -1,37 +1,30 @@
 import {AfterViewChecked, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
-import {NgClass, NgForOf, NgIf, NgOptimizedImage, NgStyle} from '@angular/common';
-import {NgbModal, NgbPopover, NgbScrollSpy, NgbScrollSpyFragment, NgbTooltip} from '@ng-bootstrap/ng-bootstrap';
-import {InquiryService} from '../../services/inquiry-service/inquiry.service';
 import {FormsModule} from '@angular/forms';
-import Swal from 'sweetalert2';
+import {NgForOf, NgIf} from '@angular/common';
+import {NgbModal, NgbPopover, NgbTooltip} from '@ng-bootstrap/ng-bootstrap';
 import {CommonUtilsService} from '../../services/common-utils/common-utils.service';
-import {RequestPaymentComponent} from '../request-payment/request-payment.component';
-import {
-    PaymentRequestCustomerViewComponent
-} from '../payment-request-customer-view/payment-request-customer-view.component';
+import {ConversationService} from '../../services/conversation-service/conversation.service';
 
 @Component({
-  selector: 'app-inquiry',
+  selector: 'app-customer-to-customer',
     imports: [
+        FormsModule,
         NgForOf,
         NgIf,
-        FormsModule,
         NgbTooltip,
-        NgbPopover,
+        NgbPopover
     ],
-  templateUrl: './inquiry.component.html',
-  styleUrl: './inquiry.component.css'
+  templateUrl: './customer-to-customer.component.html',
+  styleUrl: './customer-to-customer.component.css'
 })
-export class InquiryComponent implements OnInit, AfterViewChecked, OnDestroy {
+export class CustomerToCustomerComponent implements OnInit, AfterViewChecked, OnDestroy {
     @ViewChild('messageContainer') messageContainer!: ElementRef;
 
-    randomUserList: any = [];
-    inquiry_list: any = [];
+    conversation_list: any = [];
     placeholder_dp = 'https://xsgames.co/randomusers/avatar.php?g=pixel';
 
-    selectedRecipient: any;
+    selectedConversation: any;
     textMessages: any = [];
-    currentInquiryOpenOrClosed: any = false;
 
     messageText: any = '';
 
@@ -171,22 +164,15 @@ export class InquiryComponent implements OnInit, AfterViewChecked, OnDestroy {
     ];
 
     timeoutId: any;
-    timeoutId_PaymentRequest: any;
+    timeoutId_ConversationStatus: any;
     shouldScrollToBottom = false;
 
-    inputFiledVisibilityFlag = false;
-    paymentRequestSent = false;
-    paymentRequestReceived = false;
-    paymentRequestReceivedText = '';
-    paymentRequestSentText = '';
-
-    lastAcceptedOrDeclinedRequest!: boolean;
-    lastAcceptedOrDeclinedRequestText = '';
-
-    activePaymentRequest: any;
+    conversationRequestPending = false;
+    conversationRequestPendingText = 'Conversation Request Pending';
+    showAcceptRejectOption = false;
 
     constructor(
-        private inquiryService: InquiryService,
+        private conversationService: ConversationService,
         private commonUtilsService: CommonUtilsService,
         private modalService: NgbModal
     ) {
@@ -196,25 +182,27 @@ export class InquiryComponent implements OnInit, AfterViewChecked, OnDestroy {
         if (this.timeoutId) {
             clearTimeout(this.timeoutId);
         }
+
+        if (this.timeoutId_ConversationStatus) {
+            clearTimeout(this.timeoutId_ConversationStatus);
+        }
     }
 
     ngOnInit() {
-        this.inquiryService.getAllInquiries().subscribe(response => {
+        this.conversationService.listConversation().subscribe(response => {
             // console.log(response);
             response
                 // @ts-ignore
                 .sort((a: any, b: any) => new Date(b.updated_at) - new Date(a.updated_at))
                 // .filter((item: any) => item.status === 'OPEN')
                 .map((item: any) => {
-                    this.inquiry_list.push(item);
-            });
-            this.selectedRecipient = this.inquiry_list[0];
-            this.startPolling(this.selectedRecipient);
-            this.inputFiledVisibilityFlag = true;
-            // this.viewPaymentRequest();
-            // this.textMessages = response[0].messages;
-            // this.currentInquiryOpenOrClosed = (response[0].status === 'CLOSED');
-            // console.log(this.currentInquiryOpenOrClosed);
+                    this.conversation_list.push(item);
+                });
+
+            // this.other_customer_list = []; //  Remove it when API arrives.
+
+            this.selectedConversation = this.conversation_list[0];
+            this.startPolling(this.selectedConversation);
         })
     }
 
@@ -231,23 +219,19 @@ export class InquiryComponent implements OnInit, AfterViewChecked, OnDestroy {
             // Scroll the message container to the bottom
             this.messageContainer.nativeElement.scrollTop = this.messageContainer.nativeElement.scrollHeight;
         } catch (err) {
-            console.error('Error scrolling to bottom:', err);
+            // console.error('Error scrolling to bottom:', err);
         }
     }
 
-    getInquiryName(inquiry: any): any {
+    getCustomerName(customer: any): any {
         const current_user = this.commonUtilsService.getCurrentUser();
-        // console.log(current_user);
-
-        if (!inquiry) {
+        if (!customer) {
             return;
         }
 
-        if (current_user.role === 'CUSTOMER') {
-            return inquiry.business_name;
-        } else {
-            return inquiry.customer_name;
-        }
+        return customer.recipient_name === current_user.username
+            ? customer.sender_name
+            : customer.recipient_name;
     }
 
     getFullName(inquiry: any): any {
@@ -260,96 +244,55 @@ export class InquiryComponent implements OnInit, AfterViewChecked, OnDestroy {
     getSingleMessageClass(message: any): any {
         // console.log(message);
         const current_user = this.commonUtilsService.getCurrentUser();
-        if (current_user.role === 'CUSTOMER') {
-            if (message.sender_role.toLowerCase() === 'customer') {
-                return 'right';
-            } else {
-                return 'left';
-            }
-        } else {
-            if (message.sender_role.toLowerCase() === 'customer') {
-                return 'left';
-            } else {
-                return 'right';
-            }
-        }
 
-        // return `${message.sender_role.toLowerCase() === 'customer' ? 'left' : 'right' }`;
-
-        // return '';
+        return message?.sender === current_user.id ? 'left' : 'right';
     }
 
-    startPolling(user: any): any {
+    startPolling(conversation: any): any {
         let isFirstLoad = true;
         // console.log(user);
-        this.selectedRecipient = user;
-        this.lastAcceptedOrDeclinedRequest = false;
+        this.selectedConversation = conversation;
 
         this.messageText = '';
-        this.currentInquiryOpenOrClosed = (user.status === 'CLOSED');
-        // console.log(this.currentInquiryOpenOrClosed);
-        // this.textMessages = user.messages;
 
-        let isRefreshing = false;
+        this.showAcceptRejectOption = false;
 
         if (this.timeoutId) {
             clearTimeout(this.timeoutId);
         }
 
-        let lookForData_PaymentRequest = () => {
-            let subscription = this.inquiryService.getPaymentRequest().subscribe(response => {
-                this.lastAcceptedOrDeclinedRequest = false;
-                response = response.filter((item: any) => item.inquiry === this.selectedRecipient.id);
+        let lookForData_ConversationStatus = () => {
+            let subscription = this.conversationService
+                .getConversation(this.selectedConversation.conversation_id)
+                .subscribe(response => {
 
-                let filteredData = response
-                    .filter((item: any) => item.status === 'PENDING')
-                    .find((item: any) => item.inquiry === this.selectedRecipient.id);
+                this.conversationRequestPending = !response.is_accepted;
+                // console.log(response);
 
-                // console.log(this.commonUtilsService.getCurrentUser());
-                // console.log(this.selectedRecipient.id);
-
-                if (filteredData?.status === 'PENDING') {
-                    this.activePaymentRequest = filteredData;
-                    // console.log('PENDING FOUND')
-                    this.paymentRequestSent = (
-                        this.commonUtilsService.getCurrentUser().is_business === true ||
-                        this.commonUtilsService.getCurrentUser().is_moderator === true
-                    );
-                    this.paymentRequestSentText = `Payment Request sent. Amount: ${filteredData.amount}`;
-
-                    this.paymentRequestReceived = (
-                        this.commonUtilsService.getCurrentUser().is_business === false &&
-                        this.commonUtilsService.getCurrentUser().is_moderator === false
-                    );
-                    this.paymentRequestReceivedText = `New Payment Request Received.`;
-                } else {
-                    console.log('NO PENDING');
-
-                    if (response.length !== 0) {
-                        // @ts-ignore
-                        response.sort((a: any, b: any) => a.id - b.id);
-
-                        const temp_object = response[response.length - 1];
-                        // @ts-ignore
-                        this.lastAcceptedOrDeclinedRequest = true;
-                        this.lastAcceptedOrDeclinedRequestText = `The last payment request was ${temp_object.status}`;
-
-                        console.log(this.lastAcceptedOrDeclinedRequest);
-                    }
-
-                    this.paymentRequestSent = false;
-                    this.paymentRequestReceived = false;
+                let current_user = this.commonUtilsService.getCurrentUser();
+                // console.log(current_user.id);
+                // console.log(response.recipient);
+                if (current_user.id === response.recipient) {
+                    this.showAcceptRejectOption = true;
                 }
 
-                this.timeoutId_PaymentRequest = setTimeout(() => {
+                if (!this.conversationRequestPending) {
+                    this.showAcceptRejectOption = false;
                     subscription.unsubscribe();
-                    lookForData_PaymentRequest();
+                    clearTimeout(this.timeoutId_ConversationStatus);
+                    return;
+                }
+
+
+                this.timeoutId_ConversationStatus = setTimeout(() => {
+                    subscription.unsubscribe();
+                    lookForData_ConversationStatus();
                 }, 2000);
             });
         }
 
         let lookForData = () => {
-            let subscription = this.inquiryService.getInquiryMessage(user.id).subscribe(response => {
+            let subscription = this.conversationService.listMessages(conversation.conversation_id).subscribe(response => {
                 // console.log(response);
                 this.textMessages = response;
 
@@ -365,7 +308,7 @@ export class InquiryComponent implements OnInit, AfterViewChecked, OnDestroy {
                     lookForData(); // Call again
                 }, 2000);
             }, error => {
-                console.error(error);
+                // console.error(error);
                 if (error.status === 401) {
                     this.commonUtilsService.showSessionExpired()
                         .then((result) => {
@@ -376,36 +319,28 @@ export class InquiryComponent implements OnInit, AfterViewChecked, OnDestroy {
         };
 
         lookForData(); // Start the polling
-        lookForData_PaymentRequest(); // Start the polling
+        lookForData_ConversationStatus(); // Start the polling
     }
 
     sendMessage() {
-        console.log(this.messageText);
-        console.log(this.selectedRecipient);
-        console.log(this.textMessages)
+        const message = {
+            content: this.messageText,
+        }
 
-        this.inquiryService.sendInquiryMessage(this.messageText, this.selectedRecipient.id).subscribe(response => {
-            console.log(response);
+        this.conversationService.sendMessage(this.selectedConversation.conversation_id, message).subscribe(response => {
             this.textMessages.push(response);
             this.messageText = '';
         }, err => {
-            Swal.fire({
-                icon: "error",
-                position: "top-end",
-                showConfirmButton: false,
-                timer: 1500,
-                timerProgressBar: true,
-                title: "Message Failed!",
-            });
+            // console.log(err);
         })
     }
 
     getShouldBeDisabled() {
-        return this.currentInquiryOpenOrClosed ? 'disable-input' : '';
+        return this.conversationRequestPending ? 'disable-input' : '';
     }
 
-    markAsVisibleInquiry(inquiry: any) {
-        const opacityValue = this.selectedRecipient.id === inquiry.id ? 1 : 0;
+    markAsVisibleConversation(conversation: any) {
+        const opacityValue = this.selectedConversation.conversation_id === conversation.conversation_id ? 1 : 0;
         return `opacity: ${opacityValue}`;
     }
 
@@ -425,77 +360,18 @@ export class InquiryComponent implements OnInit, AfterViewChecked, OnDestroy {
         return `opacity: ${isClosed}`;
     }
 
-    acceptClose(p: any) {
-        this.inquiryService.closeInquiry(this.selectedRecipient.id).subscribe(response => {
-            this.inquiryService.getSingleInquiry(this.selectedRecipient.id).subscribe(response => {
-                console.log(response);
-
-                this.inquiry_list = this.inquiry_list.map((inquiry: any) => {
-                    if (inquiry.id === response.id) {
-                        return { ...inquiry, ...response };
-                    }
-                    return inquiry;
-                });
-                this.selectedRecipient = response;
-                this.currentInquiryOpenOrClosed = (this.selectedRecipient.status === 'CLOSED');
-            });
-        });
-
-
-
-        p.close();
-    }
-
-    rejectClose(p: any) {
-        p.close();
-    }
-
-    openRequestPaymentView() {
-        const modalRef = this.modalService.open(RequestPaymentComponent, { centered: true });
-        modalRef.componentInstance.recipient = this.selectedRecipient;
-        modalRef.componentInstance.modalTitle = 'Modal Title';  // Pass data into the modal
-        modalRef.componentInstance.modalMessage = 'This is the content of the modal';  // Pass more data
-
-        // Listen for the response when modal is closed
-        modalRef.componentInstance.responseEvent.subscribe((response: any) => {
-            console.log(response);  // Handle the response from the modal
-            modalRef.close();
-
-            if (response.info === 'request') {
-                const payload = {
-                    inquiry: this.selectedRecipient.id,
-                    description: response.message,
-                    amount: response.amount
-                }
-
-                this.inquiryService.createPaymentRequest(payload).subscribe(response => {
-                    console.log(response);
-                });
+    acceptOrDeny(action: any): any {
+        this.conversationService.acceptOrDeny(this.selectedConversation.conversation_id, action).subscribe(response => {
+            // console.log(response);
+            if (action === 'deny') {
+                window.location.reload();
             }
-        });
+        })
     }
 
-    viewPaymentRequest() {
-        const modalRef = this.modalService.open(PaymentRequestCustomerViewComponent, { centered: true });
-        modalRef.componentInstance.paymentRequestUUID = this.activePaymentRequest.request_id;
-        modalRef.componentInstance.modalTitle = 'Modal Title';  // Pass data into the modal
-        modalRef.componentInstance.modalMessage = 'This is the content of the modal';  // Pass more data
-
-        // Listen for the response when modal is closed
-        modalRef.componentInstance.responseEvent.subscribe((response: any) => {
-            console.log(response);  // Handle the response from the modal
-            modalRef.close();
-        });
-    }
-
-    shouldRequestPaymentButtonBeVisible() {
-        let visibility = true;
+    isMine(message: any): any {
         const current_user = this.commonUtilsService.getCurrentUser();
-        if (current_user.role == 'CUSTOMER') {
-            visibility = false;
-        }
-
-        return visibility;
+        return message?.sender === current_user.id;
     }
 
 }

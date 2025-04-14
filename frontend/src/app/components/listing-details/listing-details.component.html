@@ -44,6 +44,17 @@
                         <img src="stars.png" alt="">
                     </div>
                     <div class="score">{{rev.rating}}</div>
+                    <div style="visibility: hidden">...</div>
+
+                    <button
+                        type="button"
+                        class="btn btn-link"
+                        ngbTooltip="Contact Reviewer"
+                        style="cursor: pointer"
+                        (click)="openContactWithReviewerForm(rev)"
+                    >
+                        <i style="color: black; font-size: xx-large" class="bi bi-chat-dots"></i>
+                    </button>
                 </div>
             </div>
         </div>

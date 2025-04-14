@@ -2,13 +2,14 @@ import { CommonModule } from '@angular/common';
 import {Component, OnInit} from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ReviewsService } from '../../services/review-service/reviews.service';
-import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {NgbModal, NgbTooltip} from '@ng-bootstrap/ng-bootstrap';
 import {OpenInquiryWindowComponent} from '../open-inquiry-window/open-inquiry-window.component';
+import {ContactWithReviewerComponent} from '../contact-with-reviewer/contact-with-reviewer.component';
 
 
 @Component({
     selector: 'app-listing-details',
-    imports: [CommonModule],
+    imports: [CommonModule, NgbTooltip],
     templateUrl: './listing-details.component.html',
     styleUrl: './listing-details.component.css'
 })
@@ -44,8 +45,6 @@ export class ListingDetailsComponent implements OnInit {
         });
 
         this.getReviews()
-
-
     }
 
     getReviews() {
@@ -85,6 +84,20 @@ export class ListingDetailsComponent implements OnInit {
 
             if (response.info === 'request') {
 
+            }
+        });
+    }
+
+    openContactWithReviewerForm(review: any): any {
+        const modalRef = this.modalService.open(ContactWithReviewerComponent, { centered: true, scrollable: true });
+        modalRef.componentInstance.review = review;
+
+        // Listen for the response when modal is closed
+        modalRef.componentInstance.responseEvent.subscribe((response: any) => {
+            console.log(response);  // Handle the response from the modal
+
+            if (response?.info === 'success' || response?.info === 'cancel') {
+                modalRef.close();
             }
         });
     }

@@ -12,11 +12,13 @@ import { CreateBlogComponent } from './components/create-blog/create-blog.compon
 import { BlogsComponent } from './components/blogs/blogs.component';
 import { InquiryComponent } from './components/inquiry/inquiry.component';
 import { PaymentRequestCustomerViewComponent } from './components/payment-request-customer-view/payment-request-customer-view.component';
+import {CustomerToCustomerComponent} from './components/customer-to-customer/customer-to-customer.component';
 
 export let routes: Routes;
 routes = [
     { path: 'home', component: HomeComponent, canActivate: [AuthGuard] },
     { path: 'about', component: AboutComponent, canActivate: [AuthGuard] },
+    { path: 'p2p', component: CustomerToCustomerComponent, canActivate: [AuthGuard] },
     { path: 'login', component: LoginComponent, canActivate: [AuthGuard] },
     { path: 'sign-up', component: SignUpComponent, canActivate: [AuthGuard] },
     { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
