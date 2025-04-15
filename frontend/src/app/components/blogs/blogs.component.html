@@ -38,7 +38,47 @@
             <div class="full-content" *ngIf="selectedBlog?.slug === blog.slug" [innerHTML]="selectedBlog.content">
             </div>
         </div>
-
+            <!-- Comment Section -->
+            <div class="comments-sec" *ngIf="selectedBlog?.slug === blog.slug">
+                <div class="comment-view-btn" (click)="toggleComments(blog.slug, $event)">
+                    {{ showCommentsSlug === blog.slug ? 'Hide Comments' : 'View Comments' }}
+                </div>
+    
+                <!-- Show comments -->
+                <div *ngIf="showCommentsSlug === blog.slug">
+                    <div class="comments" *ngIf="comments.length > 0; else noComments">
+                        <div class="comment" *ngFor="let comment of comments">
+                            <div class="comment-icon">
+                                <img [src]="profilepic" alt="">
+                            </div>
+                            <div class="comment-content-block">
+                                <div class="username">
+                                    {{user.username}}
+                                </div>
+                                <div class="comment-content">
+                                    {{ comment.content }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <ng-template #noComments>
+                        <p>No comments yet.</p>
+                    </ng-template>
+                </div>
+    
+                <form [formGroup]="commentForm" class="create-comment">
+                    <textarea type="text" class="comment-field" formControlName="content"></textarea>
+    
+                    <div (click)="createComment(blog.id)" class="create-comment-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </div>
+    
+                    <div class="error" *ngIf="commentForm.get('content')?.touched && commentForm.get('content')?.invalid">
+                        Comment cannot be empty.
+                    </div>
+                </form>
+            </div>
+            <!-- End Comment Section -->
         <div class="profile-img">
             <img class="icon" *ngIf="user.profile_img" [src]="user.profile_img" alt="">
             <img class="icon" *ngIf="!user.profile_img" src="icon.png" alt="">

@@ -8,7 +8,7 @@ import { environment } from '../../env/environment';
   providedIn: 'root'
 })
 export class BlogService {
-private apiUrl = `${environment.apiHost}/api/blog`;
+  private apiUrl = `${environment.apiHost}/api/blog`;
 
   constructor(private http: HttpClient) { }
 
@@ -31,13 +31,23 @@ private apiUrl = `${environment.apiHost}/api/blog`;
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
     return this.http.get(`${this.apiUrl}/posts/slug/${slug}`, { headers });
   }
-
+  getPostComments(token: string, id: number): Observable<any> {
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.get(`${this.apiUrl}/posts/${id}/comments`, { headers });
+  }
   createBlogPost(token: string, blogData: any): Observable<any> {
     const headers = new HttpHeaders()
       .set('Authorization', `Bearer ${token}`)
       .set('Content-Type', 'application/json');
 
     return this.http.post(`${this.apiUrl}/posts/`, blogData, { headers });
+  }
+  createComment(token: string, id: number, data: any): Observable<any> {
+    const headers = new HttpHeaders()
+      .set('Authorization', `Bearer ${token}`)
+      .set('Content-Type', 'application/json');
+
+    return this.http.post(`${this.apiUrl}/posts/${id}/comments/`, data, { headers });
   }
 
 }
