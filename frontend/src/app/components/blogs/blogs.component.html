@@ -26,8 +26,8 @@
 </div>
 
 <div class="blogs">
-    <div *ngFor="let blog of blogs" class="blog" (click)="getBlogPostsBySlug(blog.slug)">
-        <div class="title">
+    <div *ngFor="let blog of blogs" class="blog" >
+        <div class="title" (click)="getBlogPostsBySlug(blog)">
             {{blog.title}}
         </div>
 
