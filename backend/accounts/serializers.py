@@ -367,6 +367,10 @@ class InquiryCreateSerializer(serializers.ModelSerializer):
         service = validated_data.get('service')
         if service and service.business == user:
             raise serializers.ValidationError("You cannot create an inquiry for your own service")
+            
+        # Also check if the service owner is the admin (which can happen when the admin created services)
+        if service and service.business.is_superuser and user.is_superuser:
+            raise serializers.ValidationError("As an admin, you cannot create an inquiry for services owned by an admin (including yourself)")
         
         # Check if the service has a fixed price and handle payment
         if service and service.fixed_price > 0:
@@ -386,24 +390,24 @@ class InquiryCreateSerializer(serializers.ModelSerializer):
                 # Create the inquiry first
                 inquiry = Inquiry.objects.create(**validated_data)
                 
-                # Create the initial message
-                InquiryMessage.objects.create(
-                    inquiry=inquiry,
-                    sender=user,
-                    content=initial_message
-                )
-                
                 # Process the payment
                 transaction_record = customer_wallet.transfer(
                     business_wallet, 
                     price
                 )
                 
-                # Create a message informing about the payment
+                # First create a message informing about the payment
                 InquiryMessage.objects.create(
                     inquiry=inquiry,
                     sender=user,
                     content=f"Paid {price} to open this inquiry."
+                )
+                
+                # Then create the initial message
+                InquiryMessage.objects.create(
+                    inquiry=inquiry,
+                    sender=user,
+                    content=initial_message
                 )
                 
                 return inquiry
