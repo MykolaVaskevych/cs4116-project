@@ -15,60 +15,91 @@ def create_test_users():
     """Create test users with standard credentials"""
     
     with transaction.atomic():
-        # Create admin user
-        try:
-            admin = User.objects.create_superuser(
-                username='admin',
-                email='admin@test.com',
-                password='admin123'
-            )
+        # Create or get admin user
+        admin, created = User.objects.get_or_create(
+            email='admin@test.com',
+            defaults={
+                'username': 'admin',
+                'is_staff': True,
+                'is_superuser': True,
+                'role': User.Role.MODERATOR
+            }
+        )
+        
+        if created:
+            admin.set_password('admin123')
+            admin.save()
             admin.wallet.balance = Decimal('100.00')
             admin.wallet.save()
             print(f'Created admin: {admin.email}')
-        except Exception as e:
-            print(f'Error creating admin: {e}')
+        else:
+            print(f'Admin already exists: {admin.email}')
+            # Ensure the password is set correctly
+            admin.set_password('admin123')
+            admin.save()
         
-        # Create customer user
-        try:
-            customer = User.objects.create_user(
-                username='customer',
-                email='customer@test.com',
-                password='customer123',
-                role=User.Role.CUSTOMER
-            )
+        # Create or get customer user
+        customer, created = User.objects.get_or_create(
+            email='customer@test.com',
+            defaults={
+                'username': 'customer',
+                'role': User.Role.CUSTOMER
+            }
+        )
+        
+        if created:
+            customer.set_password('customer123')
+            customer.save()
             customer.wallet.balance = Decimal('100.00')
             customer.wallet.save()
             print(f'Created customer: {customer.email}')
-        except Exception as e:
-            print(f'Error creating customer: {e}')
+        else:
+            print(f'Customer already exists: {customer.email}')
+            # Ensure the password is set correctly
+            customer.set_password('customer123')
+            customer.save()
         
-        # Create moderator user
-        try:
-            moderator = User.objects.create_user(
-                username='moderator',
-                email='moderator@test.com',
-                password='moderator123',
-                role=User.Role.MODERATOR
-            )
+        # Create or get moderator user
+        moderator, created = User.objects.get_or_create(
+            email='moderator@test.com',
+            defaults={
+                'username': 'moderator',
+                'role': User.Role.MODERATOR
+            }
+        )
+        
+        if created:
+            moderator.set_password('moderator123')
+            moderator.save()
             moderator.wallet.balance = Decimal('100.00')
             moderator.wallet.save()
             print(f'Created moderator: {moderator.email}')
-        except Exception as e:
-            print(f'Error creating moderator: {e}')
+        else:
+            print(f'Moderator already exists: {moderator.email}')
+            # Ensure the password is set correctly
+            moderator.set_password('moderator123')
+            moderator.save()
         
-        # Create business user
-        try:
-            business = User.objects.create_user(
-                username='business',
-                email='business@test.com',
-                password='business123',
-                role=User.Role.BUSINESS
-            )
+        # Create or get business user
+        business, created = User.objects.get_or_create(
+            email='business@test.com',
+            defaults={
+                'username': 'business',
+                'role': User.Role.BUSINESS
+            }
+        )
+        
+        if created:
+            business.set_password('business123')
+            business.save()
             business.wallet.balance = Decimal('100.00')
             business.wallet.save()
             print(f'Created business: {business.email}')
-        except Exception as e:
-            print(f'Error creating business: {e}')
+        else:
+            print(f'Business already exists: {business.email}')
+            # Ensure the password is set correctly
+            business.set_password('business123')
+            business.save()
 
 if __name__ == "__main__":
     create_test_users()

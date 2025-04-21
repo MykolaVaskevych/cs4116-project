@@ -681,6 +681,17 @@ def generate_demo_data():
     
     if existing_test_users.exists():
         print(f"Preserving test users: {', '.join(test_user_emails)}")
+        
+        # Make sure all test users have wallets with some balance
+        for user in existing_test_users:
+            if not hasattr(user, 'wallet'):
+                from django.apps import apps
+                Wallet = apps.get_model('accounts', 'Wallet')
+                Wallet.objects.create(user=user, balance=Decimal('100.00'))
+            elif user.wallet.balance < Decimal('100.00'):
+                user.wallet.balance = Decimal('100.00')
+                user.wallet.save()
+        
         # Delete all other users
         User.objects.exclude(email__in=test_emails).delete()
     else:
