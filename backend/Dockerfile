@@ -17,8 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Set working directory
 WORKDIR /project
 
-# Copy the pyproject.toml and uv.lock from the project root
-COPY pyproject.toml uv.lock ./
+# Copy the pyproject.toml and uv.lock from the backend directory
+COPY backend/pyproject.toml backend/uv.lock ./
 
 # Create a virtual environment for the project 
 RUN uv venv /project/.venv
