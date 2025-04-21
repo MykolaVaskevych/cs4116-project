@@ -698,6 +698,7 @@ def generate_demo_data():
         print("No test users found. Demo data will be generated without preserving any users.")
     
     # Delete all other data
+    from accounts.models import Wallet, Transaction
     Transaction.objects.all().delete()
     Wallet.objects.exclude(user__email__in=test_emails).delete()
     Service.objects.all().delete()
