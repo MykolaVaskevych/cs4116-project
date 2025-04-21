@@ -252,6 +252,7 @@ class ServiceSerializer(serializers.ModelSerializer):
             "logo",
             "category",
             "category_name",
+            "fixed_price",
             "business",
             "business_name",
             "business_image",
@@ -259,6 +260,12 @@ class ServiceSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["business", "created_at", "updated_at"]
+        
+    def validate_fixed_price(self, value):
+        """Validate that the fixed price is not negative"""
+        if value < 0:
+            raise serializers.ValidationError("Fixed price cannot be negative")
+        return value
     
     def create(self, validated_data):
         # Set the business to the current user
@@ -361,17 +368,58 @@ class InquiryCreateSerializer(serializers.ModelSerializer):
         if service and service.business == user:
             raise serializers.ValidationError("You cannot create an inquiry for your own service")
         
-        # Create the inquiry without assigning a moderator
-        inquiry = Inquiry.objects.create(**validated_data)
-        
-        # Create the initial message
-        InquiryMessage.objects.create(
-            inquiry=inquiry,
-            sender=user,
-            content=initial_message
-        )
-        
-        return inquiry
+        # Check if the service has a fixed price and handle payment
+        if service and service.fixed_price > 0:
+            customer_wallet = user.wallet
+            business_wallet = service.business.wallet
+            price = service.fixed_price
+            
+            # Check if customer has enough funds
+            if customer_wallet.balance < price:
+                raise serializers.ValidationError(
+                    f"Insufficient funds. This service requires {price} to open an inquiry. Your balance is {customer_wallet.balance}."
+                )
+            
+            # Use a transaction to ensure both the payment and inquiry creation are atomic
+            from django.db import transaction
+            with transaction.atomic():
+                # Create the inquiry first
+                inquiry = Inquiry.objects.create(**validated_data)
+                
+                # Create the initial message
+                InquiryMessage.objects.create(
+                    inquiry=inquiry,
+                    sender=user,
+                    content=initial_message
+                )
+                
+                # Process the payment
+                transaction_record = customer_wallet.transfer(
+                    business_wallet, 
+                    price
+                )
+                
+                # Create a message informing about the payment
+                InquiryMessage.objects.create(
+                    inquiry=inquiry,
+                    sender=user,
+                    content=f"Paid {price} to open this inquiry."
+                )
+                
+                return inquiry
+        else:
+            # No fixed price, proceed normally
+            # Create the inquiry without assigning a moderator
+            inquiry = Inquiry.objects.create(**validated_data)
+            
+            # Create the initial message
+            InquiryMessage.objects.create(
+                inquiry=inquiry,
+                sender=user,
+                content=initial_message
+            )
+            
+            return inquiry
 
 class ReviewCommentSerializer(serializers.ModelSerializer):
     """
