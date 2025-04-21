@@ -15,8 +15,14 @@ chmod -R 755 media
 echo "Collecting static files..."
 python manage.py collectstatic --noinput --clear
 
-# Create superuser if all required environment variables are set
-if [ "$DJANGO_SUPERUSER_EMAIL" ] && [ "$DJANGO_SUPERUSER_PASSWORD" ]; then
+# Create test users first if requested
+if [ "${CREATE_TEST_USERS:-false}" = "true" ]; then
+    echo "Creating test users (admin, customer, moderator, business)..."
+    python create_test_users.py
+fi
+
+# Skip creating superuser if we already created test users
+if [ "${CREATE_TEST_USERS:-false}" != "true" ] && [ "$DJANGO_SUPERUSER_EMAIL" ] && [ "$DJANGO_SUPERUSER_PASSWORD" ]; then
     echo "Creating admin superuser..."
     # Use a more reliable approach with echo for Railway
     echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('${DJANGO_SUPERUSER_USERNAME:-admin}', '$DJANGO_SUPERUSER_EMAIL', '$DJANGO_SUPERUSER_PASSWORD') if not User.objects.filter(email='$DJANGO_SUPERUSER_EMAIL').exists() else None" | python manage.py shell
