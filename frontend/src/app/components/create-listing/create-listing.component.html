@@ -35,6 +35,18 @@
                 <span>Category is required.</span>
             </div>
         </div>
+
+        <!-- Fixed Price -->
+        <div class="fixed-price">
+            <label class="label">Fixed Price to Open Inquiry (€)</label>
+            <div class="price-info">
+                <small>Set to 0 for free inquiries</small>
+            </div>
+            <input type="number" min="0" step="0.01" class="price-field" formControlName="fixed_price">
+            <div class="error" *ngIf="listingForm.controls['fixed_price'].touched && listingForm.controls['fixed_price'].invalid">
+                <span *ngIf="listingForm.controls['fixed_price'].errors?.['min']">Price cannot be negative.</span>
+            </div>
+        </div>
         <!-- Submit Button -->
         <button type="submit" (click)="onSubmit()">Submit</button>
 

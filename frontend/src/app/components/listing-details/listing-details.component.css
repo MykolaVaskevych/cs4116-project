@@ -361,3 +361,65 @@
 .bottom-sec-margin-top{
     margin-top: 8rem;
 }
+
+.price-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 15px 0;
+    padding: 10px 20px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+    font-family: 'Outfit', sans-serif;
+    width: fit-content;
+    align-self: center;
+}
+
+.price-info.free {
+    background-color: #e8fdf5;
+    border-color: #a3e9d2;
+}
+
+.price-label {
+    font-weight: 600;
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+
+.price-value {
+    font-weight: 700;
+    color: #dc3545;
+    font-size: 1.2rem;
+}
+
+.price-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 15px 0;
+    padding: 10px 20px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+    font-family: 'Outfit', sans-serif;
+    width: fit-content;
+    align-self: center;
+}
+
+.price-info.free {
+    background-color: #e8fdf5;
+    border-color: #a3e9d2;
+}
+
+.price-label {
+    font-weight: 600;
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+
+.price-value {
+    font-weight: 700;
+    color: #dc3545;
+    font-size: 1.2rem;
+}

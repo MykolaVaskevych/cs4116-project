@@ -25,6 +25,12 @@
         <span>
             {{listing.description}}
         </span>
+        <div class="price-tag" *ngIf="listing.fixed_price > 0">
+            €{{listing.fixed_price}}
+        </div>
+        <div class="price-tag free" *ngIf="listing.fixed_price == 0">
+            Free
+        </div>
         <div class="icon">
             <img src="icon.png" alt="">
         </div>
