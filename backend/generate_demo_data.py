@@ -415,11 +415,19 @@ def create_service(business_user, categories):
     
     description = random.choice(service_descriptions).format(category=category.name.lower())
     
+    # Set a random fixed price (20% chance of being free, otherwise between 0.50 and 20.00)
+    if random.random() < 0.2:
+        fixed_price = Decimal('0.00')
+    else:
+        # Generate a random decimal between 0.50 and 20.00, rounded to 2 decimal places
+        fixed_price = Decimal(str(round(random.uniform(0.5, 20.0), 2)))
+    
     service = Service.objects.create(
         name=service_name,
         description=description,
         category=category,
-        business=business_user
+        business=business_user,
+        fixed_price=fixed_price
     )
     
     return service
@@ -428,11 +436,37 @@ def create_inquiry(customer, service, moderators):
     """Create an inquiry about a service"""
     subject = random.choice(inquiry_subjects).format(service=service.name)
     
-    inquiry = Inquiry.objects.create(
-        service=service,
-        customer=customer,
-        subject=subject
-    )
+    # Process fixed price payment if service has a non-zero fixed price
+    if service.fixed_price > Decimal('0.00'):
+        # Only proceed if customer has enough funds
+        if customer.wallet.balance >= service.fixed_price:
+            # Create inquiry with transaction to handle the fixed price payment
+            with transaction.atomic():
+                inquiry = Inquiry.objects.create(
+                    service=service,
+                    customer=customer,
+                    subject=subject
+                )
+                
+                # Process the payment
+                customer.wallet.transfer(service.business.wallet, service.fixed_price)
+                
+                # Add payment message
+                InquiryMessage.objects.create(
+                    inquiry=inquiry,
+                    sender=customer,
+                    content=f"Paid {service.fixed_price} to open this inquiry."
+                )
+        else:
+            # Skip creating inquiry if customer can't afford the fixed price
+            return None
+    else:
+        # Free inquiry
+        inquiry = Inquiry.objects.create(
+            service=service,
+            customer=customer,
+            subject=subject
+        )
     
     # Add customer's initial message
     initial_message = random.choice(inquiry_messages).format(service=service.name.lower())
@@ -636,29 +670,37 @@ def generate_demo_data():
     """Generate comprehensive demo data for the application"""
     print("Generating demo data...")
     
-    # First, clear all existing data except admin user
+    # First, clear all existing data except test users
     print("Clearing existing data...")
-    # Keep admin user, delete all others
-    admin_email = "admin@example.com"
-    try:
-        admin_user = User.objects.get(email=admin_email)
-        print(f"Preserving admin user: {admin_user.email}")
+    # Keep test users, delete all others
+    test_emails = ["admin@test.com", "customer@test.com", "moderator@test.com", "business@test.com"]
+    
+    # Find test users that already exist
+    existing_test_users = User.objects.filter(email__in=test_emails)
+    test_user_emails = [user.email for user in existing_test_users]
+    
+    if existing_test_users.exists():
+        print(f"Preserving test users: {', '.join(test_user_emails)}")
+        
+        # Make sure all test users have wallets with some balance
+        for user in existing_test_users:
+            if not hasattr(user, 'wallet'):
+                from django.apps import apps
+                Wallet = apps.get_model('accounts', 'Wallet')
+                Wallet.objects.create(user=user, balance=Decimal('100.00'))
+            elif user.wallet.balance < Decimal('100.00'):
+                user.wallet.balance = Decimal('100.00')
+                user.wallet.save()
+        
         # Delete all other users
-        User.objects.exclude(email=admin_email).delete()
-    except User.DoesNotExist:
-        # Create admin if doesn't exist
-        admin_user = User.objects.create_superuser(
-            username="admin",
-            email=admin_email,
-            password="admin123",
-            first_name="Admin",
-            last_name="User"
-        )
-        print(f"Created admin user: {admin_user.email}")
+        User.objects.exclude(email__in=test_emails).delete()
+    else:
+        print("No test users found. Demo data will be generated without preserving any users.")
     
     # Delete all other data
+    from accounts.models import Wallet, Transaction
     Transaction.objects.all().delete()
-    Wallet.objects.exclude(user=admin_user).delete()
+    Wallet.objects.exclude(user__email__in=test_emails).delete()
     Service.objects.all().delete()
     Category.objects.all().delete()
     Inquiry.objects.all().delete()
@@ -720,11 +762,17 @@ def generate_demo_data():
     
     # Create inquiries
     inquiries = []
-    for i in range(NUM_INQUIRIES):
+    attempts = 0
+    max_attempts = NUM_INQUIRIES * 2  # Allow for some failures due to insufficient funds
+    
+    while len(inquiries) < NUM_INQUIRIES and attempts < max_attempts:
         customer = random.choice(customers)
         service = random.choice(services)
         inquiry = create_inquiry(customer, service, moderators)
-        inquiries.append(inquiry)
+        if inquiry:  # Only add if inquiry was successfully created
+            inquiries.append(inquiry)
+        attempts += 1
+        
     print(f"Created {len(inquiries)} inquiries with messages and reviews")
     
     # Generate some random transactions between wallets

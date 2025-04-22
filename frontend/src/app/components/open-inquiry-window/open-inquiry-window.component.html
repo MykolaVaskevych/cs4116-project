@@ -2,8 +2,16 @@
     <div class="modal-header">
         <div>
             <h4 class="modal-title">{{ targetBusinessName }}</h4>
-<!--            <h4 class="modal-title">Enter your inquiry</h4>-->
-<!--            <span style="font-size: smaller; color: gray">{{ targetBusinessName }}</span>-->
+            <div *ngIf="hasPrice" class="price-notice">
+                <span class="price-label">Price to open inquiry:</span>
+                <span class="price-value" [class.text-danger]="!hasEnoughFunds">€{{ servicePrice.toFixed(2) }}</span>
+                <span *ngIf="!hasEnoughFunds" class="insufficient-funds">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Insufficient funds
+                </span>
+            </div>
+            <div *ngIf="!hasPrice" class="price-notice free">
+                <span class="price-label">Free to inquire</span>
+            </div>
         </div>
         <button
             (click)="closeModal()"

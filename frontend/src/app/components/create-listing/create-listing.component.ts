@@ -29,7 +29,8 @@ export class CreateListingComponent {
 
         this.listingForm = this.fb.group({
             description: ['', Validators.required],
-            category: ['', Validators.required]
+            category: ['', Validators.required],
+            fixed_price: [0, [Validators.required, Validators.min(0)]]
         });
 
         this.route.queryParams.subscribe((params: { [x: string]: string; }) => {
@@ -77,6 +78,7 @@ export class CreateListingComponent {
                 description: this.listingForm.value.description,
                 category: selectedCategory.id,
                 name: selectedCategory.name,
+                fixed_price: this.listingForm.value.fixed_price,
             };
 
             this.services.createService(this.token, servListing).subscribe({

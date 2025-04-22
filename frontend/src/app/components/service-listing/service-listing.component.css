@@ -1,4 +1,3 @@
-
 a{
     all: unset;
     text-decoration: none;
@@ -196,4 +195,23 @@ a{
 
 .create-btn:hover{
     background: #4db9dd;
+}
+
+.price-tag {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #f8d7da;
+    color: #842029;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    text-transform: none;
+}
+
+.price-tag.free {
+    background-color: #d1e7dd;
+    color: #0f5132;
 }
