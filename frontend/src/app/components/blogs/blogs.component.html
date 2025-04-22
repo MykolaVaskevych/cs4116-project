@@ -54,10 +54,13 @@
                             </div>
                             <div class="comment-content-block">
                                 <div class="username">
-                                    {{user.username}}
+                                    {{ comment.author ? comment.author : 'Anonymous User' }}
                                 </div>
                                 <div class="comment-content">
                                     {{ comment.content }}
+                                </div>
+                                <div class="comment-date" *ngIf="comment.created_at">
+                                    {{ comment.created_at | date:'medium' }}
                                 </div>
                             </div>
                         </div>
