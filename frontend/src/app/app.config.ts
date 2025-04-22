@@ -12,4 +12,6 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(),
     provideMarkdown()
   ]
+
 };
+

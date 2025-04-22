@@ -7,6 +7,13 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { UserProfileService } from '../../services/user-profile.service';
 import {InquiryService} from '../../services/inquiry-service/inquiry.service';
 
+interface Transaction {
+  type: string;
+  amount: number;
+  date: string;
+  icon: string;
+}
+
 @Component({
     selector: 'app-profile',
     imports: [CommonModule, ReactiveFormsModule, FormsModule],
@@ -14,21 +21,21 @@ import {InquiryService} from '../../services/inquiry-service/inquiry.service';
     styleUrl: './profile.component.css',
 })
 export class ProfileComponent {
-    isProvider = false
+    activeSection = 'personal'; // Default active section
+    isProvider = false;
     loginForm!: FormGroup;
     passwordForm!: FormGroup;
     businessForm!: FormGroup;
     errorListAfterSignUp = [];
-    passwordFormError = false
-    businessFormError = false
-    applyStyle= false;
-    user: any
-    token: any
+    passwordFormError = false;
+    businessFormError = false;
+    applyStyle = false;
+    user: any;
+    token: any;
 
     depositSelectionFlag = false;
     withdrawSelectionFlag = false;
     transferSelectionFlag = false;
-
 
     depositError = false;
     depositErrorText = '';
@@ -42,26 +49,27 @@ export class ProfileComponent {
     transferAmount = 0;
 
     transferRecipient = '';
-
-
+    transactions: Transaction[] = [];
 
     @HostListener('window:resize', ['$event'])
     onResize(event: any) {
         this.applyStyle = window.innerWidth < 1200 && !this.isProvider;
     }
 
-
-    constructor(private fb: FormBuilder, private router: Router, private authService: AuthService,
-        private userProfileService: UserProfileService, private inquiryService: InquiryService
+    constructor(
+        private fb: FormBuilder, 
+        private router: Router, 
+        private authService: AuthService,
+        private userProfileService: UserProfileService, 
+        private inquiryService: InquiryService
     ) { }
 
-    ngOnInit(){
+    ngOnInit() {
+        this.token = localStorage.getItem('access');
+        console.log('token', this.token);
 
-        this.token =  localStorage.getItem('access');
-        console.log('token', this.token)
-
-        this.isProvider =  JSON.parse(localStorage.getItem('isProvider') || 'false');
-        console.log('isporovider',this.isProvider)
+        this.isProvider = JSON.parse(localStorage.getItem('isProvider') || 'false');
+        console.log('isporovider', this.isProvider);
 
         this.loginForm = new FormGroup({
             email: new FormControl(''),
@@ -77,45 +85,41 @@ export class ProfileComponent {
             fullName: ['', Validators.required],
             businessInfo: ['', Validators.required]
         });
+        
         this.onResize(null);
-
-        this.loadUserProfile()
-
+        this.loadUserProfile();
         this.updateWalletAmount();
     }
 
     loadUserProfile() {
-
-
         this.userProfileService.getProfile(this.token).subscribe({
           next: (response) => {
             this.user = response;
-            console.log('user', this.user)
+            console.log('user', this.user);
           },
           error: (error) => {
             console.error('Error fetching profile', error);
           }
         });
-
-      }
+    }
 
     onSubmitBusinessForm() {
         if (this.businessForm.invalid) {
             this.businessForm.markAllAsTouched();
-            this.businessFormError = true
+            this.businessFormError = true;
             return;
         } else {
-            this.businessFormError = false
+            this.businessFormError = false;
             const fullName = this.businessForm.value.fullName;
             const businessInfo = this.businessForm.value.businessInfo;
 
             const obj = {
                 fullName: fullName,
                 businessInfo: businessInfo
-            }
+            };
 
             console.log('Filled form:', obj);
-            this.makeProvider()
+            this.makeProvider();
         }
     }
 
@@ -137,13 +141,13 @@ export class ProfileComponent {
             Object.values(error.error).forEach(message => {
                 // @ts-ignore
                 this.errorListAfterSignUp.push(message);
-            })
+            });
         });
     }
 
     onUpdatePassword() {
         if (this.passwordForm.valid) {
-            this.passwordFormError = false
+            this.passwordFormError = false;
             const oldPass = this.passwordForm.value.oldPassword;
             const newPass = this.passwordForm.value.newPassword;
 
@@ -152,9 +156,8 @@ export class ProfileComponent {
             // TODO: Call backend API here
         } else {
             console.log('Form Invalid');
-
             this.businessForm.markAllAsTouched();
-            this.passwordFormError = true
+            this.passwordFormError = true;
         }
     }
 
@@ -164,9 +167,9 @@ export class ProfileComponent {
         this.userProfileService.updateProfile(this.token, updatedData).subscribe({
           next: (response) => {
             console.log('Role updated successfully', response);
-            localStorage.setItem('isProvider', JSON.stringify(true))
-        this.isProvider = true
-        console.log(this.isProvider, 'isprovider');
+            localStorage.setItem('isProvider', JSON.stringify(true));
+            this.isProvider = true;
+            console.log(this.isProvider, 'isprovider');
             this.loadUserProfile(); // Refresh user data after updating
           },
           error: (error) => {
@@ -179,8 +182,15 @@ export class ProfileComponent {
         this.depositError = false;
         this.inquiryService.walletDeposit(this.depositAmount).subscribe(result => {
             console.log(result);
+            
+            // Add to transaction history
+            this.addTransaction('Deposit', this.depositAmount, 'fa fa-arrow-down');
+            
             this.depositAmount = 0;
             this.walletAmount = result.new_balance;
+            
+            // Close the form
+            this.closeWalletForms();
         }, error => {
             this.depositError = true;
         });
@@ -190,8 +200,15 @@ export class ProfileComponent {
         this.depositError = false;
         this.inquiryService.walletWithdraw(this.withdrawAmount).subscribe(result => {
             console.log(result);
+            
+            // Add to transaction history
+            this.addTransaction('Withdrawal', -this.withdrawAmount, 'fa fa-arrow-up');
+            
             this.withdrawAmount = 0;
             this.walletAmount = result.new_balance;
+            
+            // Close the form
+            this.closeWalletForms();
         }, error => {
             this.depositError = true;
         });
@@ -202,13 +219,20 @@ export class ProfileComponent {
         this.depositError = false;
         this.inquiryService.walletTransfer(this.transferAmount, this.transferRecipient).subscribe(result => {
             console.log(result);
+            
+            // Add to transaction history
+            this.addTransaction('Transfer to ' + this.transferRecipient, -this.transferAmount, 'fa fa-exchange-alt');
+            
             this.transferAmount = 0;
             this.transferRecipient = '';
             this.walletAmount = result.new_balance;
+            
+            // Close the form
+            this.closeWalletForms();
         }, error => {
             this.transferError = true;
             this.transferErrorText = error.error.error || error.error.recipient_email || error.error.amount;
-            console.log(error.error)
+            console.log(error.error);
         });
     }
 
@@ -218,25 +242,39 @@ export class ProfileComponent {
         });
     }
 
-    toggleForm(action: any): any {
+    toggleWalletAction(action: string): void {
         console.log(`Selection: ${action}`);
-        // Show the relevant form based on action
         if (action === 'deposit') {
-            this.depositSelectionFlag = true;
-
+            this.depositSelectionFlag = !this.depositSelectionFlag;
             this.withdrawSelectionFlag = false;
             this.transferSelectionFlag = false;
         } else if (action === 'withdraw') {
-            this.withdrawSelectionFlag = true;
-
+            this.withdrawSelectionFlag = !this.withdrawSelectionFlag;
             this.depositSelectionFlag = false;
             this.transferSelectionFlag = false;
         } else if (action === 'transfer') {
-            this.transferSelectionFlag = true;
-
+            this.transferSelectionFlag = !this.transferSelectionFlag;
             this.depositSelectionFlag = false;
             this.withdrawSelectionFlag = false;
         }
     }
-
+    
+    closeWalletForms(): void {
+        this.depositSelectionFlag = false;
+        this.withdrawSelectionFlag = false;
+        this.transferSelectionFlag = false;
+    }
+    
+    addTransaction(type: string, amount: number, icon: string): void {
+        const now = new Date();
+        const transaction: Transaction = {
+            type: type,
+            amount: amount,
+            date: now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+            icon: icon
+        };
+        
+        // Add to beginning of array
+        this.transactions.unshift(transaction);
+    }
 }
