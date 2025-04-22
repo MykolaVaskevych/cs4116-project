@@ -90,6 +90,32 @@ button{
     color: red;
 }
 
+.markdown-info {
+    background-color: #f8f9fa;
+    border-left: 4px solid #56CCF2;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0 0.3rem 0.3rem 0;
+    font-size: 0.9rem;
+}
+
+.markdown-info p {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.markdown-info a {
+    color: #56CCF2;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.markdown-info a:hover {
+    text-decoration: underline;
+}
+
 /* Full-page Overlay */
 .overlay {
     position: fixed;
