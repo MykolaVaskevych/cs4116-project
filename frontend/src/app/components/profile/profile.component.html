@@ -26,7 +26,7 @@
 
                     <div class="email">
                         <div class="email-left-sec">
-                            {{user.email}}
+                            {{user.email.toLowerCase()}}
                         </div>
 
                         <div class="email-right-sec">
@@ -118,13 +118,8 @@
 
     <div *ngIf="isProvider" class="right-sec">
         <div class="provider-panel">
-            <div class="header">Provider Panel</div>
-            <div class="desc">Login to your panel to access provider functions</div>
-        </div>
-
-        <div class="panel-btns">
-            <div class="enter-panel">Enter Panel</div>
-            <div class="report-issue">Report Issue</div>
+            <div class="header">Your account now has provider privileges </div>
+            <div class="desc">You can now provide services!</div>
         </div>
     </div>
 
