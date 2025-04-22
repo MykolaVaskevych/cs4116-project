@@ -1,172 +1,263 @@
-<div  [ngClass]="{'main': !applyStyle, 'main-custom': applyStyle}">
-
-    <div class="left-sec">
-        <div class="header">
-            <div class="profile-pic">
-                <img src="profilepic.avif" alt="Profile Photo">
-            </div>
-            <div class="name">{{user.username}}</div>
-        </div>
-
-        <div class="main-sec">
-            <div class="general-info">
-                <div class="header">
-                    General Info
-                </div>
-                <div class="bottom-sec">
-                    <div class="username">
-                        <div class="username-left-sec">
-                            {{user.username}}
-                        </div>
-
-                        <div class="username-right-sec">
-                            Username
-                        </div>
-                    </div>
-
-                    <div class="email">
-                        <div class="email-left-sec">
-                            {{user.email | lowercase}}
-                        </div>
-
-                        <div class="email-right-sec">
-                            Email
-                        </div>
-                    </div>
-
-                </div>
-                <div class="update-info">
-                        update info
-                </div>
-            </div>
-        </div>
-
-
-        <div class="main-sec">
-            <div class="update-password">
-                <div class="header">
-                    Update Password
-                </div>
-                <form [formGroup]="passwordForm" class="bottom-sec">
-                    <div class="new-pass">
-                        <input type="password" class="new-pass-left-sec" formControlName="newPassword" />
-
-                        <div class="new-pass-right-sec">
-                            New Password
-                        </div>
-                    </div>
-                    <div class="old-pass">
-                        <input type="password" class="old-pass-left-sec" formControlName="oldPassword"/>
-
-                        <div class="old-pass-right-sec">
-                            Old Password
-                        </div>
-                    </div>
-
-
-                </form>
-                <div class="update-pass-field" (click)="onUpdatePassword()">
-                        Update Password
-                </div>
-                <div *ngIf="passwordFormError" class="form-error">
-                    Kindly fill all fields!
-                </div>
-                <div class="login-out-field">
-                        Log out
-                </div>
-            </div>
-        </div>
+<div class="profile-container">
+  <div class="profile-header">
+    <div class="profile-picture">
+      <img src="profilepic.avif" alt="Profile Photo">
+      <div class="edit-photo-button">
+        <i class="fa fa-camera"></i>
+      </div>
     </div>
-
-    <div class="divider">
+    <div class="profile-header-info">
+      <h1 class="profile-name">{{user.username}}</h1>
+      <span class="member-since">Member since {{ '2023-01-15' | date:'mediumDate' }}</span>
+      <div *ngIf="isProvider" class="provider-badge-small">
+        <span class="status-text-small">Verified Provider</span>
+      </div>
     </div>
+  </div>
 
-    <div  *ngIf="!isProvider" class="right-sec">
-        <div class="right-top-sec">
-            <div class="header">
-                Become a Provider
-            </div>
+  <div class="section-tabs">
+    <div class="section-tab" [class.active]="activeSection === 'personal'" (click)="activeSection = 'personal'">
+      <i class="fa fa-user"></i> Personal
+    </div>
+    <div class="section-tab" [class.active]="activeSection === 'wallet'" (click)="activeSection = 'wallet'">
+      <i class="fa fa-wallet"></i> Wallet
+    </div>
+    <div class="section-tab" [class.active]="activeSection === 'provider'" (click)="activeSection = 'provider'">
+      <i class="fa fa-store"></i> {{ isProvider ? 'Provider' : 'Become Provider' }}
+    </div>
+  </div>
 
-            <div class="desc">
-                as a service provider you can create listings, recieve bookings and grow your business
-            </div>
+  <!-- Personal Section -->
+  <div class="profile-section" *ngIf="activeSection === 'personal'">
+    <div class="section-content-wrapper">
+      <!-- User Info Subsection -->
+      <div class="subsection user-info">
+        <h2>Personal Information</h2>
+        <div class="info-item">
+          <span class="info-label">Username</span>
+          <span class="info-value">{{user.username}}</span>
         </div>
+        <div class="info-item">
+          <span class="info-label">Email</span>
+          <span class="info-value">{{user.email}}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Account Type</span>
+          <span class="info-value">{{ isProvider ? 'Service Provider' : 'Customer' }}</span>
+        </div>
+        <button class="btn btn-primary">Update Info</button>
+      </div>
 
-        <form [formGroup]="businessForm"  class="right-bottom-sec">
-            <div class="full-name">
-                <label class="full-name-label">
-                    Your Full Name
-                </label>
-                <input type="text" class="full-name-field" formControlName="fullName">
-            </div>
-
-            <div class="business-info">
-                <div class="business-info-label header">
-                    Tell Us About your business
-                </div>
-                <textarea class="business-info-field" formControlName="businessInfo"></textarea>
-                <div class="apply-btn" (click)="onSubmitBusinessForm()">
-                    Apply
-                </div>
-                <div *ngIf="businessFormError" class="form-error">
-                    Kindly fill all fields!
-                </div>
-            </div>
+      <!-- Security Subsection -->
+      <div class="subsection password-section">
+        <h2>Security</h2>
+        <form [formGroup]="passwordForm" class="password-form">
+          <div class="form-group">
+            <label for="oldPassword">Current Password</label>
+            <input type="password" id="oldPassword" formControlName="oldPassword" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="newPassword">New Password</label>
+            <input type="password" id="newPassword" formControlName="newPassword" class="form-control">
+          </div>
+          <div *ngIf="passwordFormError" class="form-error">
+            Please fill in all fields
+          </div>
+          <button type="button" class="btn btn-primary" (click)="onUpdatePassword()">Update Password</button>
         </form>
-
+        <button class="btn btn-danger logout-btn">Log Out</button>
+      </div>
     </div>
+  </div>
 
-    <div *ngIf="isProvider" class="right-sec">
-        <div class="provider-panel">
-            <div class="header">Your account now has provider privileges </div>
-            <div class="desc">You can now provide services!</div>
+  <!-- Wallet Section -->
+  <div class="profile-section" *ngIf="activeSection === 'wallet'">
+    <div class="section-content-wrapper">
+      <div class="subsection wallet-overview">
+        <h2>Wallet</h2>
+        <div class="wallet-balance">
+          <div class="balance-info">
+            <span class="balance-label">Current Balance</span>
+            <span class="balance-amount">{{ walletAmount }} <span class="currency">USD</span></span>
+          </div>
+          <div class="balance-icon">
+            <i class="fa fa-wallet"></i>
+          </div>
         </div>
+        
+        <div class="wallet-actions">
+          <button class="btn btn-action" [class.active]="depositSelectionFlag" (click)="toggleWalletAction('deposit')">
+            <i class="fa fa-arrow-down"></i> Deposit
+          </button>
+          <button class="btn btn-action" [class.active]="withdrawSelectionFlag" (click)="toggleWalletAction('withdraw')">
+            <i class="fa fa-arrow-up"></i> Withdraw
+          </button>
+          <button class="btn btn-action" [class.active]="transferSelectionFlag" (click)="toggleWalletAction('transfer')">
+            <i class="fa fa-exchange-alt"></i> Transfer
+          </button>
+        </div>
+      </div>
+
+      <!-- Wallet Forms -->
+      <div class="subsection wallet-forms" *ngIf="depositSelectionFlag || withdrawSelectionFlag || transferSelectionFlag">
+        <div class="form-header">
+          <h3>
+            {{ depositSelectionFlag ? 'Deposit Funds' : withdrawSelectionFlag ? 'Withdraw Funds' : 'Transfer Funds' }}
+          </h3>
+          <button class="btn-close" (click)="closeWalletForms()">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+
+        <!-- Deposit Form -->
+        <div *ngIf="depositSelectionFlag" class="wallet-form">
+          <div class="form-group">
+            <label for="deposit-amount">Amount to Deposit</label>
+            <div class="input-with-icon">
+              <input id="deposit-amount" [(ngModel)]="depositAmount" type="number" class="form-control" min="0" placeholder="Enter amount..."/>
+              <span class="input-icon">$</span>
+            </div>
+          </div>
+          <div *ngIf="depositError" class="form-error">Invalid Input Amount</div>
+          <button (click)="walletDeposit()" class="btn btn-success">
+            <i class="fa fa-check"></i> Complete Deposit
+          </button>
+        </div>
+
+        <!-- Withdraw Form -->
+        <div *ngIf="withdrawSelectionFlag" class="wallet-form">
+          <div class="form-group">
+            <label for="withdraw-amount">Amount to Withdraw</label>
+            <div class="input-with-icon">
+              <input id="withdraw-amount" [(ngModel)]="withdrawAmount" type="number" class="form-control" min="0" placeholder="Enter amount..."/>
+              <span class="input-icon">$</span>
+            </div>
+          </div>
+          <div *ngIf="depositError" class="form-error">Invalid Input Amount</div>
+          <button (click)="walletWithdraw()" class="btn btn-success">
+            <i class="fa fa-check"></i> Complete Withdrawal
+          </button>
+        </div>
+
+        <!-- Transfer Form -->
+        <div *ngIf="transferSelectionFlag" class="wallet-form">
+          <div class="form-group">
+            <label for="transfer-amount">Amount to Transfer</label>
+            <div class="input-with-icon">
+              <input id="transfer-amount" [(ngModel)]="transferAmount" type="number" class="form-control" min="0" placeholder="Enter amount..."/>
+              <span class="input-icon">$</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="recipient-email">Recipient Email</label>
+            <input id="recipient-email" [(ngModel)]="transferRecipient" type="text" class="form-control" placeholder="Enter recipient's email..."/>
+          </div>
+          <div *ngIf="transferError" class="form-error">{{ transferErrorText }}</div>
+          <button (click)="walletTransfer()" class="btn btn-success">
+            <i class="fa fa-check"></i> Complete Transfer
+          </button>
+        </div>
+      </div>
+      
+      <!-- Transaction History -->
+      <div class="subsection transaction-history">
+        <h2>Recent Transactions</h2>
+        <div class="transaction-list" *ngIf="transactions && transactions.length > 0">
+          <div class="transaction-item" *ngFor="let transaction of transactions">
+            <div class="transaction-info">
+              <div class="transaction-type">
+                <i [class]="transaction.icon"></i>
+                <span>{{ transaction.type }}</span>
+              </div>
+              <div class="transaction-date">{{ transaction.date }}</div>
+            </div>
+            <div class="transaction-amount" [class.amount-positive]="transaction.amount > 0" [class.amount-negative]="transaction.amount < 0">
+              {{ transaction.amount > 0 ? '+' : '' }}{{ transaction.amount }} USD
+            </div>
+          </div>
+        </div>
+        <div class="transaction-empty" *ngIf="!transactions || transactions.length === 0">
+          <i class="fa fa-list"></i>
+          <p>No recent transactions</p>
+        </div>
+      </div>
     </div>
+  </div>
 
+  <!-- Provider Section -->
+  <div class="profile-section" *ngIf="activeSection === 'provider'">
+    <div class="section-content-wrapper">
+      <!-- Non-Provider Content -->
+      <div class="subsection" *ngIf="!isProvider">
+        <h2>Become a Service Provider</h2>
+        <div class="provider-info">
+          <div class="provider-icon">
+            <i class="fa fa-store"></i>
+          </div>
+          <p class="provider-description">As a service provider, you can create listings, receive bookings, and grow your business.</p>
+        </div>
+        
+        <form [formGroup]="businessForm" class="provider-form">
+          <div class="form-group">
+            <label for="fullName">Your Full Name</label>
+            <input type="text" id="fullName" formControlName="fullName" class="form-control" placeholder="Enter your full name...">
+          </div>
+          <div class="form-group">
+            <label for="businessInfo">Tell Us About Your Business</label>
+            <textarea id="businessInfo" formControlName="businessInfo" class="form-control" placeholder="Describe your business and services..."></textarea>
+          </div>
+          <div *ngIf="businessFormError" class="form-error">
+            Please fill in all fields
+          </div>
+          <button type="button" class="btn btn-primary" (click)="onSubmitBusinessForm()">
+            <i class="fa fa-check-circle"></i> Apply Now
+          </button>
+        </form>
+      </div>
 
+      <!-- Provider Content -->
+      <div *ngIf="isProvider">
+        <div class="subsection provider-overview">
+          <h2>Provider Status</h2>
+          <div class="provider-badge-large">
+            <div class="badge-icon">
+              <i class="fa fa-certificate"></i>
+            </div>
+            <div class="badge-info">
+              <span class="status-text">Verified Service Provider</span>
+              <p class="provider-message">Your account has full provider privileges</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="subsection provider-stats">
+          <h2>Provider Statistics</h2>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-value">0</div>
+              <div class="stat-label">Active Listings</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">0</div>
+              <div class="stat-label">Bookings</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">0</div>
+              <div class="stat-label">Reviews</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="subsection provider-actions">
+          <h2>Provider Actions</h2>
+          <button class="btn btn-primary">
+            <i class="fa fa-plus-circle"></i> Create New Listing
+          </button>
+          <button class="btn btn-secondary">
+            <i class="fa fa-cog"></i> Manage Services
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-
-<div class="wallet-container">
-    <div class="wallet-header">Wallet</div>
-    <div class="wallet-amount">
-        <span>Amount: {{ walletAmount }}</span>
-    </div>
-
-    <div class="button-container">
-        <button class="action-button" (click)="toggleForm('deposit')">Deposit</button>
-        <button class="action-button" (click)="toggleForm('withdraw')">Withdraw</button>
-        <button class="action-button" (click)="toggleForm('transfer')">Transfer</button>
-    </div>
-
-    <!-- Deposit Form -->
-    <div *ngIf="depositSelectionFlag" class="action-form" id="deposit-form">
-        <input [(ngModel)]="depositAmount" type="number" placeholder="Enter amount to deposit" min="0"/>
-        <button (click)="walletDeposit()" class="submit-button">Deposit</button>
-        <div style="visibility: hidden" *ngIf="depositError">Invalid Input</div>
-        <div *ngIf="depositError">Invalid Input Amount</div>
-    </div>
-
-    <!-- Withdraw Form -->
-    <div *ngIf="withdrawSelectionFlag" class="action-form" id="withdraw-form">
-        <input [(ngModel)]="withdrawAmount" type="number" placeholder="Enter amount to withdraw" min="0"/>
-        <button (click)="walletWithdraw()" class="submit-button">Withdraw</button>
-        <div style="visibility: hidden" *ngIf="depositError">Invalid Input</div>
-        <div *ngIf="depositError">Invalid Input Amount</div>
-    </div>
-
-    <!-- Transfer Form -->
-    <div *ngIf="transferSelectionFlag" class="action-form" id="transfer-form">
-        <input [(ngModel)]="transferAmount" type="number" placeholder="Enter amount to transfer" min="0"/>
-        <input [(ngModel)]="transferRecipient" type="text" placeholder="Enter recipient email"/>
-        <button (click)="walletTransfer()" class="submit-button">Transfer</button>
-        <div style="visibility: hidden" *ngIf="depositError">Invalid Input</div>
-        <div style="visibility: hidden" *ngIf="transferError">{{ transferErrorText }}</div>
-        <div *ngIf="transferError">{{ transferErrorText }}</div>
-    </div>
-</div>
-
-<div style="height: 300px; visibility: hidden">
-    Hidden Length
-</div>
-
-<div style="visibility: hidden">This is a gap</div>
