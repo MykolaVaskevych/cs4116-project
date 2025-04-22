@@ -4,10 +4,11 @@ import { BlogService } from '../../services/blog.service';
 import { CommonModule } from '@angular/common';
 import { UserProfileService } from '../../services/user-profile.service';
 import { Validators } from 'ngx-editor';
+import { MarkdownModule } from 'ngx-markdown';
 
 @Component({
     selector: 'app-blogs',
-    imports: [CommonModule, FormsModule, ReactiveFormsModule],
+    imports: [CommonModule, FormsModule, ReactiveFormsModule, MarkdownModule],
     templateUrl: './blogs.component.html',
     styleUrl: './blogs.component.css'
 })

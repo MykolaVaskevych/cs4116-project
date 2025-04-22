@@ -35,7 +35,8 @@
             <div class="summary">
                 {{blog.summary}}
             </div>
-            <div class="full-content" *ngIf="selectedBlog?.slug === blog.slug" [innerHTML]="selectedBlog.content">
+            <div class="full-content" *ngIf="selectedBlog?.slug === blog.slug">
+                <markdown [data]="selectedBlog.content"></markdown>
             </div>
         </div>
             <!-- Comment Section -->
