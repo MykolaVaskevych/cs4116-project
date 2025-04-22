@@ -50,7 +50,7 @@ export class OpenInquiryWindowComponent implements OnInit {
             // Get wallet balance
             this.inquiryService.getWallet().subscribe({
                 next: (wallet: any) => {
-                    this.walletBalance = wallet.balance;
+                    this.walletBalance = parseFloat(wallet.balance);
                     this.hasEnoughFunds = this.walletBalance >= this.servicePrice;
                 },
                 error: (error: any) => {
@@ -95,7 +95,7 @@ export class OpenInquiryWindowComponent implements OnInit {
                 console.error('Error creating inquiry:', error);
                 
                 // Handle specific errors
-                if (error.status === 400 && error.error && error.error.includes('Insufficient funds')) {
+                if (error.status === 400 && error.error?.detail === 'Insufficient funds' || (error.error && typeof error.error === 'string' && error.error.includes('Insufficient funds'))) {
                     alert('Insufficient funds to open this inquiry. Please deposit more funds.');
                 } else {
                     alert('Failed to create inquiry. Please try again.');

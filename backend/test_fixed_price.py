@@ -164,7 +164,7 @@ try:
         # Rollback the transaction to avoid creating real records
         raise Exception("Rolling back test transaction")
 except Exception as e:
-    if str(e) \!= "Rolling back test transaction":
+    if str(e) != "Rolling back test transaction":
         print(f"❌ Test failed with error: {e}")
 
 print("\nTESTING FREE SERVICE INQUIRY:")
@@ -174,5 +174,5 @@ try:
         # Rollback the transaction to avoid creating real records
         raise Exception("Rolling back test transaction")
 except Exception as e:
-    if str(e) \!= "Rolling back test transaction":
+    if str(e) != "Rolling back test transaction":
         print(f"❌ Test failed with error: {e}")

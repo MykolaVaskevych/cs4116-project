@@ -31,7 +31,7 @@
 
     <div class="price-info" *ngIf="listing.fixed_price > 0">
         <div class="price-label">Price to open inquiry:</div>
-        <div class="price-value">€{{listing.fixed_price}}</div>
+        <div class="price-value">{{ listing.fixed_price | currency:'EUR':'symbol':'1.2-2' }}</div>
     </div>
     <div class="price-info free" *ngIf="listing.fixed_price == 0">
         <div class="price-label">Free to inquire</div>
