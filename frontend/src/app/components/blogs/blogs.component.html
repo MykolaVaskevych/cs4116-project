@@ -1,91 +1,108 @@
-<div class="header">
-    <div class="header-left-sec">Adulting 101</div>
-    <div class="header-right-sec">
-        <!-- <div *ngFor="let cat of categories" class="category" (click)="getBlogPostsByCat(cat.id)">
-            {{cat.name}}
-        </div> -->
-        <div class="dropdown">
-            <button class="dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-              Select Category
-            </button>
-            <ul class="dropdown-menu">
-              <li *ngFor="let cat of categories">
-                <a class="dropdown-item" (click)="getBlogPostsByCat(cat.id)">{{ cat.name }}</a>
-              </li>
-            </ul>
-          </div>
-
-    </div>
-
-</div>
-
-<div class="btn-wrapper">
-    <a href="/create-blog" class="create-btn">
-        Create Blog
-    </a>
-</div>
-
-<div class="blogs">
-    <div *ngFor="let blog of blogs" class="blog" >
-        <div class="title" (click)="getBlogPostsBySlug(blog)">
-            {{blog.title}}
+<div class="blog-page-container">
+    <!-- Header with title and create button -->
+    <header class="blog-header">
+        <div class="header-content">
+            <h1 class="site-title">Adulting 101</h1>
+            <a routerLink="/create-blog" class="create-blog-btn">
+                <i class="bi bi-plus-circle-fill"></i> Create Blog
+            </a>
         </div>
-
-        <div class="content">
-            <div class="summary">
-                {{blog.summary}}
+        
+        <!-- Search and filter bar -->
+        <div class="search-filter-container">
+            <div class="search-bar">
+                <i class="bi bi-search search-icon"></i>
+                <input 
+                    type="text" 
+                    placeholder="Search blogs..." 
+                    [ngModel]="searchTerm" 
+                    (input)="onSearch($event)"
+                    class="search-input">
+                <button *ngIf="searchTerm" class="clear-search" (click)="clearSearch()">
+                    <i class="bi bi-x-circle"></i>
+                </button>
             </div>
-            <div class="full-content" *ngIf="selectedBlog?.slug === blog.slug">
-                <markdown [data]="selectedBlog.content"></markdown>
-            </div>
-        </div>
-            <!-- Comment Section -->
-            <div class="comments-sec" *ngIf="selectedBlog?.slug === blog.slug">
-                <div class="comment-view-btn" (click)="toggleComments(blog.slug, $event)">
-                    {{ showCommentsSlug === blog.slug ? 'Hide Comments' : 'View Comments' }}
+            
+            <div class="filter-section">
+                <div class="category-filter">
+                    <button class="filter-btn" [class.active]="!selectedCategory" (click)="filterByCategory(null)">
+                        All
+                    </button>
+                    <ng-container *ngIf="categories && categories.length > 0">
+                        <button 
+                            *ngFor="let cat of categories" 
+                            class="filter-btn" 
+                            [class.active]="selectedCategory === cat.id"
+                            (click)="filterByCategory(cat.id)">
+                            {{ cat.name }}
+                        </button>
+                    </ng-container>
                 </div>
-    
-                <!-- Show comments -->
-                <div *ngIf="showCommentsSlug === blog.slug">
-                    <div class="comments" *ngIf="comments.length > 0; else noComments">
-                        <div class="comment" *ngFor="let comment of comments">
-                            <div class="comment-icon">
-                                <img [src]="profilepic" alt="">
-                            </div>
-                            <div class="comment-content-block">
-                                <div class="username">
-                                    {{ comment.author ? comment.author : 'Anonymous User' }}
-                                </div>
-                                <div class="comment-content">
-                                    {{ comment.content }}
-                                </div>
-                                <div class="comment-date" *ngIf="comment.created_at">
-                                    {{ comment.created_at | date:'medium' }}
-                                </div>
-                            </div>
+                
+                <div class="sort-options">
+                    <select [(ngModel)]="sortOption" (change)="sortBlogs()" class="sort-select">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="a-z">A-Z</option>
+                        <option value="z-a">Z-A</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Blog posts container -->
+    <div class="blogs-container">
+        <!-- Loading indicator -->
+        <div *ngIf="isLoading" class="loading-container">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        
+        <!-- No results message -->
+        <div *ngIf="!isLoading && filteredBlogs.length === 0" class="no-results">
+            <i class="bi bi-search"></i>
+            <p>No blogs found. Try adjusting your search criteria.</p>
+        </div>
+        
+        <!-- Blog grid layout -->
+        <div class="blog-grid">
+            <div *ngFor="let blog of filteredBlogs" class="blog-card">
+                <!-- Blog card header with image -->
+                <div class="blog-card-header" (click)="viewBlogDetail(blog)">
+                    <div class="blog-image">
+                        <img [src]="blog.image || 'assets/banners/adulting 101.png'" alt="{{ blog.title }}">
+                    </div>
+                    <div class="blog-meta">
+                        <span class="blog-category">{{ blog.category_name }}</span>
+                        <span class="blog-date">{{ blog.created_at | date:'mediumDate' }}</span>
+                    </div>
+                </div>
+                
+                <!-- Blog card content -->
+                <div class="blog-card-content">
+                    <h2 class="blog-title" (click)="viewBlogDetail(blog)">{{ blog.title }}</h2>
+                    
+                    <!-- Author info -->
+                    <div class="blog-author">
+                        <div class="author-image">
+                            <img [src]="blog.author_image || 'icon.png'" alt="{{ blog.author_name }}">
                         </div>
+                        <span class="author-name">{{ blog.author_name }}</span>
                     </div>
-                    <ng-template #noComments>
-                        <p>No comments yet.</p>
-                    </ng-template>
+                    
+                    <!-- Blog summary -->
+                    <p class="blog-summary">{{ blog.summary }}</p>
+                    
+                    <!-- Read more button that navigates to blog detail page -->
+                    <a [routerLink]="['/blogs', blog.slug]" class="read-more">
+                        Read More
+                    </a>
                 </div>
-    
-                <form [formGroup]="commentForm" class="create-comment">
-                    <textarea type="text" class="comment-field" formControlName="content"></textarea>
-    
-                    <div (click)="createComment(blog.id)" class="create-comment-btn">
-                        <i class="fas fa-paper-plane"></i>
-                    </div>
-    
-                    <div class="error" *ngIf="commentForm.get('content')?.touched && commentForm.get('content')?.invalid">
-                        Comment cannot be empty.
-                    </div>
-                </form>
             </div>
-            <!-- End Comment Section -->
-        <div class="profile-img">
-            <img class="icon" *ngIf="user.profile_img" [src]="user.profile_img" alt="">
-            <img class="icon" *ngIf="!user.profile_img" src="icon.png" alt="">
         </div>
+        
+        <!-- Pagination removed as requested -->
     </div>
 </div>

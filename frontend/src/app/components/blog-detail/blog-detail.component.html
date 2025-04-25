@@ -1,0 +1,118 @@
+<div class="blog-detail-container">
+    <!-- Loading spinner -->
+    <div *ngIf="isLoading" class="loading-spinner">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Back to blogs button -->
+    <div class="back-button-container">
+        <a [routerLink]="['/blogs']" class="back-button">
+            <i class="bi bi-arrow-left"></i> Back to Blogs
+        </a>
+    </div>
+
+    <!-- Blog content section -->
+    <div *ngIf="!isLoading && blog" class="blog-content">
+        <!-- Blog header section -->
+        <header class="blog-header">
+            <div class="blog-meta">
+                <span class="blog-category">{{ blog.category_name }}</span>
+                <span class="blog-date">{{ blog.created_at | date:'mediumDate' }}</span>
+            </div>
+            <h1 class="blog-title">{{ blog.title }}</h1>
+            
+            <!-- Author info -->
+            <div class="blog-author">
+                <div class="author-image">
+                    <img [src]="blog.author_image || 'icon.png'" alt="{{ blog.author_name }}">
+                </div>
+                <div class="author-info">
+                    <span class="author-name">{{ blog.author_name }}</span>
+                    <span class="author-bio" *ngIf="blog.author_bio">{{ blog.author_bio }}</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Featured image -->
+        <div *ngIf="blog.image" class="blog-featured-image">
+            <img [src]="blog.image" alt="{{ blog.title }}">
+        </div>
+
+        <!-- Blog summary -->
+        <div class="blog-summary">
+            <p>{{ blog.summary }}</p>
+        </div>
+
+        <!-- Blog full content -->
+        <div class="blog-body">
+            <div [innerHTML]="blog.content" class="blog-formatted-content"></div>
+        </div>
+
+        <!-- Comments section -->
+        <div class="comments-section">
+            <h2 class="comments-title">
+                Comments ({{ comments.length }})
+                <button class="toggle-comments-btn" (click)="toggleComments()">
+                    {{ showComments ? 'Hide' : 'Show' }}
+                    <i class="bi" [ngClass]="showComments ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                </button>
+            </h2>
+
+            <!-- Comments display -->
+            <div *ngIf="showComments" class="comments-container">
+                <div *ngIf="comments.length === 0" class="no-comments">
+                    <p>No comments yet. Be the first to comment!</p>
+                </div>
+
+                <div *ngIf="comments.length > 0" class="comments-list">
+                    <div *ngFor="let comment of comments" class="comment">
+                        <div class="comment-author">
+                            <img [src]="comment.author_image || profilePic" alt="Profile" class="comment-avatar">
+                            <div class="comment-author-info">
+                                <h4 class="comment-author-name">
+                                    {{ comment.author_name ? comment.author_name : (comment.author ? comment.author : 'Anonymous User') }}
+                                </h4>
+                                <span class="comment-date">{{ comment.created_at | date:'medium' }}</span>
+                            </div>
+                        </div>
+                        <p class="comment-text">{{ comment.content }}</p>
+                    </div>
+                </div>
+
+                <!-- Add comment form -->
+                <form [formGroup]="commentForm" class="comment-form" (ngSubmit)="submitComment()">
+                    <h3 class="form-title">Add a Comment</h3>
+                    <textarea 
+                        formControlName="content" 
+                        class="comment-textarea" 
+                        placeholder="Write your thoughts..."
+                        rows="4"></textarea>
+                    
+                    <div class="form-actions">
+                        <button 
+                            type="submit" 
+                            class="submit-comment-btn" 
+                            [disabled]="commentForm.invalid || isLoading">
+                            {{ isLoading ? 'Posting...' : 'Post Comment' }}
+                        </button>
+                        <div class="error-message" *ngIf="commentForm.get('content')?.touched && commentForm.get('content')?.invalid">
+                            Comment cannot be empty
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="!isLoading && !blog" class="error-state">
+        <div class="error-icon">
+            <i class="bi bi-exclamation-circle"></i>
+        </div>
+        <h2>Blog post not found</h2>
+        <p>The blog post you're looking for may have been removed or doesn't exist.</p>
+        <a [routerLink]="['/blogs']" class="return-link">Return to blogs</a>
+    </div>
+</div>

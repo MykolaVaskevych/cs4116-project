@@ -4,52 +4,130 @@
     </div>
 </div>
 
+<div class="create-blog-container">
+    <header class="blog-header">
+        <h1 class="page-title">Create New Blog Post</h1>
+        <p class="subtitle">Share your knowledge and experience with the community</p>
+    </header>
 
-<div class="main">
-    <form [formGroup]="blogForm" >
+    <form [formGroup]="blogForm" (ngSubmit)="onSubmit()">
+        <div class="form-layout">
+            <!-- Left Column - Main Content -->
+            <div class="main-content">
+                <!-- Title -->
+                <div class="form-group">
+                    <label for="title">Blog Title</label>
+                    <input 
+                        type="text" 
+                        id="title" 
+                        formControlName="title" 
+                        placeholder="Enter a descriptive title for your blog post"
+                        class="form-control"
+                    >
+                    <div class="error-message" *ngIf="blogForm.controls['title'].touched && blogForm.controls['title'].invalid">
+                        <span *ngIf="blogForm.controls['title'].errors?.['required']">Title is required</span>
+                    </div>
+                </div>
 
-        <!-- Title -->
-        <div class="title">
-            <label class="label">Title</label>
-            <input type="text" class="title-field" formControlName="title">
-            <div class="error" *ngIf="blogForm.controls['title'].touched && blogForm.controls['title'].invalid">
-                <span *ngIf="blogForm.controls['title'].errors?.['required']">Title is required.</span>
+                <!-- Summary -->
+                <div class="form-group">
+                    <label for="summary">Summary</label>
+                    <textarea 
+                        id="summary" 
+                        formControlName="summary" 
+                        placeholder="Write a brief summary of your blog post (displayed in listings)"
+                        class="form-control" 
+                        rows="3"
+                    ></textarea>
+                    <div class="error-message" *ngIf="blogForm.controls['summary'].touched && blogForm.controls['summary'].invalid">
+                        <span *ngIf="blogForm.controls['summary'].errors?.['required']">Summary is required</span>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="form-group">
+                    <label for="content">Blog Content</label>
+                    <quill-editor 
+                        formControlName="content" 
+                        placeholder="Write your blog content here..."
+                        [styles]="{ height: '400px' }"
+                    ></quill-editor>
+                    <div class="error-message" *ngIf="blogForm.controls['content'].touched && blogForm.controls['content'].invalid">
+                        <span *ngIf="blogForm.controls['content'].errors?.['required']">Content is required</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Sidebar -->
+            <div class="sidebar">
+                <!-- Category -->
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" formControlName="category" class="form-control">
+                        <option value="" disabled selected>Select a category</option>
+                        <option *ngFor="let category of categories" [value]="category.id">
+                            {{ category.name }}
+                        </option>
+                    </select>
+                    <div class="error-message" *ngIf="blogForm.controls['category'].touched && blogForm.controls['category'].invalid">
+                        <span>Category is required</span>
+                    </div>
+                </div>
+
+                <!-- Super Basic Image Upload -->
+                <div class="form-group">
+                    <label for="image">Featured Image</label>
+                    
+                    <!-- Basic Upload Button -->
+                    <div style="margin-top: 16px;">
+                        <button type="button" class="btn btn-outline-primary" (click)="fileInput.click()">
+                            Select Image
+                        </button>
+                        
+                        <input 
+                            #fileInput
+                            type="file" 
+                            id="image" 
+                            accept="image/*"
+                            style="display: none;"
+                            (change)="onImageSelected($event)"
+                        >
+                    </div>
+                    
+                    <!-- Image Preview -->
+                    <div *ngIf="imagePreviewSrc" style="margin-top: 16px; border: 1px solid #ccc; padding: 8px; text-align: center; border-radius: 4px;">
+                        <!-- Image Element -->
+                        <img 
+                            src="{{imagePreviewSrc}}" 
+                            alt="Image Preview"
+                            style="max-width: 100%; max-height: 200px; border-radius: 4px;"
+                        />
+                        
+                        <div style="margin-top: 8px;">
+                            <button type="button" class="btn btn-danger btn-sm" (click)="removeImage()">
+                                Remove Image
+                            </button>
+                        </div>
+                    </div>
+                    
+                </div>
+
+
+                <!-- Submit Button -->
+                <button type="submit" class="submit-btn" [disabled]="blogForm.invalid || isSubmitting">
+                    {{ isSubmitting ? 'Publishing...' : 'Publish Blog Post' }}
+                </button>
+
+                <!-- Cancel Button -->
+                <button type="button" class="cancel-btn" (click)="cancelPost()">
+                    Cancel
+                </button>
             </div>
         </div>
-
-        <!-- Category -->
-        <div class="category">
-            <label class="label">Category</label>
-            <select formControlName="category" class="category-field form-select">
-                <option *ngFor="let category of categories" [value]="category.id">
-                    {{ category.name }}
-                </option>
-            </select>
-            <div class="error" *ngIf="blogForm.controls['category'].touched && blogForm.controls['category'].invalid">
-                <span>Category is required.</span>
-            </div>
-        </div>
-
-        <!-- Content -->
-        <div class="content">
-            <label class="label">Content</label>
-            <div class="markdown-info">
-                <p><i class="bi bi-info-circle"></i> You can use Markdown formatting in your blog post content. 
-                   <a href="https://www.markdownguide.org/cheat-sheet/" target="_blank">Learn Markdown syntax</a></p>
-            </div>
-            <quill-editor formControlName="content"></quill-editor>
-            <div class="error" *ngIf="blogForm.controls['content'].touched && blogForm.controls['content'].invalid">
-                <span>Content is required.</span>
-            </div>
-        </div>
-
-        <!-- Submit Button -->
-        <button type="submit" (click)="onSubmit()">Submit</button>
 
         <!-- API Error -->
-        <div class="error" *ngIf="errorMessage">
+        <div class="error-banner" *ngIf="errorMessage">
             {{ errorMessage }}
         </div>
-
     </form>
 </div>

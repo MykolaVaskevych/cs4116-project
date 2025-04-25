@@ -10,9 +10,10 @@ import { ListingDetailsComponent } from './components/listing-details/listing-de
 import { CreateListingComponent } from './components/create-listing/create-listing.component';
 import { CreateBlogComponent } from './components/create-blog/create-blog.component';
 import { BlogsComponent } from './components/blogs/blogs.component';
+import { BlogDetailComponent } from './components/blog-detail/blog-detail.component';
 import { InquiryComponent } from './components/inquiry/inquiry.component';
 import { PaymentRequestCustomerViewComponent } from './components/payment-request-customer-view/payment-request-customer-view.component';
-import {CustomerToCustomerComponent} from './components/customer-to-customer/customer-to-customer.component';
+import { CustomerToCustomerComponent } from './components/customer-to-customer/customer-to-customer.component';
 
 export let routes: Routes;
 routes = [
@@ -28,6 +29,7 @@ routes = [
     { path: 'create-listing', component: CreateListingComponent, canActivate: [AuthGuard] },
     { path: 'create-blog', component: CreateBlogComponent, canActivate: [AuthGuard] },
     { path: 'blogs', component: BlogsComponent, canActivate: [AuthGuard] },
+    { path: 'blogs/:slug', component: BlogDetailComponent, canActivate: [AuthGuard] },
     { path: 'modal', component: PaymentRequestCustomerViewComponent, canActivate: [AuthGuard] },
     { path: '', redirectTo: '/home', pathMatch: 'full' },
 ];
