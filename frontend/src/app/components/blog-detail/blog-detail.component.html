@@ -36,8 +36,8 @@
         </header>
 
         <!-- Featured image -->
-        <div *ngIf="blog.image" class="blog-featured-image">
-            <img [src]="blog.image" alt="{{ blog.title }}">
+        <div class="blog-featured-image">
+            <img [src]="blog.image || 'assets/banners/adulting 101.png'" alt="{{ blog.title }}">
         </div>
 
         <!-- Blog summary -->
