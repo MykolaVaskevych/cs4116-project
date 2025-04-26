@@ -28,6 +28,13 @@ export class UserProfileService {
     const headers = new HttpHeaders()
       .set('Authorization', `Bearer ${token}`)
       .set('Content-Type', 'application/json'); // Ensure JSON request format
-    return this.http.put(`${environment.apiHost}/api/change-password/`, data, { headers });
+    return this.http.post(`${environment.apiHost}/api/change-password/`, data, { headers });
+  }
+  
+  updateProfileImage(token: string, formData: FormData) {
+    const headers = new HttpHeaders()
+      .set('Authorization', `Bearer ${token}`);
+    // Note: Don't set Content-Type for FormData, browser will set it automatically with boundary
+    return this.http.patch(`${this.apiUrl}/`, formData, { headers });
   }
 }

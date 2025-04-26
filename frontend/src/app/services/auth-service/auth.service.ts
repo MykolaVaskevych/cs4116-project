@@ -40,5 +40,14 @@ export class AuthService {
     getJWT(): any {
         return localStorage.getItem(this.accessTokenKey);
     }
+    
+    // Change password functionality
+    changePassword(token: string, passwordData: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/change-password/`, passwordData, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+    }
 
 }

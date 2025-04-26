@@ -19,15 +19,28 @@ export class UserProfileService {
 
   updateProfile(token: string, profileData: any): Observable<any> {
     const headers = new HttpHeaders()
-    .set('Authorization', `Bearer ${token}`)
-    .set('Content-Type', 'application/json'); // Ensure JSON request format
+      .set('Authorization', `Bearer ${token}`);
+      
+    // If profileData is FormData, don't set Content-Type
+    // Browser will set it automatically with the correct boundary
+    if (!(profileData instanceof FormData)) {
+      headers.set('Content-Type', 'application/json');
+    }
+    
     return this.http.patch(`${this.apiUrl}/`, profileData, { headers });
   }
 
-  updatePassword(token: string, data: any){
+  updatePassword(token: string, data: any): Observable<any> {
     const headers = new HttpHeaders()
     .set('Authorization', `Bearer ${token}`)
     .set('Content-Type', 'application/json'); // Ensure JSON request format
-    return this.http.put(`${environment.apiHost}/api/change-password/`, data, { headers });
+    return this.http.post(`${environment.apiHost}/api/change-password/`, data, { headers });
+  }
+  
+  updateProfileImage(token: string, formData: FormData): Observable<any> {
+    const headers = new HttpHeaders()
+      .set('Authorization', `Bearer ${token}`);
+    // Note: Don't set Content-Type for FormData, browser will set it automatically with boundary
+    return this.http.patch(`${this.apiUrl}/`, formData, { headers });
   }
 }

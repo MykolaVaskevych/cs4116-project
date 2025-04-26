@@ -1,9 +1,57 @@
 <div class="profile-container">
+<!-- Photo Upload Modal -->
+<div class="modal-overlay" *ngIf="showPhotoModal">
+  <div class="photo-modal">
+    <div class="modal-header">
+      <h3>Update Profile Photo</h3>
+      <button class="modal-close" (click)="closePhotoModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="image-upload-container">
+        <div *ngIf="!imagePreviewSrc" class="upload-prompt">
+          <i class="bi bi-image"></i>
+          <p>Select a profile photo</p>
+          <button class="compact-btn" (click)="triggerFileInput()">
+            Choose Image
+          </button>
+        </div>
+        
+        <div *ngIf="imagePreviewSrc" class="image-preview-container">
+          <img [src]="imagePreviewSrc" alt="Image Preview" class="image-preview">
+          <div class="image-preview-actions">
+            <button class="btn btn-outline-danger" (click)="removeSelectedImage()">
+              <i class="bi bi-trash"></i> Remove
+            </button>
+          </div>
+        </div>
+        
+        <input type="file" #fileInput style="display: none" accept="image/*" (change)="onImageSelected($event)">
+      </div>
+      
+      <div *ngIf="photoUploadError" class="photo-upload-error mt-3">
+        {{ photoUploadError }}
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closePhotoModal()">Cancel</button>
+      <button class="btn btn-primary" [disabled]="!selectedImage || isUploading" (click)="uploadProfileImage()">
+        <span *ngIf="!isUploading">Upload</span>
+        <span *ngIf="isUploading">
+          <i class="bi bi-arrow-repeat spinning"></i> Uploading...
+        </span>
+      </button>
+    </div>
+  </div>
+</div>
   <div class="profile-header">
     <div class="profile-picture">
-      <img src="profilepic.avif" alt="Profile Photo">
-      <div class="edit-photo-button">
-        <i class="fa fa-camera"></i>
+      <img [src]="profileImage || 'profilepic.avif'" alt="Profile Photo">
+      <div class="edit-photo-button" (click)="openPhotoModal()">
+        <i class="bi bi-camera"></i>
       </div>
     </div>
     <div class="profile-header-info">
@@ -33,19 +81,55 @@
       <!-- User Info Subsection -->
       <div class="subsection user-info">
         <h2>Personal Information</h2>
-        <div class="info-item">
-          <span class="info-label">Username</span>
-          <span class="info-value">{{user.username}}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Email</span>
-          <span class="info-value">{{user.email}}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Account Type</span>
-          <span class="info-value">{{ isProvider ? 'Service Provider' : 'Customer' }}</span>
-        </div>
-        <button class="btn btn-primary">Update Info</button>
+        <form [formGroup]="profileForm" *ngIf="isEditingProfile; else profileDisplay">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" formControlName="username" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" formControlName="email" class="form-control" [disabled]="true">
+          </div>
+          <div class="form-group">
+            <label for="first_name">First Name</label>
+            <input type="text" id="first_name" formControlName="first_name" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="last_name">Last Name</label>
+            <input type="text" id="last_name" formControlName="last_name" class="form-control">
+          </div>
+          <div *ngIf="profileFormError" class="form-error">
+            Please fill in all required fields
+          </div>
+          <div class="button-group">
+            <button type="button" class="btn btn-primary" (click)="onUpdateProfile()">Save Changes</button>
+            <button type="button" class="btn btn-secondary" (click)="cancelEditProfile()">Cancel</button>
+          </div>
+        </form>
+        
+        <ng-template #profileDisplay>
+          <div class="info-item">
+            <span class="info-label">Username</span>
+            <span class="info-value">{{user?.username}}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Email</span>
+            <span class="info-value">{{user?.email}}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">First Name</span>
+            <span class="info-value">{{user?.first_name || 'Not set'}}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Last Name</span>
+            <span class="info-value">{{user?.last_name || 'Not set'}}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Account Type</span>
+            <span class="info-value">{{ isProvider ? 'Service Provider' : 'Customer' }}</span>
+          </div>
+          <button class="btn btn-primary" (click)="editProfile()">Update Info</button>
+        </ng-template>
       </div>
 
       <!-- Security Subsection -->
@@ -53,19 +137,50 @@
         <h2>Security</h2>
         <form [formGroup]="passwordForm" class="password-form">
           <div class="form-group">
-            <label for="oldPassword">Current Password</label>
-            <input type="password" id="oldPassword" formControlName="oldPassword" class="form-control">
+            <label for="old_password">Current Password</label>
+            <div class="password-input-container">
+              <input [type]="showPasswords ? 'text' : 'password'" id="old_password" formControlName="old_password" class="form-control">
+              <span class="password-toggle" (click)="togglePasswordVisibility()">
+                <i class="bi" [ngClass]="showPasswords ? 'bi-eye-slash' : 'bi-eye'"></i>
+              </span>
+            </div>
+            <div *ngIf="passwordForm.get('old_password')?.invalid && passwordForm.get('old_password')?.touched" class="form-error">
+              Current password is required
+            </div>
           </div>
           <div class="form-group">
-            <label for="newPassword">New Password</label>
-            <input type="password" id="newPassword" formControlName="newPassword" class="form-control">
+            <label for="new_password">New Password</label>
+            <div class="password-input-container">
+              <input [type]="showPasswords ? 'text' : 'password'" id="new_password" formControlName="new_password" class="form-control">
+              <span class="password-toggle" (click)="togglePasswordVisibility()">
+                <i class="bi" [ngClass]="showPasswords ? 'bi-eye-slash' : 'bi-eye'"></i>
+              </span>
+            </div>
+            <div *ngIf="passwordForm.get('new_password')?.invalid && passwordForm.get('new_password')?.touched" class="form-error">
+              New password is required (minimum 8 characters)
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="confirm_password">Confirm New Password</label>
+            <div class="password-input-container">
+              <input [type]="showPasswords ? 'text' : 'password'" id="confirm_password" formControlName="confirm_password" class="form-control">
+              <span class="password-toggle" (click)="togglePasswordVisibility()">
+                <i class="bi" [ngClass]="showPasswords ? 'bi-eye-slash' : 'bi-eye'"></i>
+              </span>
+            </div>
+            <div *ngIf="passwordForm.errors?.['passwordMismatch'] && passwordForm.get('confirm_password')?.touched" class="form-error">
+              Passwords do not match
+            </div>
           </div>
           <div *ngIf="passwordFormError" class="form-error">
-            Please fill in all fields
+            {{ passwordErrorText }}
           </div>
-          <button type="button" class="btn btn-primary" (click)="onUpdatePassword()">Update Password</button>
+          <div *ngIf="passwordUpdateSuccess" class="form-success">
+            Password updated successfully!
+          </div>
+          <button type="button" class="btn btn-primary" [disabled]="passwordForm.invalid" (click)="onUpdatePassword()">Update Password</button>
         </form>
-        <button class="btn btn-danger logout-btn">Log Out</button>
+        <button class="btn btn-danger logout-btn" (click)="logOut()">Log Out</button>
       </div>
     </div>
   </div>

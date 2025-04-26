@@ -1,4 +1,4 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, ViewChild, ElementRef } from '@angular/core';
 import {FormGroup, FormControl, Validators, FormBuilder, FormsModule} from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth-service/auth.service';
@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { UserProfileService } from '../../services/user-profile.service';
 import {InquiryService} from '../../services/inquiry-service/inquiry.service';
+import { environment } from '../../../env/environment';
 
 interface Transaction {
   type: string;
@@ -21,17 +22,35 @@ interface Transaction {
     styleUrl: './profile.component.css',
 })
 export class ProfileComponent {
+    @ViewChild('fileInput') fileInput!: ElementRef;
+    
     activeSection = 'personal'; // Default active section
     isProvider = false;
     loginForm!: FormGroup;
     passwordForm!: FormGroup;
+    profileForm!: FormGroup;
     businessForm!: FormGroup;
     errorListAfterSignUp = [];
     passwordFormError = false;
+    passwordErrorText = '';
+    passwordUpdateSuccess = false;
+    profileFormError = false;
     businessFormError = false;
     applyStyle = false;
+    isEditingProfile = false;
     user: any;
     token: any;
+    profileImage: string | null = null;
+    photoUploadError: string | null = null;
+    
+    // Photo upload modal
+    showPhotoModal = false;
+    selectedImage: File | null = null;
+    imagePreviewSrc: string | null = null;
+    isUploading = false;
+    
+    // Password visibility toggle
+    showPasswords = false;
 
     depositSelectionFlag = false;
     withdrawSelectionFlag = false;
@@ -76,9 +95,19 @@ export class ProfileComponent {
             password: new FormControl(''),
         });
 
+        // Password form with validation
         this.passwordForm = this.fb.group({
-            oldPassword: ['', Validators.required],
-            newPassword: ['', Validators.required]
+            old_password: ['', Validators.required],
+            new_password: ['', [Validators.required, Validators.minLength(8)]],
+            confirm_password: ['', Validators.required]
+        }, { validators: this.passwordMatchValidator });
+
+        // Profile form
+        this.profileForm = this.fb.group({
+            username: ['', Validators.required],
+            email: [{value: '', disabled: true}],
+            first_name: [''],
+            last_name: ['']
         });
 
         this.businessForm = this.fb.group({
@@ -90,17 +119,187 @@ export class ProfileComponent {
         this.loadUserProfile();
         this.updateWalletAmount();
     }
+    
+    // Custom validator to check if passwords match
+    passwordMatchValidator(formGroup: FormGroup) {
+        const newPassword = formGroup.get('new_password')?.value;
+        const confirmPassword = formGroup.get('confirm_password')?.value;
+        
+        if (newPassword !== confirmPassword) {
+            return { passwordMismatch: true };
+        }
+        
+        return null;
+    }
 
     loadUserProfile() {
         this.userProfileService.getProfile(this.token).subscribe({
           next: (response) => {
             this.user = response;
             console.log('user', this.user);
+            
+            // Initialize profile form with current user data
+            this.profileForm.patchValue({
+              username: this.user.username || '',
+              email: this.user.email || '',
+              first_name: this.user.first_name || '',
+              last_name: this.user.last_name || ''
+            });
+            
+            // Set profile image if available
+            if (this.user.profile_image) {
+              this.profileImage = `${environment.apiHost}${this.user.profile_image}`;
+            }
           },
           error: (error) => {
             console.error('Error fetching profile', error);
           }
         });
+    }
+    
+    // Open the photo upload modal
+    openPhotoModal() {
+      this.showPhotoModal = true;
+      this.photoUploadError = null;
+      this.selectedImage = null;
+      this.imagePreviewSrc = null;
+    }
+    
+    // Close the photo upload modal
+    closePhotoModal() {
+      this.showPhotoModal = false;
+    }
+    
+    // Trigger file input click when button is clicked
+    triggerFileInput() {
+      this.fileInput.nativeElement.click();
+    }
+    
+    // Handle image selection
+    onImageSelected(event: Event) {
+      const element = event.target as HTMLInputElement;
+      if (element.files && element.files.length) {
+        const file = element.files[0];
+        
+        // Check if file is an image
+        if (!file.type.includes('image')) {
+          this.photoUploadError = 'Please select an image file.';
+          return;
+        }
+        
+        // Check file size (limit to 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+          this.photoUploadError = 'Image must be less than 2MB.';
+          return;
+        }
+        
+        // Reset error
+        this.photoUploadError = null;
+        this.selectedImage = file;
+        
+        // Create preview
+        const reader = new FileReader();
+        reader.onload = () => {
+          this.imagePreviewSrc = reader.result as string;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    
+    // Remove selected image
+    removeSelectedImage() {
+      this.selectedImage = null;
+      this.imagePreviewSrc = null;
+      this.fileInput.nativeElement.value = '';
+    }
+    
+    // Upload the profile image
+    uploadProfileImage() {
+      if (!this.selectedImage) {
+        return;
+      }
+      
+      this.isUploading = true;
+      this.photoUploadError = null;
+      
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('profile_image', this.selectedImage, this.selectedImage.name);
+      
+      // Upload profile image using the dedicated method
+      this.userProfileService.updateProfileImage(this.token, formData).subscribe({
+        next: (response: any) => {
+          console.log('Profile image updated successfully', response);
+          
+          // Update the profile image
+          if (response.profile_image) {
+            this.profileImage = `${environment.apiHost}${response.profile_image}`;
+          } else {
+            // If no URL is returned in the response, use the preview as fallback
+            this.profileImage = this.imagePreviewSrc;
+          }
+          
+          // Close the modal
+          this.showPhotoModal = false;
+          this.isUploading = false;
+          
+          // Reset the form
+          this.selectedImage = null;
+          this.imagePreviewSrc = null;
+        },
+        error: (error: any) => {
+          console.error('Error updating profile image', error);
+          this.photoUploadError = 'Failed to upload image. Please try again.';
+          this.isUploading = false;
+        }
+      });
+    }
+    
+    // Start editing profile
+    editProfile() {
+        this.isEditingProfile = true;
+    }
+    
+    // Cancel profile editing
+    cancelEditProfile() {
+        this.isEditingProfile = false;
+        this.profileFormError = false;
+        
+        // Reset the form to current user data
+        this.profileForm.patchValue({
+          username: this.user.username || '',
+          email: this.user.email || '',
+          first_name: this.user.first_name || '',
+          last_name: this.user.last_name || ''
+        });
+    }
+    
+    // Save profile changes
+    onUpdateProfile() {
+        if (this.profileForm.valid) {
+            this.profileFormError = false;
+            
+            const updatedData = {
+                username: this.profileForm.value.username,
+                first_name: this.profileForm.value.first_name,
+                last_name: this.profileForm.value.last_name
+            };
+            
+            this.userProfileService.updateProfile(this.token, updatedData).subscribe({
+                next: (response) => {
+                    this.user = response;
+                    this.isEditingProfile = false;
+                    console.log('Profile updated successfully', response);
+                },
+                error: (error) => {
+                    this.profileFormError = true;
+                    console.error('Error updating profile', error);
+                }
+            });
+        } else {
+            this.profileFormError = true;
+            this.profileForm.markAllAsTouched();
+        }
     }
 
     onSubmitBusinessForm() {
@@ -148,17 +347,63 @@ export class ProfileComponent {
     onUpdatePassword() {
         if (this.passwordForm.valid) {
             this.passwordFormError = false;
-            const oldPass = this.passwordForm.value.oldPassword;
-            const newPass = this.passwordForm.value.newPassword;
-
-            console.log('Old Password:', oldPass);
-            console.log('New Password:', newPass);
-            // TODO: Call backend API here
+            this.passwordUpdateSuccess = false;
+            
+            const passwordData = {
+                old_password: this.passwordForm.value.old_password,
+                new_password: this.passwordForm.value.new_password,
+                confirm_password: this.passwordForm.value.confirm_password
+            };
+            
+            console.log('Submitting password data:', passwordData);
+            
+            this.userProfileService.updatePassword(this.token, passwordData).subscribe({
+                next: (response) => {
+                    console.log('Password updated successfully', response);
+                    this.passwordUpdateSuccess = true;
+                    this.passwordForm.reset();
+                },
+                error: (error) => {
+                    this.passwordFormError = true;
+                    console.error('Error changing password', error);
+                    
+                    if (error.error && typeof error.error === 'object') {
+                        // Handle error messages from backend
+                        if (error.error.old_password) {
+                            this.passwordErrorText = error.error.old_password;
+                        } else if (error.error.new_password) {
+                            this.passwordErrorText = error.error.new_password;
+                        } else if (error.error.confirm_password) {
+                            this.passwordErrorText = error.error.confirm_password;
+                        } else if (error.error.non_field_errors) {
+                            this.passwordErrorText = error.error.non_field_errors;
+                        } else if (error.error.error) {
+                            this.passwordErrorText = error.error.error;
+                        } else {
+                            this.passwordErrorText = 'Failed to update password. Please try again.';
+                        }
+                    } else {
+                        this.passwordErrorText = 'Failed to update password. Please try again.';
+                    }
+                }
+            });
         } else {
             console.log('Form Invalid');
-            this.businessForm.markAllAsTouched();
+            this.passwordForm.markAllAsTouched();
             this.passwordFormError = true;
+            this.passwordErrorText = 'Please fill in all required fields correctly';
         }
+    }
+    
+    // Log out the user
+    logOut() {
+        this.authService.logOut();
+        this.router.navigate(['/login']);
+    }
+    
+    // Toggle password visibility for all fields
+    togglePasswordVisibility() {
+        this.showPasswords = !this.showPasswords;
     }
 
     makeProvider() {
