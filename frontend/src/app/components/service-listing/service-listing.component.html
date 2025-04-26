@@ -1,110 +1,157 @@
-<div *ngIf="!other" class="header">
-    {{serviceCat.name}}
-</div>
-<div *ngIf="other" class="header">
-    Other
-</div>
+<div class="services-page-container">
+    <header class="services-header">
+        <div class="header-content">
+            <h1 class="site-title">
+                <span *ngIf="!other">{{serviceCat.name}}</span>
+                <span *ngIf="other">Services</span>
+            </h1>
+            <a *ngIf="isProvider" (click)="redirectToCreateListing()" class="create-service-btn">
+                <i class="bi bi-plus-circle-fill"></i> Create Listing
+            </a>
+        </div>
+        
+        <div class="search-filter-container">
+            <div class="search-bar">
+                <i class="bi bi-search search-icon"></i>
+                <input 
+                    type="text" 
+                    placeholder="Search services..." 
+                    [(ngModel)]="searchTerm" 
+                    (ngModelChange)="filterServices()" 
+                    class="search-input"
+                    name="search">
+                <button *ngIf="searchTerm" class="clear-search" (click)="searchTerm=''; filterServices()">
+                    <i class="bi bi-x-circle"></i>
+                </button>
+            </div>
+            
+            <!-- Advanced filters - Only show on main services pages (not on category-specific pages) -->
+            <div class="filter-section" *ngIf="other">
+                <!-- Category Filter -->
+                <div class="category-filter" *ngIf="categories && categories.length > 0">
+                    <div class="filter-label">Category:</div>
+                    <div class="filter-buttons">
+                        <button 
+                            class="filter-btn" 
+                            [class.active]="selectedCategory === null" 
+                            (click)="filterByCategory(null)">
+                            All
+                        </button>
+                        <button 
+                            *ngFor="let cat of categories" 
+                            class="filter-btn" 
+                            [class.active]="selectedCategory === cat.id" 
+                            (click)="filterByCategory(cat.id)">
+                            {{ cat.name }}
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Price Range Filter -->
+                <div class="price-filter">
+                    <div class="filter-label">Price Range:</div>
+                    <div class="range-inputs">
+                        <div class="price-input">
+                            <input 
+                                type="number" 
+                                placeholder="Min €" 
+                                [(ngModel)]="priceMin" 
+                                (ngModelChange)="filterServices()"
+                                min="0"
+                                class="price-range-input"
+                                name="min-price">
+                        </div>
+                        <span class="range-separator">-</span>
+                        <div class="price-input">
+                            <input 
+                                type="number" 
+                                placeholder="Max €" 
+                                [(ngModel)]="priceMax" 
+                                (ngModelChange)="filterServices()"
+                                min="0"
+                                class="price-range-input"
+                                name="max-price">
+                        </div>
+                        <button class="clear-filters" (click)="clearFilters()">
+                            <i class="bi bi-x-circle"></i> Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
 
-<form class="d-flex align-items-center justify-content-center p-3" role="search">
-    <input class="form-control me-2 w-50" type="search" placeholder="Search"
-        [(ngModel)]="searchTerm"  (ngModelChange)="filterServices()" name="search" aria-label="Search">
-</form>
-
-<div *ngIf="isProvider" class="btn-wrapper">
-    <div (click)="redirectToCreateListing()" class="create-btn">
-        Create Listing
+    <!-- Services cards container -->
+    <div class="services-container">
+        <!-- No results message -->
+        <div *ngIf="empty || filteredServices.length === 0" class="no-results">
+            <i class="bi bi-search"></i>
+            <p>No services found. Try adjusting your search criteria.</p>
+        </div>
+        
+        <!-- Services grid layout -->
+        <div class="services-grid" *ngIf="!empty && filteredServices.length > 0">
+            <div *ngFor="let listing of filteredServices" class="service-card" (click)="NavigateToDetailsPage(listing)">
+                <div class="service-card-content">
+                    <!-- Service Image Section -->
+                    <div class="service-image-container">
+                        <div class="service-logo">
+                            <ng-container *ngIf="listing.logo; else textPlaceholder">
+                                <img [src]="listing.logo" alt="Service Logo">
+                            </ng-container>
+                            <ng-template #textPlaceholder>
+                                <div class="text-placeholder" [ngClass]="'gradient-' + getGradientClass(listing.category_name)">
+                                    <span class="placeholder-text">{{ listing.category_name }}</span>
+                                </div>
+                            </ng-template>
+                        </div>
+                        
+                        <!-- Category tag - positioned absolutely on the image -->
+                        <div class="category-tag">
+                            <span>{{ listing.category_name }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Service Info Section -->
+                    <div class="service-info">
+                        <!-- Service Header with Name and Trust Badge -->
+                        <div class="service-provider">
+                            <h3 class="provider-name">{{listing.business_name || 'Service Provider'}}</h3>
+                            <div *ngIf="listing.trusted" class="trusted-badge">
+                                <i class="bi bi-patch-check-fill"></i> Trusted
+                            </div>
+                        </div>
+                        
+                        <!-- Rating Stars -->
+                        <div class="provider-rating" *ngIf="listing.rating !== undefined && listing.rating > 0">
+                            <div class="stars">
+                                <i class="bi" [ngClass]="listing.rating >= 1 ? 'bi-star-fill' : (listing.rating >= 0.5 ? 'bi-star-half' : 'bi-star')"></i>
+                                <i class="bi" [ngClass]="listing.rating >= 2 ? 'bi-star-fill' : (listing.rating >= 1.5 ? 'bi-star-half' : 'bi-star')"></i>
+                                <i class="bi" [ngClass]="listing.rating >= 3 ? 'bi-star-fill' : (listing.rating >= 2.5 ? 'bi-star-half' : 'bi-star')"></i>
+                                <i class="bi" [ngClass]="listing.rating >= 4 ? 'bi-star-fill' : (listing.rating >= 3.5 ? 'bi-star-half' : 'bi-star')"></i>
+                                <i class="bi" [ngClass]="listing.rating >= 5 ? 'bi-star-fill' : (listing.rating >= 4.5 ? 'bi-star-half' : 'bi-star')"></i>
+                                <span class="rating-value">{{listing.rating.toFixed(1)}}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Description -->
+                        <p class="service-description">{{listing.description}}</p>
+                    </div>
+                    
+                    <!-- Footer with Price and View Details -->
+                    <div class="service-footer">
+                        <div class="price-badge" [ngClass]="{'free': listing.fixed_price == 0}">
+                            <i class="bi" [ngClass]="listing.fixed_price == 0 ? 'bi-cash-coin' : 'bi-currency-euro'"></i>
+                            <span *ngIf="listing.fixed_price > 0">{{listing.fixed_price}}</span>
+                            <span *ngIf="listing.fixed_price == 0">Free</span>
+                        </div>
+                        
+                        <div class="view-details-btn">
+                            <i class="bi bi-eye"></i> View Details
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-
-<div class="" *ngIf="empty">
-    No Services Found
-</div>
-
-<div class="listings">
-    <div *ngFor="let listing of filteredServices" class="listing" (click)="NavigateToDetailsPage(listing)">
-        <span>
-            {{listing.description}}
-        </span>
-        <div class="price-tag" *ngIf="listing.fixed_price > 0">
-            €{{listing.fixed_price}}
-        </div>
-        <div class="price-tag free" *ngIf="listing.fixed_price == 0">
-            Free
-        </div>
-        <div class="icon">
-            <img src="icon.png" alt="">
-        </div>
-        <!-- <div *ngIf="listing.trusted" class="trusted-star">
-            <img src="star_filled.png" alt="">
-        </div> -->
-    </div>
-    <!-- <div class="listing-row1">
-        <div class="listing" (click)="NavigateToDetailsPage()">
-            <span>
-                Got caught plagiarizing? Landlord stealing your soul (and security deposit)? Relax—I find legal loopholes faster than your professor finds ChatGPT in your essay. Let’s get you out of this mess before your future is “would you like fries with that?”
-            </span>
-
-            <div class="icon">
-                <img src="icon.png" alt="">
-            </div>
-        </div>
-        <div class="listing" (click)="NavigateToDetailsPage()">
-            Made a few “bad life choices” at that party last weekend? Got caught, but not caught-caught? Good. Because I turn “Oops” into “Case Dismissed” like it’s my side hustle. You make poor choices—I make them disappear. Let’s work.
-
-            <div class="icon">
-                <img src="icon.png" alt="">
-            </div>
-        </div>
-        <div class="listing" (click)="NavigateToDetailsPage()">
-            <div class="icon">
-                <img src="icon.png" alt="">
-            </div>
-        </div>
-    </div>
-    <div class="listing-row2">
-        <div class="listing" (click)="NavigateToDetailsPage()">
-            <div class="icon">
-                <img src="icon.png" alt="">
-            </div>
-        </div>
-        <div class="listing" (click)="NavigateToDetailsPage()">
-            <div class="icon">
-                <img src="icon.png" alt="">
-            </div>
-        </div>
-        <div class="listing" (click)="NavigateToDetailsPage()">
-            <span>
-                Sent some “questionable” messages? Got canceled online? Accidentally hacked your school’s system? I specialize in bad decisions with WiFi. If you’re about to become a case study in legal ethics, call me before your future does a backflip off a cliff.
-            </span>
-
-            <div class="icon">
-                <img src="icon.png" alt="">
-            </div>
-        </div>
-    </div>
-    <div class="listing-row3">
-        <div class="listing" (click)="NavigateToDetailsPage()">
-            <div class="icon">
-                <img src="icon.png" alt="">
-            </div>
-        </div>
-        <div class="listing" (click)="NavigateToDetailsPage()">
-            <div class="icon">
-                <img src="icon.png" alt="">
-            </div>
-        </div>
-        <div class="listing" (click)="NavigateToDetailsPage()">
-            <div class="icon">
-                <img src="icon.png" alt="">
-            </div>
-        </div>
-        <div class="listing" (click)="NavigateToDetailsPage()">
-            <div class="icon">
-                <img src="icon.png" alt="">
-            </div>
-        </div>
-    </div> -->
-</div>
-
-
-

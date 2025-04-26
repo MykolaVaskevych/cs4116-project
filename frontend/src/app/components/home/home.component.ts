@@ -89,7 +89,17 @@ export class HomeComponent {
     }
 
     NavigateToServiceListing(service: any) {
-        this.router.navigate(['/service-listing'], { queryParams: { service: JSON.stringify(service)  } });
+        const allCategories = this.serviceCategories;
+        
+        this.router.navigate(['/service-listing'], { 
+            queryParams: { 
+                service: JSON.stringify(allCategories),
+                filter: JSON.stringify({ 
+                    category: Array.isArray(service) ? null : service.name,
+                    isFromHome: true
+                })
+            }
+        });
     }
 
     navigateToBlogs(): any {

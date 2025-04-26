@@ -9,6 +9,7 @@ import {ContactWithReviewerComponent} from '../contact-with-reviewer/contact-wit
 
 @Component({
     selector: 'app-listing-details',
+    standalone: true,
     imports: [CommonModule, NgbTooltip],
     templateUrl: './listing-details.component.html',
     styleUrl: './listing-details.component.css'
@@ -51,18 +52,23 @@ export class ListingDetailsComponent implements OnInit {
         this.reviewsService.getReviews(this.token, this.listing.id).subscribe({
           next: (response) => {
             this.reviews = response;
-            console.log('reviews', this.reviews)
+            console.log('reviews', this.reviews);
 
-            if(this.reviews.length>0)
-            this.avgRating = this.reviews.reduce((sum: any, review: { rating: any; }) => sum + review.rating, 0) / this.reviews.length;
+            // Calculate average rating only if there are actual reviews
+            if (this.reviews.length > 0) {
+                this.avgRating = this.reviews.reduce((sum: any, review: { rating: any; }) => sum + review.rating, 0) / this.reviews.length;
+            } else {
+                // No reviews means no rating
+                this.avgRating = 0;
+            }
 
-        console.log('avg', this.avgRating)
+            console.log('avg rating', this.avgRating);
           },
           error: (error) => {
-            console.error('Error fetching profile', error);
+            console.error('Error fetching reviews', error);
+            this.avgRating = 0;
           }
         });
-
       }
 
     goBack() {
@@ -101,4 +107,44 @@ export class ListingDetailsComponent implements OnInit {
             }
         });
     }
+    
+    getGradientClass(categoryName: string): string {
+        if (!categoryName) {
+            return 'default';
+        }
+        
+        const categoryMap: {[key: string]: string} = {
+            'Finance': 'finance',
+            'Legal': 'legal',
+            'Lifestyle': 'lifestyle',
+            'Education': 'education',
+            'Healthcare': 'healthcare',
+            'Technology': 'technology',
+            'Food': 'food',
+            'Art': 'art',
+            'Travel': 'travel'
+        };
+        
+        if (categoryMap[categoryName]) {
+            return categoryMap[categoryName];
+        }
+        
+        const lowerCaseName = categoryName.toLowerCase();
+        if (lowerCaseName.includes('tech') || lowerCaseName.includes('software') || lowerCaseName.includes('it')) {
+            return 'technology';
+        } else if (lowerCaseName.includes('food') || lowerCaseName.includes('cook') || lowerCaseName.includes('restaurant')) {
+            return 'food';
+        } else if (lowerCaseName.includes('health') || lowerCaseName.includes('medical') || lowerCaseName.includes('doctor')) {
+            return 'healthcare';
+        } else if (lowerCaseName.includes('art') || lowerCaseName.includes('design') || lowerCaseName.includes('creative')) {
+            return 'art';
+        } else if (lowerCaseName.includes('travel') || lowerCaseName.includes('tour') || lowerCaseName.includes('trip')) {
+            return 'travel';
+        } else if (lowerCaseName.includes('education') || lowerCaseName.includes('school') || lowerCaseName.includes('learn')) {
+            return 'education';
+        }
+        
+        return 'other';
+    }
+    
 }

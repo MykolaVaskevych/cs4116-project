@@ -5,55 +5,105 @@
 </div>
 
 <div class="main">
-    <form [formGroup]="listingForm" >
+    <div class="form-header">
+        <h2>Create New Service Listing</h2>
+        <p>Add a new service to your business profile</p>
+    </div>
 
-        <!-- Title -->
-        <div class="description">
-            <label class="label">Description</label>
-            <input type="text" class="description-field" formControlName="description">
-            <div class="error" *ngIf="listingForm.controls['description'].touched && listingForm.controls['description'].invalid">
-                <span *ngIf="listingForm.controls['description'].errors?.['required']">Description is required.</span>
+    <form [formGroup]="listingForm">
+        <div class="form-columns">
+            <div class="form-column main-info">
+                <!-- Service Description -->
+                <div class="form-group description">
+                    <label class="label">Service Description</label>
+                    <textarea rows="4" class="description-field" formControlName="description" 
+                        placeholder="Describe your service in detail"></textarea>
+                    <div class="error" *ngIf="listingForm.controls['description'].touched && listingForm.controls['description'].invalid">
+                        <span *ngIf="listingForm.controls['description'].errors?.['required']">Description is required.</span>
+                    </div>
+                </div>
+
+                <!-- Fixed Price -->
+                <div class="form-group fixed-price">
+                    <label class="label">Fixed Price to Open Inquiry (€)</label>
+                    <div class="price-info">
+                        <small>Set to 0 for free inquiries</small>
+                    </div>
+                    <input type="number" min="0" step="0.01" class="price-field" formControlName="fixed_price">
+                    <div class="error" *ngIf="listingForm.controls['fixed_price'].touched && listingForm.controls['fixed_price'].invalid">
+                        <span *ngIf="listingForm.controls['fixed_price'].errors?.['min']">Price cannot be negative.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-column sidebar">
+                <!-- Category -->
+                <div class="form-group category">
+                    <label class="label">Category</label>
+                    <select formControlName="category" class="category-field form-select">
+                        <option value="" disabled selected>Select a category</option>
+                        <option *ngFor="let category of categories" [value]="category.id">
+                            {{ category.name }}
+                        </option>
+
+                        <!-- Other Categories -->
+                        <optgroup *ngIf="otherCategories.length > 0" label="Other">
+                            <option *ngFor="let category of otherCategories" [value]="category.id">
+                                {{ category.name }}
+                            </option>
+                        </optgroup>
+                    </select>
+                    <div class="error" *ngIf="listingForm.controls['category'].touched && listingForm.controls['category'].invalid">
+                        <span>Category is required.</span>
+                    </div>
+                </div>
+
+                <!-- Service Logo Upload -->
+                <div class="form-group logo-upload">
+                    <label class="label">Service Logo</label>
+                    <p class="image-hint">Add a logo or image for your service (recommended size: 512x512)</p>
+                    
+                    <div class="upload-section">
+                        <button type="button" class="upload-btn" (click)="fileInput.click()">
+                            <i class="bi bi-cloud-upload"></i> Select Image
+                        </button>
+                        
+                        <input 
+                            #fileInput
+                            type="file" 
+                            accept="image/*"
+                            style="display: none;"
+                            (change)="onImageSelected($event)"
+                        >
+                    </div>
+                    
+                    <!-- Image Preview -->
+                    <div *ngIf="imagePreviewSrc" class="image-preview-container">
+                        <img 
+                            [src]="imagePreviewSrc" 
+                            alt="Service Logo Preview"
+                            class="image-preview"
+                        />
+                        
+                        <button type="button" class="remove-image-btn" (click)="removeImage()">
+                            <i class="bi bi-trash"></i> Remove
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="button" class="cancel-btn" (click)="cancelListing()">Cancel</button>
+                    <button type="submit" class="submit-btn" (click)="onSubmit()" [disabled]="listingForm.invalid || isSubmitting">
+                        {{ isSubmitting ? 'Creating...' : 'Create Listing' }}
+                    </button>
+                </div>
+
+                <!-- API Error -->
+                <div class="error-message" *ngIf="errorMessage">
+                    {{ errorMessage }}
+                </div>
             </div>
         </div>
-
-        <!-- Category -->
-        <div class="category">
-            <label class="label">Category</label>
-            <select formControlName="category" class="category-field form-select">
-                <option *ngFor="let category of categories" [value]="category.id">
-                    {{ category.name }}
-                </option>
-
-                <!-- Other Categories -->
-                <optgroup *ngIf="otherCategories.length > 0" label="Other">
-                    <option *ngFor="let category of otherCategories" [value]="category.id">
-                        {{ category.name }}
-                    </option>
-                </optgroup>
-            </select>
-            <div class="error" *ngIf="listingForm.controls['category'].touched && listingForm.controls['category'].invalid">
-                <span>Category is required.</span>
-            </div>
-        </div>
-
-        <!-- Fixed Price -->
-        <div class="fixed-price">
-            <label class="label">Fixed Price to Open Inquiry (€)</label>
-            <div class="price-info">
-                <small>Set to 0 for free inquiries</small>
-            </div>
-            <input type="number" min="0" step="0.01" class="price-field" formControlName="fixed_price">
-            <div class="error" *ngIf="listingForm.controls['fixed_price'].touched && listingForm.controls['fixed_price'].invalid">
-                <span *ngIf="listingForm.controls['fixed_price'].errors?.['min']">Price cannot be negative.</span>
-            </div>
-        </div>
-        <!-- Submit Button -->
-        <button type="submit" (click)="onSubmit()">Submit</button>
-
-        <!-- API Error -->
-        <div class="error" *ngIf="errorMessage">
-            {{ errorMessage }}
-        </div>
-
     </form>
 </div>

@@ -1,81 +1,119 @@
-<div class="header">
-    {{serviceCat.name}} - {{listing.business_name}}
-</div>
+<div class="service-detail-container">
+    <!-- Back button -->
+    <div class="back-button-container">
+        <a (click)="goBack()" class="back-button">
+            <i class="bi bi-arrow-left"></i> Back to Services
+        </a>
+    </div>
 
-<div class="card">
-
-    <div class="profile-detail">
-        <div *ngIf="listing.trusted" class="profile-header">
-            <div>Trusted by us</div>
-            <div class="star-filled">
-                <img src="star_filled.png" alt="">
+    <!-- Service content section -->
+    <div class="service-content">
+        <!-- Service header section -->
+        <header class="service-header">
+            <div class="service-meta">
+                <span class="service-category">{{ serviceCat.name }}</span>
+                <span *ngIf="listing.trusted" class="trusted-badge">
+                    <i class="bi bi-patch-check-fill"></i> Trusted Provider
+                </span>
             </div>
-        </div>
-
-        <div class="profile-icon">
-            <img src="icon.png" alt="">
-        </div>
-
-        <div class="profile-rating">
-            <div class="profile-rating-star">
-                <img src="stars.png" alt="">
-            </div>
-            <span>{{avgRating.toFixed(1)}}</span>
-        </div>
-    </div>
-
-
-    <div class="desc">
-        {{listing.description}}
-    </div>
-
-    <div class="price-info" *ngIf="listing.fixed_price > 0">
-        <div class="price-label">Price to open inquiry:</div>
-        <div class="price-value">{{ listing.fixed_price | currency:'EUR':'symbol':'1.2-2' }}</div>
-    </div>
-    <div class="price-info free" *ngIf="listing.fixed_price == 0">
-        <div class="price-label">Free to inquire</div>
-    </div>
-
-    <div class="bottom-sec" [ngClass]="{'bottom-sec-margin-top': listing.description === ''}">
-        <div class="ratings">
-            <div *ngFor="let rev of reviews" class="rating-card"
-            [ngClass]="{
-                'low-rating-bg': rev.rating<2.5,
-                'high-rating-bg': rev.rating>2.5,
-              }">
-                <div class="rating-desc">
-                    {{rev.comment}}
+            <h1 class="service-title">{{ listing.business_name || 'Service Provider' }}</h1>
+            
+            <!-- Service logo -->
+            <div class="service-logo-container">
+                <div class="service-logo">
+                    <ng-container *ngIf="listing.logo; else textPlaceholder">
+                        <img [src]="listing.logo" alt="Service Logo">
+                    </ng-container>
+                    <ng-template #textPlaceholder>
+                        <div class="text-placeholder" [ngClass]="'gradient-' + getGradientClass(listing.category_name)">
+                            <span class="placeholder-text">{{ listing.category_name }}</span>
+                        </div>
+                    </ng-template>
                 </div>
-                <div class="rating">
-                    <div class="star">
-                        <img src="stars.png" alt="">
+            </div>
+            
+            <!-- Provider info and price -->
+            <div class="provider-rating-price">
+                <div class="service-provider">
+                    <div class="provider-info">
+                        <div class="star-rating" *ngIf="avgRating > 0">
+                            <div class="stars">
+                                <i class="bi" [ngClass]="avgRating >= 1 ? 'bi-star-fill' : (avgRating >= 0.5 ? 'bi-star-half' : 'bi-star')"></i>
+                                <i class="bi" [ngClass]="avgRating >= 2 ? 'bi-star-fill' : (avgRating >= 1.5 ? 'bi-star-half' : 'bi-star')"></i>
+                                <i class="bi" [ngClass]="avgRating >= 3 ? 'bi-star-fill' : (avgRating >= 2.5 ? 'bi-star-half' : 'bi-star')"></i>
+                                <i class="bi" [ngClass]="avgRating >= 4 ? 'bi-star-fill' : (avgRating >= 3.5 ? 'bi-star-half' : 'bi-star')"></i>
+                                <i class="bi" [ngClass]="avgRating >= 5 ? 'bi-star-fill' : (avgRating >= 4.5 ? 'bi-star-half' : 'bi-star')"></i>
+                            </div>
+                            <span class="rating-value">{{avgRating.toFixed(1)}}</span>
+                        </div>
                     </div>
-                    <div class="score">{{rev.rating}}</div>
-                    <div style="visibility: hidden">...</div>
+                </div>
+                
+                <!-- Price tag -->
+                <div class="price-tag" *ngIf="listing.fixed_price !== undefined" [ngClass]="{'free': listing.fixed_price == 0}">
+                    <i class="bi" [ngClass]="listing.fixed_price > 0 ? 'bi-currency-euro' : 'bi-cash-coin'"></i>
+                    <span *ngIf="listing.fixed_price > 0">{{ listing.fixed_price }}</span>
+                    <span *ngIf="listing.fixed_price == 0">Free</span>
+                </div>
+            </div>
+        </header>
 
-                    <button
-                        type="button"
-                        class="btn btn-link"
-                        ngbTooltip="Contact Reviewer"
-                        style="cursor: pointer"
-                        (click)="openContactWithReviewerForm(rev)"
-                    >
-                        <i style="color: black; font-size: xx-large" class="bi bi-chat-dots"></i>
-                    </button>
+        <!-- Service description -->
+        <div class="service-description">
+            <h2>Service Description</h2>
+            <p>{{ listing.description }}</p>
+        </div>
+
+        <!-- Reviews section -->
+        <div class="reviews-section">
+            <h2 class="reviews-title">
+                Reviews
+                <span *ngIf="reviews.length > 0" class="reviews-count">({{ reviews.length }})</span>
+            </h2>
+            
+            <div *ngIf="reviews.length === 0" class="no-reviews">
+                <i class="bi bi-chat-dots"></i>
+                <p>No reviews yet for this service</p>
+            </div>
+            
+            <div *ngIf="reviews.length > 0" class="reviews-grid">
+                <div *ngFor="let rev of reviews" class="review-card" [ngClass]="{'low-rating': rev.rating < 2.5, 'high-rating': rev.rating >= 2.5}">
+                    <p class="review-text">{{ rev.comment }}</p>
+                    
+                    <div class="review-footer">
+                        <div class="review-rating">
+                            <div class="review-stars">
+                                <i class="bi" [ngClass]="rev.rating >= 1 ? 'bi-star-fill' : (rev.rating >= 0.5 ? 'bi-star-half' : 'bi-star')"></i>
+                                <i class="bi" [ngClass]="rev.rating >= 2 ? 'bi-star-fill' : (rev.rating >= 1.5 ? 'bi-star-half' : 'bi-star')"></i>
+                                <i class="bi" [ngClass]="rev.rating >= 3 ? 'bi-star-fill' : (rev.rating >= 2.5 ? 'bi-star-half' : 'bi-star')"></i>
+                                <i class="bi" [ngClass]="rev.rating >= 4 ? 'bi-star-fill' : (rev.rating >= 3.5 ? 'bi-star-half' : 'bi-star')"></i>
+                                <i class="bi" [ngClass]="rev.rating >= 5 ? 'bi-star-fill' : (rev.rating >= 4.5 ? 'bi-star-half' : 'bi-star')"></i>
+                            </div>
+                            <span class="rating-value">{{ rev.rating }}</span>
+                        </div>
+                        
+                        <button
+                            type="button"
+                            class="contact-reviewer-btn"
+                            ngbTooltip="Contact Reviewer"
+                            (click)="openContactWithReviewerForm(rev)"
+                        >
+                            <i class="bi bi-chat-dots"></i> Contact Reviewer
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="btns">
-            <div class="inquire" (click)="openInquiryWindow()">                Inquire
-            </div>
-            <div class="back" (click)="goBack()">
-                Back
-            </div>
-            <div class="report">
-                Report
-            </div>
+        <!-- Action buttons -->
+        <div class="action-buttons">
+            <button class="inquire-btn" (click)="openInquiryWindow()">
+                <i class="bi bi-chat-text-fill"></i> Open Inquiry
+            </button>
+            
+            <button class="report-btn">
+                <i class="bi bi-flag-fill"></i> Report Provider
+            </button>
         </div>
     </div>
 </div>
