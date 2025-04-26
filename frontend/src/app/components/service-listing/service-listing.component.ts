@@ -154,12 +154,10 @@ export class ServiceListingComponent {
       getAllServices() {
         this.services.getServices(this.token).subscribe({
           next: (response) => {
-            this.fetchedServices = response.filter((service: { category_name: string; }) =>
-                !['Finance', 'Legal', 'Lifestyle'].includes(service.category_name)
-            );
-            
+            // Store all services without filtering out main categories
+            this.fetchedServices = response;
             this.filteredServices = [...this.fetchedServices];
-            console.log('Filtered services:', this.fetchedServices);
+            console.log('All services:', this.fetchedServices);
           },
           error: (error) => {
             if (error.status === 404) {
