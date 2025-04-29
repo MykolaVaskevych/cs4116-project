@@ -38,31 +38,48 @@ export class ServiceListingComponent {
         console.log('token', this.token)
 
         this.route.queryParams.subscribe(params => {
-            this.serviceCat = JSON.parse(params['service']);
-            console.log('serviceCat received:', this.serviceCat);
+            // Check for filter parameter first
+            let filter = params['filter'];
             
-            let filter = null;
-            if (params['filter']) {
-                filter = JSON.parse(params['filter']);
-                console.log('Filter received:', filter);
-            }
-
-            if(this.serviceCat.length>1){
-                this.other = true
-                this.getAllServices()
-                this.getServiceCategories()
-                
-                if (filter && filter.isFromHome && filter.category) {
-                    setTimeout(() => {
-                        this.selectedCategory = this.categories.find(
-                            (cat: any) => cat.name === filter.category
-                        )?.id || null;
-                        this.filterServices();
-                    }, 500);
+            // If filter is 'my-services', fetch only the business user's services
+            if (filter === 'my-services') {
+                this.other = true;
+                this.getMyServices();
+                this.getServiceCategories();
+            } else {
+                // Normal flow for service categories
+                if (params['service']) {
+                    this.serviceCat = JSON.parse(params['service']);
+                    console.log('serviceCat received:', this.serviceCat);
+                    
+                    if (params['filter']) {
+                        filter = JSON.parse(params['filter']);
+                        console.log('Filter received:', filter);
+                    }
+    
+                    if(this.serviceCat.length > 1){
+                        this.other = true
+                        this.getAllServices()
+                        this.getServiceCategories()
+                        
+                        if (filter && filter.isFromHome && filter.category) {
+                            setTimeout(() => {
+                                this.selectedCategory = this.categories.find(
+                                    (cat: any) => cat.name === filter.category
+                                )?.id || null;
+                                this.filterServices();
+                            }, 500);
+                        }
+                    }
+                    else {
+                        this.getServicesByCategories()
+                    }
+                } else {
+                    // No service category, show all services
+                    this.other = true;
+                    this.getAllServices();
+                    this.getServiceCategories();
                 }
-            }
-            else {
-                this.getServicesByCategories()
             }
         });
 
@@ -168,7 +185,25 @@ export class ServiceListingComponent {
             }
           }
         });
-
+      }
+      
+      // Get services owned by the business user
+      getMyServices() {
+        this.services.getMyServices(this.token).subscribe({
+          next: (response) => {
+            this.fetchedServices = response;
+            this.filteredServices = [...this.fetchedServices];
+            console.log('My services:', this.fetchedServices);
+          },
+          error: (error) => {
+            if (error.status === 404) {
+                this.empty = true;
+                console.warn('No services found for this business user.');
+            } else {
+                console.error('Error fetching services', error);
+            }
+          }
+        });
       }
 
     NavigateToDetailsPage(listing: any) {

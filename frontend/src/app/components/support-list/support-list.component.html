@@ -1,0 +1,124 @@
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-md-10 offset-md-1">
+      <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="bi bi-headset me-2"></i> Support Center
+          </h5>
+          <button 
+            *ngIf="!isModerator" 
+            class="btn btn-sm btn-outline-light" 
+            (click)="toggleNewConversationForm()">
+            <i class="bi" [ngClass]="{'bi-x-lg': showNewConversationForm, 'bi-plus-lg': !showNewConversationForm}"></i>
+            {{showNewConversationForm ? 'Cancel' : 'New Support Request'}}
+          </button>
+        </div>
+        
+        <div class="card-body">
+          <div *ngIf="error" class="alert alert-danger">
+            {{error}}
+          </div>
+          
+          <!-- New conversation form -->
+          <div *ngIf="showNewConversationForm" class="mb-4 p-3 border rounded">
+            <h6 class="text-primary mb-3">Create New Support Request</h6>
+            <form [formGroup]="newConversationForm" (ngSubmit)="createNewConversation()">
+              <div class="mb-3">
+                <label for="title" class="form-label">Subject</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="title" 
+                  formControlName="title" 
+                  placeholder="Enter the subject of your support request"
+                  [ngClass]="{'is-invalid': newConversationForm.get('title')?.invalid && newConversationForm.get('title')?.touched}">
+                <div *ngIf="newConversationForm.get('title')?.invalid && newConversationForm.get('title')?.touched" class="invalid-feedback">
+                  Subject is required
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <label for="message" class="form-label">Message</label>
+                <textarea 
+                  class="form-control" 
+                  id="message" 
+                  formControlName="message" 
+                  rows="4" 
+                  placeholder="Describe your issue in detail"
+                  [ngClass]="{'is-invalid': newConversationForm.get('message')?.invalid && newConversationForm.get('message')?.touched}"></textarea>
+                <div *ngIf="newConversationForm.get('message')?.invalid && newConversationForm.get('message')?.touched" class="invalid-feedback">
+                  Message is required
+                </div>
+              </div>
+              
+              <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary" [disabled]="newConversationForm.invalid || loading">
+                  <i class="bi bi-send"></i> Submit Request
+                </button>
+              </div>
+            </form>
+          </div>
+          
+          <!-- Loading spinner -->
+          <div *ngIf="loading" class="text-center my-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading support tickets...</p>
+          </div>
+          
+          <!-- No support tickets message -->
+          <div *ngIf="conversations.length === 0 && !loading && !showNewConversationForm" class="text-center my-5">
+            <p class="text-muted">
+              <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+              {{isModerator ? 'No support tickets available.' : 'You have no active support tickets.'}}
+            </p>
+            <button *ngIf="!isModerator" class="btn btn-outline-primary" (click)="toggleNewConversationForm()">
+              <i class="bi bi-plus-circle"></i> Create New Support Request
+            </button>
+          </div>
+          
+          <!-- Support ticket list -->
+          <div *ngIf="conversations.length > 0 && !loading" class="list-group support-tickets">
+            <a 
+              *ngFor="let ticket of conversations" 
+              class="list-group-item list-group-item-action d-flex justify-content-between align-items-start p-3"
+              [ngClass]="{'unread': hasUnreadMessages(ticket)}"
+              (click)="openConversation(ticket.ticket_id)">
+              <div class="ms-2 me-auto w-100">
+                <div class="d-flex w-100 justify-content-between">
+                  <h6 class="mb-1 fw-bold">
+                    {{ticket.title}}
+                    <span *ngIf="ticket.status === 'CLOSED'" class="badge bg-secondary ms-2">Closed</span>
+                  </h6>
+                  <small>{{getLastMessageTime(ticket) | date:'short'}}</small>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <p class="mb-1 text-muted">{{getLastMessage(ticket)}}</p>
+                  <div *ngIf="isModerator && ticket.user_name" class="ms-3 badge bg-primary">
+                    From: {{ticket.user_name}}
+                  </div>
+                  <div *ngIf="!isModerator && ticket.moderator_name" class="ms-3 badge bg-info">
+                    Assigned to: {{ticket.moderator_name}}
+                  </div>
+                </div>
+                <div class="d-flex align-items-center mt-1">
+                  <small class="text-muted">
+                    <i class="bi bi-chat-left-text"></i> {{ticket.messages_count || 0}} messages
+                  </small>
+                  <span *ngIf="hasUnreadMessages(ticket)" class="ms-2 badge bg-danger rounded-pill">
+                    {{getUnreadCount(ticket)}} new
+                  </span>
+                  <span class="ms-2 badge" [ngClass]="{'bg-success': ticket.status === 'OPEN', 'bg-secondary': ticket.status === 'CLOSED'}">
+                    {{ticket.status}}
+                  </span>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

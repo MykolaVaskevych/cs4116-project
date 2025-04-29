@@ -349,27 +349,35 @@
           <h2>Provider Statistics</h2>
           <div class="stats-grid">
             <div class="stat-item">
-              <div class="stat-value">0</div>
+              <div class="stat-value">{{ activeListings }}</div>
               <div class="stat-label">Active Listings</div>
             </div>
             <div class="stat-item">
-              <div class="stat-value">0</div>
+              <div class="stat-value">{{ totalBookings }}</div>
               <div class="stat-label">Bookings</div>
             </div>
             <div class="stat-item">
-              <div class="stat-value">0</div>
+              <div class="stat-value">{{ totalReviews }}</div>
               <div class="stat-label">Reviews</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">{{ avgRating ? avgRating : '0.0' }}</div>
+              <div class="stat-label">Avg Rating</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">{{ verifiedCustomers }}</div>
+              <div class="stat-label">Verified Customers</div>
             </div>
           </div>
         </div>
         
         <div class="subsection provider-actions">
           <h2>Provider Actions</h2>
-          <button class="btn btn-primary">
+          <button class="btn btn-primary" (click)="createNewService()">
             <i class="fa fa-plus-circle"></i> Create New Listing
           </button>
-          <button class="btn btn-secondary">
-            <i class="fa fa-cog"></i> Manage Services
+          <button class="btn btn-secondary" (click)="viewMyListings()">
+            <i class="fa fa-cog"></i> View My Listings
           </button>
         </div>
       </div>

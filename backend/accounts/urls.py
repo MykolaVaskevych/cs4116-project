@@ -12,8 +12,11 @@ from .views import (
     ModeratorListView, ModeratorRequestView, PaymentRequestListCreateView,
     PaymentRequestDetailView, PendingPaymentRequestListView, PaymentRequestActionView,
     ConversationListCreateView, ConversationDetailView, ConversationActionView,
-    ConversationMessageListCreateView, UnreadConversationCountView
+    ConversationMessageListCreateView, UnreadConversationCountView,
+    SupportTicketListCreateView, SupportTicketDetailView, SupportTicketCloseView,
+    SupportMessageListCreateView, SupportUnreadCountView
 )
+from .service_reports import report_service
 
 # Create a router for viewsets
 router = DefaultRouter()
@@ -89,6 +92,16 @@ urlpatterns = [
     path('conversations/<uuid:conversation_id>/', ConversationDetailView.as_view(), name='conversation-detail'),
     path('conversations/<uuid:conversation_id>/respond/', ConversationActionView.as_view(), name='conversation-action'),
     path('conversations/<uuid:conversation_id>/messages/', ConversationMessageListCreateView.as_view(), name='conversation-messages'),
+    
+    # Support ticket endpoints
+    path('support/tickets/', SupportTicketListCreateView.as_view(), name='support-ticket-list-create'),
+    path('support/tickets/<uuid:ticket_id>/', SupportTicketDetailView.as_view(), name='support-ticket-detail'),
+    path('support/tickets/<uuid:ticket_id>/close/', SupportTicketCloseView.as_view(), name='support-ticket-close'),
+    path('support/tickets/<uuid:ticket_id>/messages/', SupportMessageListCreateView.as_view(), name='support-ticket-messages'),
+    path('support/unread/', SupportUnreadCountView.as_view(), name='support-unread-count'),
+    
+    # Service reports
+    path('services/<int:service_id>/report/', report_service, name='report-service'),
     
     # Include routers for the new viewsets
     path('', include(router.urls)),

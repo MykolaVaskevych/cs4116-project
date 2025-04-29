@@ -427,6 +427,7 @@ export class InquiryComponent implements OnInit, AfterViewChecked, OnDestroy {
 
     acceptClose(p: any) {
         this.inquiryService.closeInquiry(this.selectedRecipient.id).subscribe(response => {
+            // First, get updated inquiry
             this.inquiryService.getSingleInquiry(this.selectedRecipient.id).subscribe(response => {
                 console.log(response);
 
@@ -438,10 +439,34 @@ export class InquiryComponent implements OnInit, AfterViewChecked, OnDestroy {
                 });
                 this.selectedRecipient = response;
                 this.currentInquiryOpenOrClosed = (this.selectedRecipient.status === 'CLOSED');
+                
+                // Get service ID for this inquiry to verify the customer
+                if (response.status === 'CLOSED') {
+                    this.inquiryService.getInquiryServiceId(this.selectedRecipient.id).subscribe(
+                        serviceData => {
+                            if (serviceData && serviceData.service_id) {
+                                console.log('Customer verified for service ID:', serviceData.service_id);
+                                console.log('Is customer verified:', serviceData.is_verified);
+                                // The backend handles adding the customer to verified customers list
+                                // Show a success message
+                                Swal.fire({
+                                    icon: "success",
+                                    position: "top-end",
+                                    showConfirmButton: false,
+                                    timer: 2000,
+                                    timerProgressBar: true,
+                                    title: "Inquiry closed!",
+                                    text: "Customer can now leave reviews for this service."
+                                });
+                            }
+                        },
+                        error => {
+                            console.error('Error getting service ID for inquiry:', error);
+                        }
+                    );
+                }
             });
         });
-
-
 
         p.close();
     }
@@ -485,6 +510,27 @@ export class InquiryComponent implements OnInit, AfterViewChecked, OnDestroy {
         modalRef.componentInstance.responseEvent.subscribe((response: any) => {
             console.log(response);  // Handle the response from the modal
             modalRef.close();
+            
+            // Handle error responses
+            if (response.info === 'error') {
+                Swal.fire({
+                    icon: "error",
+                    position: "top-end",
+                    showConfirmButton: true,
+                    title: "Payment Error",
+                    text: response.message
+                });
+            } else if (response.info === 'request' && response.success) {
+                Swal.fire({
+                    icon: "success",
+                    position: "top-end",
+                    showConfirmButton: false,
+                    timer: 1500,
+                    timerProgressBar: true,
+                    title: "Payment Request Processed",
+                    text: response.message
+                });
+            }
         });
     }
 

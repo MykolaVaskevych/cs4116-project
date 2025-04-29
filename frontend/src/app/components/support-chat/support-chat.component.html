@@ -1,0 +1,152 @@
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-md-10 offset-md-1">
+      <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="bi bi-headset me-2"></i>
+            Support Ticket
+            <span *ngIf="ticket?.title"> - {{ticket?.title}}</span>
+            <span class="badge ms-2" [ngClass]="{'bg-success': ticket?.status === 'OPEN', 'bg-secondary': ticket?.status === 'CLOSED'}">
+              {{ticket?.status || 'Loading...'}}
+            </span>
+            <span *ngIf="ticket?.user_name" class="badge bg-primary ms-2">Submitted by: {{ticket?.user_name}}</span>
+            <span *ngIf="ticket?.moderator_name" class="badge bg-info ms-2">Assigned to: {{ticket?.moderator_name}}</span>
+          </h5>
+          <a class="btn btn-sm btn-outline-light" (click)="goBack()" style="cursor: pointer;">
+            <i class="bi bi-arrow-left"></i> Back to Support
+          </a>
+        </div>
+        
+        <div class="card-body">
+          <div *ngIf="loading && messages.length === 0" class="text-center my-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading support ticket...</p>
+          </div>
+          
+          <div *ngIf="error" class="alert alert-danger">
+            {{error}}
+          </div>
+          
+          <div *ngIf="messages.length === 0 && !loading" class="text-center my-5">
+            <p class="text-muted">No messages yet. Start the conversation by sending a message below.</p>
+          </div>
+          
+          <div class="messages-container" style="max-height: 400px; overflow-y: auto;">
+            <div *ngFor="let message of messages" class="mb-3">
+              <!-- Determine if the message is from a moderator -->
+              <ng-container *ngIf="isModeratorMessage(message); else userMessage">
+                <!-- Check if it's a system message -->
+                <ng-container *ngIf="isSystemMessage(message); else moderatorMessage">
+                  <!-- SYSTEM MESSAGE -->
+                  <div class="d-flex justify-content-center my-3">
+                    <div class="message-bubble bg-secondary text-white" style="max-width: 75%; padding: 8px 15px; border-radius: 18px;">
+                      <div class="d-flex align-items-center">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <div>{{message.content}}</div>
+                      </div>
+                    </div>
+                  </div>
+                </ng-container>
+                
+                <!-- MODERATOR MESSAGES -->
+                <ng-template #moderatorMessage>
+                  <div class="d-flex justify-content-start">
+                    <!-- Moderator avatar/icon -->
+                    <div class="avatar-circle bg-info text-white me-2">
+                      <i class="bi bi-shield-check"></i>
+                    </div>
+                    
+                    <!-- Moderator message bubble -->
+                    <div class="message-bubble bg-success text-white" style="max-width: 75%; padding: 10px 15px; border-radius: 18px;">
+                      <!-- Message header with sender info and timestamp -->
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <small class="text-white fw-bold">
+                          <!-- Sender name -->
+                          <span>
+                            {{isCurrentUserMessage(message) ? 'You' : (message.sender_name || 'Support Staff')}}
+                          </span>
+                        </small>
+                        <small class="text-white-50">
+                          {{message.created_at | date:'short'}}
+                        </small>
+                      </div>
+                      
+                      <!-- Message content -->
+                      <div>{{message.content}}</div>
+                    </div>
+                  </div>
+                </ng-template>
+              </ng-container>
+              
+              <!-- USER/CUSTOMER MESSAGES -->
+              <ng-template #userMessage>
+                <div class="d-flex justify-content-end">
+                  <!-- User message bubble -->
+                  <div class="message-bubble bg-primary text-white" style="max-width: 75%; padding: 10px 15px; border-radius: 18px;">
+                    <!-- Message header with sender info and timestamp -->
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                      <small class="text-white fw-bold">
+                        <!-- Sender name -->
+                        <span>
+                          {{isCurrentUserMessage(message) ? 'You' : (message.sender_name || 'Customer')}}
+                        </span>
+                      </small>
+                      <small class="text-white-50">
+                        {{message.created_at | date:'short'}}
+                      </small>
+                    </div>
+                    
+                    <!-- Message content -->
+                    <div>{{message.content}}</div>
+                  </div>
+                  
+                  <!-- User avatar/icon -->
+                  <div class="avatar-circle bg-primary text-white ms-2">
+                    <i class="bi bi-person"></i>
+                  </div>
+                </div>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card-footer">
+          <!-- Moderator actions -->
+          <div *ngIf="isModerator && ticket?.status === 'OPEN'" class="mb-3">
+            <button class="btn btn-warning" (click)="closeTicket()">
+              <i class="bi bi-check-circle"></i> Close Ticket
+            </button>
+            <small class="text-muted ms-2">Close this ticket when the issue is resolved</small>
+          </div>
+          
+          <!-- Message form - disabled if ticket is closed -->
+          <form [formGroup]="messageForm" (ngSubmit)="sendMessage()">
+            <div class="input-group">
+              <input 
+                type="text" 
+                class="form-control" 
+                placeholder="Type your message..." 
+                formControlName="content"
+                [disabled]="loading || ticket?.status === 'CLOSED'">
+              <button 
+                class="btn btn-primary" 
+                type="submit" 
+                [disabled]="messageForm.invalid || loading || ticket?.status === 'CLOSED'">
+                <i class="bi bi-send-fill"></i> Send
+              </button>
+            </div>
+            <div *ngIf="messageForm.get('content')?.invalid && messageForm.get('content')?.touched" class="text-danger mt-1">
+              Message cannot be empty
+            </div>
+            <div *ngIf="ticket?.status === 'CLOSED'" class="text-warning mt-1">
+              This ticket is closed. No new messages can be sent.
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

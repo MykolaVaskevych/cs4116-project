@@ -49,6 +49,13 @@ export class InquiryService {
 
         return this.http.post(`${this.apiUrl}/inquiries/${inquiry_id}/close/`, {}, { headers });
     }
+    
+    // Get service ID for a specific inquiry
+    getInquiryServiceId(inquiry_id: any): Observable<any> {
+        const headers = this.getHeadersWithJwt();
+        
+        return this.http.get(`${this.apiUrl}/inquiries/${inquiry_id}/service/`, { headers });
+    }
 
     sendInquiryMessage(content: any, inquiry: any): Observable<any> {
         const headers = this.getHeadersWithJwt();

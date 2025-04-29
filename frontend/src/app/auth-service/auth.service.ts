@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
-import { environment } from '../../../env/environment';
+import { environment } from '../../env/environment';
+import { User } from '../models/user.model';
 
 
 @Injectable({
@@ -29,6 +30,7 @@ export class AuthService {
     logOut(): void {
         localStorage.removeItem('access');
         localStorage.removeItem('isProvider');
+        localStorage.removeItem('user');
     }
     // Refresh JWT token: NOW IN ACTION
     refreshJWT(): Observable<any> {
@@ -39,5 +41,18 @@ export class AuthService {
     getJWT(): any {
         return localStorage.getItem(this.accessTokenKey);
     }
-
+    
+    getCurrentUser(): User | null {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            return JSON.parse(userStr) as User;
+        }
+        return null;
+    }
+    
+    getUserProfile(): Observable<any> {
+        const token = this.getJWT();
+        const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+        return this.http.get(`${this.apiUrl}/profile/`, { headers });
+    }
 }

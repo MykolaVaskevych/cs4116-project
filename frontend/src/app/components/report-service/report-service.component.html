@@ -1,0 +1,59 @@
+<div class="report-dialog">
+  <h2 mat-dialog-title>
+    <i class="bi bi-flag-fill text-danger me-2"></i>
+    Report Service
+  </h2>
+  
+  <div mat-dialog-content>
+    <div *ngIf="success" class="text-center my-4">
+      <div class="success-checkmark">
+        <div class="check-icon">
+          <span class="icon-line line-tip"></span>
+          <span class="icon-line line-long"></span>
+          <div class="icon-circle"></div>
+          <div class="icon-fix"></div>
+        </div>
+      </div>
+      <p class="text-success fw-bold mb-0">Thank you for your report!</p>
+      <p class="text-muted">A moderator will review your report shortly.</p>
+    </div>
+    
+    <div *ngIf="!success">
+      <p class="text-muted">
+        You are about to report: <strong>{{data.serviceName}}</strong>
+      </p>
+      
+      <p>Please provide details about why you're reporting this service:</p>
+      
+      <form [formGroup]="reportForm" (ngSubmit)="onSubmit()">
+        <div class="mb-3">
+          <textarea 
+            class="form-control" 
+            placeholder="Explain the reason for your report in detail..." 
+            formControlName="reason" 
+            rows="5"
+            [ngClass]="{'is-invalid': reportForm.get('reason')?.invalid && reportForm.get('reason')?.touched}"></textarea>
+          <div *ngIf="reportForm.get('reason')?.invalid && reportForm.get('reason')?.touched" class="invalid-feedback">
+            <div *ngIf="reportForm.get('reason')?.errors?.['required']">Reason is required</div>
+            <div *ngIf="reportForm.get('reason')?.errors?.['minlength']">Reason must be at least 10 characters</div>
+            <div *ngIf="reportForm.get('reason')?.errors?.['maxlength']">Reason cannot exceed 500 characters</div>
+          </div>
+        </div>
+      </form>
+      
+      <div *ngIf="error" class="alert alert-danger">
+        {{error}}
+      </div>
+    </div>
+  </div>
+  
+  <div mat-dialog-actions align="end" *ngIf="!success">
+    <button class="btn btn-outline-secondary me-2" (click)="onCancel()" [disabled]="loading">
+      Cancel
+    </button>
+    <button class="btn btn-danger" (click)="onSubmit()" [disabled]="reportForm.invalid || loading">
+      <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+      Submit Report
+    </button>
+  </div>
+</div>

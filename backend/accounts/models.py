@@ -385,6 +385,14 @@ class Service(models.Model):
         related_name='services',
         limit_choices_to={'role': User.Role.BUSINESS}
     )
+    verified_customers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        through='VerifiedServiceCustomer',
+        through_fields=('service', 'customer'),  # Specify which fields to use for the relationship
+        related_name='verified_services',
+        blank=True,
+        help_text='Customers who are verified to review this service'
+    )
     
     def __str__(self):
         return f"{self.name} by {self.business.username}"
@@ -445,12 +453,23 @@ class Inquiry(models.Model):
         return f"Inquiry about {self.service.name} by {self.customer.username}"
     
     def close(self, moderator):
-        """Close an inquiry - only moderators can do this"""
+        """
+        Close an inquiry - only moderators can do this
+        When an inquiry is closed, the customer is verified for the service
+        """
         if not moderator.is_moderator:
             raise ValueError("Only moderators can close inquiries")
+        
         self.status = self.Status.CLOSED
         self.moderator = moderator
         self.save(update_fields=['status', 'moderator', 'updated_at'])
+        
+        # Verify the customer for this service (required to leave reviews)
+        VerifiedServiceCustomer.objects.get_or_create(
+            service=self.service,
+            customer=self.customer,
+            defaults={'verified_by': moderator}
+        )
     
     def request_moderator(self):
         """Request a moderator for this inquiry"""
@@ -556,18 +575,34 @@ class Review(models.Model):
     def save(self, *args, **kwargs):
         """
         Custom save method with business logic validation:
-        1. Ensures the user has a closed inquiry for this service
+        1. Ensures the user is verified for this service (has a closed inquiry)
         2. Prevents duplicate reviews for the same service by the same user
         """
-        # Verify user has a closed inquiry for this service
-        inquiry = Inquiry.objects.filter(
-            customer=self.user, 
-            service=self.service, 
-            status=Inquiry.Status.CLOSED
-        ).first()
+        # Verify user is verified for this service (either via VerifiedServiceCustomer or a closed inquiry)
+        is_verified = VerifiedServiceCustomer.objects.filter(
+            customer=self.user,
+            service=self.service
+        ).exists()
+        
+        # If not verified via VerifiedServiceCustomer, check if the user has a closed inquiry
+        if not is_verified:
+            inquiry = Inquiry.objects.filter(
+                customer=self.user, 
+                service=self.service, 
+                status=Inquiry.Status.CLOSED
+            ).first()
+            
+            if inquiry:
+                # Create the verification record
+                VerifiedServiceCustomer.objects.create(
+                    service=self.service,
+                    customer=self.user,
+                    verified_by=inquiry.moderator
+                )
+                is_verified = True
 
-        if not inquiry:
-            raise ValueError("You can only review a service if you have a closed inquiry for it.")
+        if not is_verified:
+            raise ValueError("You can only review a service if you are a verified customer.")
             
         # Prevent duplicate reviews (only check on creation)
         if not self.pk and Review.objects.filter(user=self.user, service=self.service).exists():
@@ -577,6 +612,177 @@ class Review(models.Model):
     
     class Meta:
         ordering = ['-created_at']
+
+
+class VerifiedServiceCustomer(models.Model):
+    """
+    Through model for the many-to-many relationship between Service and User (customers).
+    Represents a customer who has been verified to review a specific service.
+    """
+    service = models.ForeignKey(
+        Service, 
+        on_delete=models.CASCADE,
+        related_name='verified_customer_records'
+    )
+    customer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='verified_service_records',
+        limit_choices_to={'role': User.Role.CUSTOMER}
+    )
+    verified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name='customer_verifications',
+        limit_choices_to={'role': User.Role.MODERATOR},
+        null=True
+    )
+    verified_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.customer.username} verified for {self.service.name}"
+    
+    class Meta:
+        verbose_name = "Verified Service Customer"
+        verbose_name_plural = "Verified Service Customers"
+        unique_together = ('service', 'customer')
+
+
+class ServiceReport(models.Model):
+    """Model for reporting services that violate platform rules"""
+    
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', _('Pending')
+        APPROVED = 'APPROVED', _('Approved')
+        REJECTED = 'REJECTED', _('Rejected')
+    
+    service = models.ForeignKey(
+        'Service',
+        on_delete=models.CASCADE,
+        related_name='reports'
+    )
+    reporter = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='reported_services'
+    )
+    reviewer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name='reviewed_reports',
+        limit_choices_to={'role': 'MODERATOR'},
+        null=True,
+        blank=True
+    )
+    reason = models.TextField(help_text='Reason for reporting this service')
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Report for {self.service.business_name} by {self.reporter.username}"
+    
+    def review(self, moderator, approve=False):
+        """
+        Review this report and take appropriate action
+        Returns a string indicating the action taken
+        """
+        if self.status != self.Status.PENDING:
+            raise ValueError("This report has already been reviewed")
+            
+        self.reviewer = moderator
+        
+        if approve:
+            self.status = self.Status.APPROVED
+            result = "Report approved - service has been flagged for further review"
+        else:
+            self.status = self.Status.REJECTED
+            result = "Report rejected - no action taken"
+            
+        self.save()
+        return result
+
+class SupportTicket(models.Model):
+    """
+    Model for support tickets created by users.
+    Tickets are handled by moderators who can respond to user queries.
+    """
+    class Status(models.TextChoices):
+        OPEN = 'OPEN', _('Open')
+        CLOSED = 'CLOSED', _('Closed')
+    
+    ticket_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='support_tickets'
+    )
+    title = models.CharField(max_length=100)
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.OPEN
+    )
+    moderator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name='moderated_tickets',
+        limit_choices_to={'role': User.Role.MODERATOR},
+        null=True,
+        blank=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Support Ticket {self.ticket_id} - {self.title}"
+    
+    def close(self, moderator):
+        """Close a support ticket"""
+        if not moderator.is_moderator:
+            raise ValueError("Only moderators can close support tickets")
+        
+        self.status = self.Status.CLOSED
+        self.moderator = moderator
+        self.save(update_fields=['status', 'moderator', 'updated_at'])
+    
+    class Meta:
+        ordering = ['-created_at']
+
+
+class SupportMessage(models.Model):
+    """
+    Model for messages within a support ticket.
+    """
+    ticket = models.ForeignKey(
+        SupportTicket,
+        on_delete=models.CASCADE,
+        related_name='messages'
+    )
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='sent_support_messages'
+    )
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"Message in {self.ticket} by {self.sender.username}"
+    
+    def mark_as_read(self):
+        """Mark this message as read"""
+        if not self.is_read:
+            self.is_read = True
+            self.save(update_fields=['is_read'])
+    
+    class Meta:
+        ordering = ['created_at']
 
 
 class ReviewComment(models.Model):

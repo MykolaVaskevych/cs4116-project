@@ -17,6 +17,7 @@ export interface Service {
   business: number;
   business_name: string;
   rating?: number;
+  verified_customers?: number[];
 }
 
 export interface Category {
@@ -113,5 +114,29 @@ export class ServicesService {
   getServiceDetails(token: string, id: number): Observable<Service> {
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
     return this.http.get<Service>(`${this.apiUrl}/${id}/`, { headers });
+  }
+  
+  /**
+   * Check if user is verified for a specific service
+   */
+  isVerifiedForService(token: string, serviceId: number): Observable<{is_verified: boolean}> {
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.get<{is_verified: boolean}>(`${this.apiUrl}/${serviceId}/check_verification/`, { headers });
+  }
+  
+  /**
+   * Get service statistics for business users
+   */
+  getServiceStatistics(token: string): Observable<any> {
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.get<any>(`${this.apiUrl}/statistics/`, { headers });
+  }
+  
+  /**
+   * Get business user's own services
+   */
+  getMyServices(token: string): Observable<Service[]> {
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.get<Service[]>(`${this.apiUrl}/my_services/`, { headers });
   }
 }

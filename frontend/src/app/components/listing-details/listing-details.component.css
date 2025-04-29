@@ -339,20 +339,55 @@
     border-top: 1px solid #f0f0f0;
 }
 
+.reviews-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
 .reviews-title {
     display: flex;
     align-items: center;
     gap: 0.4rem;
     font-size: 1.2rem;
     font-weight: 700;
-    margin-bottom: 1rem;
     color: #333;
+    margin: 0;
 }
 
 .reviews-count {
     font-size: 0.9rem;
     font-weight: 600;
     color: #6c757d;
+}
+
+.review-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.verified-customer-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.review-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.user-review-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .no-reviews {

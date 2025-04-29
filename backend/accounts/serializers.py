@@ -8,7 +8,8 @@ from decimal import Decimal
 from .models import (
     Wallet, Transaction, Service, Inquiry, InquiryMessage,
     Review, ReviewComment, Category, BlogCategory, BlogPost, BlogComment,
-    PaymentRequest, Conversation, ConversationMessage
+    PaymentRequest, Conversation, ConversationMessage, SupportTicket, SupportMessage,
+    ServiceReport
 )
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -1109,4 +1110,185 @@ class ConversationActionSerializer(serializers.Serializer):
             if sender_wallet.balance < fee_amount:
                 raise serializers.ValidationError("The sender does not have sufficient funds for this conversation")
                 
+        return data
+
+
+class SupportMessageSerializer(serializers.ModelSerializer):
+    """Serializer for support ticket messages"""
+    sender_name = serializers.CharField(source='sender.username', read_only=True)
+    sender_role = serializers.CharField(source='sender.get_role_display', read_only=True)
+    content = serializers.CharField(required=True)  # Make sure content is required
+    
+    class Meta:
+        model = SupportMessage
+        fields = ['id', 'ticket', 'sender', 'sender_name', 'sender_role', 'content', 'created_at', 'is_read']
+        read_only_fields = ['sender', 'is_read', 'ticket']  # Add ticket as read-only since we set it in perform_create
+
+
+class SupportTicketSerializer(serializers.ModelSerializer):
+    """Serializer for support tickets"""
+    user_name = serializers.CharField(source='user.username', read_only=True)
+    moderator_name = serializers.CharField(source='moderator.username', read_only=True, allow_null=True)
+    messages_count = serializers.SerializerMethodField()
+    last_message = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = SupportTicket
+        fields = [
+            'id', 'ticket_id', 'user', 'user_name', 'title', 
+            'status', 'moderator', 'moderator_name', 
+            'created_at', 'updated_at', 'messages_count', 'last_message'
+        ]
+        read_only_fields = ['user', 'status', 'moderator', 'ticket_id']
+    
+    def get_messages_count(self, obj):
+        return obj.messages.count()
+    
+    def get_last_message(self, obj):
+        last_message = obj.messages.order_by('-created_at').first()
+        if last_message:
+            return {
+                'content': last_message.content[:100] + ('...' if len(last_message.content) > 100 else ''),
+                'sender_name': last_message.sender.username,
+                'created_at': last_message.created_at,
+                'is_read': last_message.is_read
+            }
+        return None
+        
+    def create(self, validated_data):
+        # Set the user to the current authenticated user
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class SupportTicketCreateSerializer(serializers.Serializer):
+    """Serializer for creating a new support ticket with an initial message"""
+    title = serializers.CharField(max_length=100)
+    initial_message = serializers.CharField(min_length=1)
+    
+    # Add response fields
+    id = serializers.CharField(read_only=True)
+    ticket_id = serializers.CharField(read_only=True)
+    
+    def create(self, validated_data):
+        user = self.context['request'].user
+        title = validated_data.get('title')
+        initial_message = validated_data.get('initial_message')
+        
+        # Create the ticket
+        ticket = SupportTicket.objects.create(
+            user=user,
+            title=title
+        )
+        
+        # Create the initial message
+        message = SupportMessage.objects.create(
+            ticket=ticket,
+            sender=user,
+            content=initial_message
+        )
+        
+        # Store the created objects
+        self.ticket = ticket
+        self.message = message
+        
+        return ticket  # Return the ticket object
+    
+    def to_representation(self, instance):
+        """Custom representation of the created ticket"""
+        if hasattr(self, 'ticket'):
+            # If we have the ticket stored from create()
+            ticket = self.ticket
+        else:
+            # Otherwise use the instance (should be a ticket)
+            ticket = instance
+            
+        return {
+            'id': str(ticket.ticket_id),
+            'ticket_id': str(ticket.ticket_id),
+            'title': ticket.title,
+            'created_at': ticket.created_at,
+            'status': ticket.status
+        }
+
+
+class ServiceReportSerializer(serializers.ModelSerializer):
+    """Serializer for service reports"""
+    reporter_name = serializers.SerializerMethodField()
+    service_name = serializers.SerializerMethodField()
+    reviewer_name = serializers.SerializerMethodField()
+    status_display = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = ServiceReport
+        fields = [
+            'id', 'service', 'service_name', 'reporter', 'reporter_name',
+            'reviewer', 'reviewer_name', 'reason', 'status', 'status_display',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['reporter', 'reviewer', 'status']
+    
+    def get_reporter_name(self, obj):
+        return obj.reporter.username if obj.reporter else None
+    
+    def get_service_name(self, obj):
+        return obj.service.business_name if obj.service else None
+    
+    def get_reviewer_name(self, obj):
+        return obj.reviewer.username if obj.reviewer else None
+    
+    def get_status_display(self, obj):
+        return obj.get_status_display()
+    
+    def validate_service(self, value):
+        """Validate that the user is not reporting their own service"""
+        user = self.context['request'].user
+        
+        if value.business == user:
+            raise serializers.ValidationError("You cannot report your own service")
+        
+        return value
+
+class ServiceReportReviewSerializer(serializers.Serializer):
+    """Serializer for reviewing a service report"""
+    action = serializers.ChoiceField(choices=['approve', 'reject'])
+    
+    def validate(self, data):
+        # The report object should be in the context
+        report = self.context.get('report')
+        user = self.context['request'].user
+        
+        if not report:
+            raise serializers.ValidationError("Report not found")
+            
+        # Ensure the user is a moderator
+        if not user.is_moderator:
+            raise serializers.ValidationError("Only moderators can review service reports")
+            
+        # Ensure the report is pending
+        if report.status != ServiceReport.Status.PENDING:
+            raise serializers.ValidationError("This report has already been reviewed")
+            
+        return data
+
+
+class SupportTicketCloseSerializer(serializers.Serializer):
+    """Serializer for closing a support ticket"""
+    
+    def validate(self, data):
+        # The ticket object should be in the context
+        ticket = self.context.get('ticket')
+        user = self.context['request'].user
+        
+        if not ticket:
+            raise serializers.ValidationError("Ticket not found")
+            
+        # Ensure the user is a moderator
+        if not user.is_moderator:
+            raise serializers.ValidationError("Only moderators can close support tickets")
+            
+        # Ensure the ticket is not already closed
+        if ticket.status == SupportTicket.Status.CLOSED:
+            raise serializers.ValidationError("This ticket is already closed")
+            
         return data

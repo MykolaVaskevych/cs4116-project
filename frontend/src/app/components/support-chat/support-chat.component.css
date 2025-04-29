@@ -1,0 +1,84 @@
+.message-bubble {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  position: relative;
+  margin-bottom: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Customer message styles */
+.bg-primary.message-bubble::after {
+  content: '';
+  position: absolute;
+  right: -10px;
+  top: 10px;
+  border: 10px solid transparent;
+  border-left-color: #0d6efd;
+  border-right: 0;
+}
+
+/* Moderator message styles */
+.bg-info.message-bubble::after {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 10px;
+  border: 10px solid transparent;
+  border-right-color: #0dcaf0;
+  border-left: 0;
+}
+
+/* Moderator as sender styles */
+.bg-success.message-bubble::after {
+  content: '';
+  position: absolute;
+  right: -10px;
+  top: 10px;
+  border: 10px solid transparent;
+  border-left-color: #198754;
+  border-right: 0;
+}
+
+.avatar-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.messages-container {
+  scroll-behavior: smooth;
+}
+
+.card {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: none;
+}
+
+.card-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  padding: 15px 20px;
+}
+
+.card-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.125);
+  padding: 15px 20px;
+  background-color: #f8f9fa;
+}
+
+/* Add cursor pointer to clickable elements */
+a[role="button"], 
+a.btn, 
+button.btn {
+  cursor: pointer;
+}
+
+.badge {
+  font-size: 0.65em;
+}

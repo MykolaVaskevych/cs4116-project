@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 import { environment } from '../../../env/environment';
-
+import { User } from '../../models/user.model';
 
 @Injectable({
     providedIn: 'root'
@@ -50,4 +50,17 @@ export class AuthService {
         });
     }
 
+    getCurrentUser(): User | null {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            return JSON.parse(userStr) as User;
+        }
+        return null;
+    }
+    
+    getUserProfile(): Observable<any> {
+        const token = this.getJWT();
+        const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+        return this.http.get(`${this.apiUrl}/profile/`, { headers });
+    }
 }

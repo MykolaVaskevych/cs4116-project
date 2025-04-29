@@ -47,12 +47,37 @@ export class PaymentRequestCustomerViewComponent implements OnInit {
         this.accept_reject = true;
         this.inquiryService
             .acceptOrDeclinePaymentRequest(this.paymentRequestUUID, response)
-            .subscribe(response => {
-                this.accept_reject = false;
-                this.responseEvent.emit({
-                    info: 'request',
-                });
-        });
+            .subscribe({
+                next: (response) => {
+                    this.accept_reject = false;
+                    this.responseEvent.emit({
+                        info: 'request',
+                        success: true,
+                        message: response.message
+                    });
+                },
+                error: (error) => {
+                    this.accept_reject = false;
+                    
+                    // Get the error message from the API
+                    let errorMessage = 'An error occurred';
+                    if (error.error && error.error.error) {
+                        errorMessage = error.error.error;
+                    }
+                    
+                    // Check if it's an insufficient funds error
+                    if (errorMessage.includes('Insufficient funds')) {
+                        errorMessage = 'Insufficient funds. Please deposit money in your wallet from your profile page.';
+                    }
+                    
+                    // Show error to user
+                    this.responseEvent.emit({
+                        info: 'error',
+                        success: false,
+                        message: errorMessage
+                    });
+                }
+            });
     }
 
     getDateString(date_data: any): any {

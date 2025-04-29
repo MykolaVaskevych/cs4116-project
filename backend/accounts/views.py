@@ -3,13 +3,17 @@ from rest_framework import status, permissions, viewsets, generics, filters, ser
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.exceptions import PermissionDenied
 from django.contrib.auth import get_user_model, authenticate
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
+from django.http import Http404
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import (
     Wallet, Transaction, Service, Inquiry, InquiryMessage, 
     Review, ReviewComment, Category, BlogCategory, BlogPost, BlogComment,
-    PaymentRequest, User, Conversation, ConversationMessage
+    PaymentRequest, User, Conversation, ConversationMessage, VerifiedServiceCustomer,
+    SupportTicket, SupportMessage
 )
 from .serializers import (
     UserSerializer, UserProfileSerializer, WalletSerializer,
@@ -21,7 +25,9 @@ from .serializers import (
     BlogPostCreateSerializer, BlogCommentSerializer, ModeratorSerializer,
     ModeratorRequestSerializer, PaymentRequestSerializer, PaymentRequestActionSerializer,
     ChangePasswordSerializer, ConversationSerializer, ConversationMessageSerializer,
-    ConversationCreateSerializer, ConversationActionSerializer
+    ConversationCreateSerializer, ConversationActionSerializer,
+    SupportTicketSerializer, SupportMessageSerializer, SupportTicketCreateSerializer,
+    SupportTicketCloseSerializer
 )
 
 User = get_user_model()
@@ -350,6 +356,109 @@ class ServiceViewSet(viewsets.ModelViewSet):
             raise permissions.PermissionDenied("Only business users can create services")
             
         serializer.save(business=user)
+    
+    @action(detail=True, methods=['get'], url_path='check_verification')
+    def check_verification(self, request, pk=None):
+        """
+        Checks if the current user is verified for a specific service.
+        This means they can leave reviews.
+        """
+        service = self.get_object()
+        user = request.user
+        
+        # Business users can't be verified for services
+        if user.is_business:
+            return Response({'is_verified': False})
+        
+        # Check if the user is in the verified_customers list
+        is_verified = VerifiedServiceCustomer.objects.filter(
+            service=service,
+            customer=user
+        ).exists()
+        
+        # If not verified via VerifiedServiceCustomer, check for closed inquiries
+        if not is_verified:
+            # Check if the user has a closed inquiry for this service
+            inquiry = Inquiry.objects.filter(
+                service=service,
+                customer=user,
+                status=Inquiry.Status.CLOSED
+            ).first()
+            
+            if inquiry:
+                # Create verification record based on closed inquiry
+                VerifiedServiceCustomer.objects.create(
+                    service=service,
+                    customer=user,
+                    verified_by=inquiry.moderator
+                )
+                is_verified = True
+        
+        return Response({'is_verified': is_verified})
+    
+    @action(detail=False, methods=['get'], url_path='my_services')
+    def my_services(self, request):
+        """
+        Returns all services created by the current business user
+        """
+        if not request.user.is_business:
+            return Response(
+                {'error': 'Only business users can access their services'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        services = Service.objects.filter(business=request.user)
+        serializer = self.get_serializer(services, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def statistics(self, request):
+        """
+        Returns statistics for a business user's services:
+        - Number of active listings
+        - Total bookings (inquiries)
+        - Total reviews
+        - Average rating
+        """
+        if not request.user.is_business:
+            return Response(
+                {'error': 'Only business users can access service statistics'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Count active listings
+        active_listings = Service.objects.filter(business=request.user).count()
+        
+        # Count total inquiries
+        total_bookings = Inquiry.objects.filter(
+            service__business=request.user
+        ).count()
+        
+        # Count total reviews
+        reviews = Review.objects.filter(
+            service__business=request.user
+        )
+        total_reviews = reviews.count()
+        
+        # Calculate average rating across all services
+        avg_rating = 0
+        if total_reviews > 0:
+            avg_rating = reviews.aggregate(models.Avg('rating'))['rating__avg']
+            if avg_rating:
+                avg_rating = round(avg_rating, 1)
+        
+        # Count verified customers
+        verified_customers_count = VerifiedServiceCustomer.objects.filter(
+            service__business=request.user
+        ).count()
+        
+        return Response({
+            'active_listings': active_listings,
+            'total_bookings': total_bookings,
+            'total_reviews': total_reviews,
+            'avg_rating': avg_rating,
+            'verified_customers': verified_customers_count
+        })
 
 
 class InquiryViewSet(viewsets.ModelViewSet):
@@ -407,6 +516,35 @@ class InquiryViewSet(viewsets.ModelViewSet):
         inquiry.close(request.user)
         serializer = self.get_serializer(inquiry)
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def service(self, request, pk=None):
+        """
+        Returns the service ID for an inquiry, useful for frontend verification
+        """
+        inquiry = self.get_object()
+        
+        # Check if the customer is verified for this service
+        is_verified = VerifiedServiceCustomer.objects.filter(
+            service=inquiry.service,
+            customer=inquiry.customer
+        ).exists()
+        
+        # If not verified via VerifiedServiceCustomer, check if inquiry is closed
+        if not is_verified and inquiry.status == Inquiry.Status.CLOSED:
+            # Create verification record if closed inquiry
+            VerifiedServiceCustomer.objects.create(
+                service=inquiry.service,
+                customer=inquiry.customer,
+                verified_by=inquiry.moderator
+            )
+            is_verified = True
+        
+        return Response({
+            'service_id': inquiry.service.id,
+            'service_name': inquiry.service.name,
+            'is_verified': is_verified
+        })
 
 
 class InquiryMessageViewSet(viewsets.ModelViewSet):
@@ -1270,5 +1408,236 @@ class UnreadConversationCountView(generics.GenericAPIView):
             
             if has_unread:
                 unread_count += 1
+        
+        return Response({'unread_count': unread_count})
+
+
+# Support Ticket views
+class SupportTicketListCreateView(generics.ListCreateAPIView):
+    """
+    API endpoint for listing and creating support tickets.
+    
+    GET: Returns all support tickets the authenticated user has access to.
+    POST: Creates a new support ticket with an initial message.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return SupportTicketCreateSerializer
+        return SupportTicketSerializer
+    
+    def get_queryset(self):
+        """Return tickets based on user role"""
+        user = self.request.user
+        
+        if user.is_moderator:
+            # Moderators can see all tickets
+            return SupportTicket.objects.all()
+        else:
+            # Regular users can only see their own tickets
+            return SupportTicket.objects.filter(user=user)
+    
+    def perform_create(self, serializer):
+        """Create a new support ticket with an initial message"""
+        serializer.save()
+        # No need to return anything, serializer.data will be used in the response
+
+
+class SupportTicketDetailView(generics.RetrieveAPIView):
+    """
+    API endpoint for accessing a specific support ticket.
+    
+    GET: Returns details about a specific support ticket.
+    """
+    serializer_class = SupportTicketSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'ticket_id'
+    lookup_url_kwarg = 'ticket_id'
+    
+    def get_queryset(self):
+        """Return tickets based on user role and permissions"""
+        user = self.request.user
+        
+        if user.is_moderator:
+            # Moderators can see all tickets
+            return SupportTicket.objects.all()
+        else:
+            # Regular users can only see their own tickets
+            return SupportTicket.objects.filter(user=user)
+
+
+class SupportTicketCloseView(generics.GenericAPIView):
+    """
+    API endpoint for closing a support ticket.
+    
+    POST: Closes a support ticket (moderators only).
+    """
+    serializer_class = SupportTicketCloseSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_object(self):
+        """Get the ticket by ID and check moderator permissions"""
+        ticket_id = self.kwargs.get('ticket_id')
+        ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
+            
+        # Check if the user is a moderator
+        if not self.request.user.is_moderator:
+            raise PermissionDenied("Only moderators can close support tickets")
+                
+        return ticket
+    
+    def post(self, request, *args, **kwargs):
+        """Close a support ticket"""
+        ticket = self.get_object()
+        
+        # Check if the ticket is already closed
+        if ticket.status == SupportTicket.Status.CLOSED:
+            return Response(
+                {"error": "This ticket is already closed"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Create serializer with the empty data
+        serializer = self.get_serializer(
+            data={},
+            context={'ticket': ticket, 'request': request}
+        )
+        
+        if serializer.is_valid():
+            # Close the ticket
+            ticket.close(request.user)
+            updated_serializer = SupportTicketSerializer(ticket)
+            return Response(updated_serializer.data)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SupportMessageListCreateView(generics.ListCreateAPIView):
+    """
+    API endpoint for listing and creating support ticket messages.
+    
+    GET: Returns all messages in a support ticket.
+    POST: Creates a new message in a support ticket.
+    """
+    serializer_class = SupportMessageSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def create(self, request, *args, **kwargs):
+        """Override create to log request data and handle errors"""
+        print("Create support message request data:", request.data)
+        
+        # Validate that content is present
+        if not request.data.get('content'):
+            return Response(
+                {"detail": "Content field is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            print("Error creating support message:", str(e))
+            return Response(
+                {"detail": str(e)}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    
+    def get_ticket(self):
+        """Get the ticket by ID and check permissions"""
+        ticket_id = self.kwargs.get('ticket_id')
+        try:
+            ticket = SupportTicket.objects.get(ticket_id=ticket_id)
+            
+            # Check if the user is allowed to access this ticket
+            user = self.request.user
+            if not user.is_moderator and user != ticket.user:
+                raise PermissionDenied("You do not have permission to access this ticket")
+                
+            return ticket
+        except SupportTicket.DoesNotExist:
+            raise Http404("Support ticket not found")
+    
+    def get_queryset(self):
+        """Return messages for a specific ticket, marking unread ones as read"""
+        ticket = self.get_ticket()
+        user = self.request.user
+        
+        # Mark messages as read for this user
+        if self.request.method == 'GET':
+            if user.is_moderator:
+                # If moderator, mark customer messages as read
+                SupportMessage.objects.filter(
+                    ticket=ticket,
+                    sender=ticket.user,
+                    is_read=False
+                ).update(is_read=True)
+            else:
+                # If customer, mark moderator messages as read
+                # Get a list of moderators
+                from django.contrib.auth import get_user_model
+                User = get_user_model()
+                moderator_ids = User.objects.filter(role=User.Role.MODERATOR).values_list('id', flat=True)
+                
+                SupportMessage.objects.filter(
+                    ticket=ticket,
+                    sender__id__in=moderator_ids,
+                    is_read=False
+                ).update(is_read=True)
+        
+        return SupportMessage.objects.filter(ticket=ticket)
+    
+    def perform_create(self, serializer):
+        """Create a new message in the specified ticket"""
+        ticket = self.get_ticket()
+        
+        # Check if ticket is closed
+        if ticket.status == SupportTicket.Status.CLOSED:
+            raise serializers.ValidationError("This ticket is closed, you cannot add more messages")
+        
+        serializer.save(
+            ticket=ticket,
+            sender=self.request.user
+        )
+
+
+class SupportUnreadCountView(generics.GenericAPIView):
+    """
+    API endpoint for getting the unread support message count.
+    
+    GET: Returns the number of unread support messages for the current user.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, *args, **kwargs):
+        """Get unread support message count"""
+        user = request.user
+        
+        if user.is_moderator:
+            # For moderators, count unread messages from all tickets
+            # Either assigned to this moderator or unassigned (null moderator)
+            from django.db.models import Q
+            tickets = SupportTicket.objects.filter(
+                Q(moderator=user) | Q(moderator__isnull=True)
+            )
+            
+            # Get count of unread messages from non-moderators
+            unread_count = SupportMessage.objects.filter(
+                ticket__in=tickets,
+                sender__role=User.Role.CUSTOMER,  # More direct than using a subquery
+                is_read=False
+            ).count()
+        else:
+            # For regular users, count unread messages from moderators
+            # Get a list of moderators
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            moderator_ids = User.objects.filter(role=User.Role.MODERATOR).values_list('id', flat=True)
+            
+            unread_count = SupportMessage.objects.filter(
+                ticket__user=user,
+                sender__id__in=moderator_ids,
+                is_read=False
+            ).count()
         
         return Response({'unread_count': unread_count})

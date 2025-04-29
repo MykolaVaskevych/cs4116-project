@@ -66,10 +66,35 @@
 
         <!-- Reviews section -->
         <div class="reviews-section">
-            <h2 class="reviews-title">
-                Reviews
-                <span *ngIf="reviews.length > 0" class="reviews-count">({{ reviews.length }})</span>
-            </h2>
+            <div class="reviews-header">
+                <h2 class="reviews-title">
+                    Reviews
+                    <span *ngIf="reviews.length > 0" class="reviews-count">({{ reviews.length }})</span>
+                </h2>
+                
+                <!-- Review action buttons for verified customers -->
+                <div class="review-actions">
+                    <div *ngIf="canReview" class="verified-customer-actions">
+                        <div *ngIf="!userReview" class="review-badge">
+                            <span class="badge bg-success mb-2">✓ Verified Customer</span>
+                            <button (click)="openReviewForm()" class="btn btn-warning">
+                                <i class="bi bi-star"></i> Leave a Review
+                            </button>
+                        </div>
+                        <div *ngIf="userReview" class="user-review-actions">
+                            <span class="badge bg-success mb-2">✓ Verified Customer</span>
+                            <div>
+                                <button (click)="openReviewForm()" class="btn btn-warning">
+                                    <i class="bi bi-pencil"></i> Edit Review
+                                </button>
+                                <button (click)="deleteReview()" class="btn btn-outline-danger ms-2">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <div *ngIf="reviews.length === 0" class="no-reviews">
                 <i class="bi bi-chat-dots"></i>
@@ -111,7 +136,7 @@
                 <i class="bi bi-chat-text-fill"></i> Open Inquiry
             </button>
             
-            <button class="report-btn">
+            <button class="report-btn" (click)="openReportServiceForm()">
                 <i class="bi bi-flag-fill"></i> Report Provider
             </button>
         </div>

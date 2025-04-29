@@ -7,6 +7,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { UserProfileService } from '../../services/user-profile.service';
 import {InquiryService} from '../../services/inquiry-service/inquiry.service';
 import { environment } from '../../../env/environment';
+import { ServicesService } from '../../services/services-service/services.service';
 
 interface Transaction {
   type: string;
@@ -69,6 +70,13 @@ export class ProfileComponent {
 
     transferRecipient = '';
     transactions: Transaction[] = [];
+    
+    // Provider statistics
+    activeListings: number = 0;
+    totalBookings: number = 0;
+    totalReviews: number = 0;
+    avgRating: number = 0;
+    verifiedCustomers: number = 0;
 
     @HostListener('window:resize', ['$event'])
     onResize(event: any) {
@@ -80,7 +88,8 @@ export class ProfileComponent {
         private router: Router, 
         private authService: AuthService,
         private userProfileService: UserProfileService, 
-        private inquiryService: InquiryService
+        private inquiryService: InquiryService,
+        private servicesService: ServicesService
     ) { }
 
     ngOnInit() {
@@ -118,6 +127,12 @@ export class ProfileComponent {
         this.onResize(null);
         this.loadUserProfile();
         this.updateWalletAmount();
+        
+        if (this.isProvider) {
+            setTimeout(() => {
+                this.loadProviderStatistics();
+            }, 500); // Short delay to ensure user is loaded first
+        }
     }
     
     // Custom validator to check if passwords match
@@ -521,5 +536,40 @@ export class ProfileComponent {
         
         // Add to beginning of array
         this.transactions.unshift(transaction);
+    }
+    
+    // Load provider statistics from the backend
+    loadProviderStatistics(): void {
+        if (!this.token) return;
+        
+        this.servicesService.getServiceStatistics(this.token).subscribe({
+            next: (response) => {
+                if (response) {
+                    this.activeListings = response.active_listings || 0;
+                    this.totalBookings = response.total_bookings || 0;
+                    this.totalReviews = response.total_reviews || 0;
+                    this.avgRating = response.avg_rating || 0;
+                    this.verifiedCustomers = response.verified_customers || 0;
+                }
+                console.log('Provider statistics loaded:', response);
+            },
+            error: (error) => {
+                console.error('Error loading provider statistics:', error);
+            }
+        });
+    }
+    
+    // Navigate to service listing with filter for business user's own services
+    viewMyListings(): void {
+        this.router.navigate(['/service-listing'], {
+            queryParams: {
+                filter: 'my-services'
+            }
+        });
+    }
+    
+    // Navigate to create service page
+    createNewService(): void {
+        this.router.navigate(['/create-listing']);
     }
 }
