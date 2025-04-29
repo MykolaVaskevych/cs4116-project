@@ -17,7 +17,6 @@ import { CustomerToCustomerComponent } from './components/customer-to-customer/c
 import { SupportListComponent } from './components/support-list/support-list.component';
 import { SupportChatComponent } from './components/support-chat/support-chat.component';
 import { RequestPaymentComponent } from './components/request-payment/request-payment.component';
-import { ReportServiceComponent } from './components/report-service/report-service.component';
 
 export let routes: Routes;
 routes = [

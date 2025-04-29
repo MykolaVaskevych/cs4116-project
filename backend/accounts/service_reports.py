@@ -144,7 +144,7 @@ def report_service(request, service_id):
         report = serializer.save(reporter=request.user)
         
         # Create a support ticket for this report
-        ticket_title = f"Service Report: {service.business_name}"
+        ticket_title = f"Service Report: {service.name}"
         ticket = SupportTicket.objects.create(
             user=request.user,
             title=ticket_title
@@ -152,7 +152,7 @@ def report_service(request, service_id):
         
         # Add the initial message with report details
         initial_message = (
-            f"I would like to report the service '{service.business_name}' "
+            f"I would like to report the service '{service.name}' "
             f"for the following reason:\n\n{reason}"
         )
         

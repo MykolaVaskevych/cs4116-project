@@ -1,10 +1,7 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { SupportService } from '../../services/support-service/support.service';
 
 @Component({
@@ -14,11 +11,7 @@ import { SupportService } from '../../services/support-service/support.service';
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule
+    ReactiveFormsModule
   ]
 })
 export class ReportServiceComponent implements OnInit {
@@ -26,12 +19,14 @@ export class ReportServiceComponent implements OnInit {
   loading = false;
   error: string | null = null;
   success = false;
+  
+  @Input() serviceId!: number;
+  @Input() serviceName!: string;
 
   constructor(
     private fb: FormBuilder,
     private supportService: SupportService,
-    public dialogRef: MatDialogRef<ReportServiceComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { serviceId: number, serviceName: string }
+    public activeModal: NgbActiveModal
   ) {
     this.reportForm = this.fb.group({
       reason: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(500)]]
@@ -47,13 +42,13 @@ export class ReportServiceComponent implements OnInit {
     this.loading = true;
     this.error = null;
     
-    this.supportService.reportServiceProvider(this.data.serviceId, this.reportForm.value.reason)
+    this.supportService.reportServiceProvider(this.serviceId, this.reportForm.value.reason)
       .subscribe({
         next: () => {
           this.loading = false;
           this.success = true;
           setTimeout(() => {
-            this.dialogRef.close(true);
+            this.activeModal.close(true);
           }, 1500);
         },
         error: (err) => {
@@ -65,6 +60,6 @@ export class ReportServiceComponent implements OnInit {
   }
 
   onCancel(): void {
-    this.dialogRef.close(false);
+    this.activeModal.dismiss('cancel');
   }
 }

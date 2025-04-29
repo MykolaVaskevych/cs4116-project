@@ -9,13 +9,12 @@ import { ReviewFormComponent } from '../review-form/review-form.component';
 import { AuthService } from '../../services/auth-service/auth.service';
 import { ServicesService } from '../../services/services-service/services.service';
 import { ReportServiceComponent } from '../report-service/report-service.component';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 
 @Component({
     selector: 'app-listing-details',
     standalone: true,
-    imports: [CommonModule, NgbTooltip, MatDialogModule],
+    imports: [CommonModule, NgbTooltip],
     templateUrl: './listing-details.component.html',
     styleUrl: './listing-details.component.css'
 })
@@ -41,8 +40,7 @@ export class ListingDetailsComponent implements OnInit {
         private reviewsService: ReviewsService,
         private modalService: NgbModal,
         private authService: AuthService,
-        private servicesService: ServicesService,
-        private matDialog: MatDialog
+        private servicesService: ServicesService
     ) { }
 
 
@@ -223,22 +221,27 @@ export class ListingDetailsComponent implements OnInit {
     }
     
     openReportServiceForm(): void {
-        const dialogRef = this.matDialog.open(ReportServiceComponent, {
-            width: '500px',
-            data: {
-                serviceId: this.listing.id,
-                serviceName: this.listing.business_name || 'Service Provider'
-            },
-            disableClose: false
+        const modalRef = this.modalService.open(ReportServiceComponent, { 
+            centered: true, 
+            scrollable: true 
         });
+        
+        modalRef.componentInstance.serviceId = this.listing.id;
+        modalRef.componentInstance.serviceName = this.listing.business_name || 'Service Provider';
 
-        dialogRef.afterClosed().subscribe(result => {
-            console.log('Report dialog closed with result:', result);
-            // If true, the report was submitted successfully
-            if (result === true) {
-                console.log('Service reported successfully');
+        // Listen for the response when modal is closed
+        modalRef.result.then(
+            (result) => {
+                console.log('Report dialog closed with result:', result);
+                // If true, the report was submitted successfully
+                if (result === true) {
+                    console.log('Service reported successfully');
+                }
+            },
+            (reason) => {
+                console.log('Report dialog dismissed:', reason);
             }
-        });
+        );
     }
     
     getGradientClass(categoryName: string): string {

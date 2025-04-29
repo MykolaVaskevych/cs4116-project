@@ -1232,7 +1232,7 @@ class ServiceReportSerializer(serializers.ModelSerializer):
         return obj.reporter.username if obj.reporter else None
     
     def get_service_name(self, obj):
-        return obj.service.business_name if obj.service else None
+        return obj.service.name if obj.service else None
     
     def get_reviewer_name(self, obj):
         return obj.reviewer.username if obj.reviewer else None
